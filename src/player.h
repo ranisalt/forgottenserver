@@ -89,6 +89,11 @@ enum tradestate_t : uint8_t {
 	TRADE_TRANSFER,
 };
 
+enum attackHand_t : uint8_t {
+	HAND_LEFT,
+	HAND_RIGHT,
+};
+
 struct VIPEntry {
 	VIPEntry(uint32_t guid, std::string name, const std::string& description, uint32_t icon, bool notify)
 		: guid(guid), name(name), description(description), icon(icon), notify(notify) {}
@@ -630,12 +635,25 @@ class Player final : public Creature, public Cylinder
 		BlockType_t getLastAttackBlockType() const {
 			return lastAttackBlockType;
 		}
+		void switchAttackHand() {
+			lastAttackHand = lastAttackHand == HAND_LEFT ? HAND_RIGHT : HAND_LEFT;
+		}
+		slots_t getAttackHand() const {
+			return lastAttackHand == HAND_LEFT ? CONST_SLOT_LEFT : CONST_SLOT_RIGHT;
+		}
+		void switchBlockSkillAdvance() {
+			blockSkillAdvance = !blockSkillAdvance;
+		}
+		bool getBlockSkillAdvance() {
+			return blockSkillAdvance;
+		}
 
 		Item* getWeapon(slots_t slot, bool ignoreAmmo) const;
 		Item* getWeapon(bool ignoreAmmo = false) const;
 		WeaponType_t getWeaponType() const;
 		int32_t getWeaponSkill(const Item* item) const;
 		void getShieldAndWeapon(const Item*& shield, const Item*& weapon) const;
+		bool isDualWielding() const;
 
 		void drainHealth(Creature* attacker, int32_t damage) final;
 		void drainMana(Creature* attacker, int32_t manaLoss) final;
@@ -1293,6 +1311,8 @@ class Player final : public Creature, public Cylinder
 		chaseMode_t chaseMode;
 		fightMode_t fightMode;
 		AccountType_t accountType;
+		attackHand_t lastAttackHand;
+		bool blockSkillAdvance;
 
 		bool secureMode;
 		bool inMarket;
@@ -1319,9 +1339,7 @@ class Player final : public Creature, public Cylinder
 
 		bool isPromoted() const;
 
-		uint32_t getAttackSpeed() const {
-			return vocation->getAttackSpeed();
-		}
+		uint32_t getAttackSpeed() const;
 
 		static uint8_t getPercentLevel(uint64_t count, uint64_t nextLevelCount);
 		double getLostPercent() const;
