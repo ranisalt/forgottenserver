@@ -5,9 +5,10 @@ cache:
   - ccache
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo add-apt-repository ppa:smspillaz/cmake-2.8.12 -y
   - sudo apt-get update -qq
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
   - if [ "$CXX" = "g++" ]; then export CXX="ccache g++-4.8" CC="ccache gcc-4.8"; fi
-install: sudo apt-get install libboost-system-dev liblua5.2-dev libgmp3-dev libmysqlclient-dev ccache
+install: sudo apt-get install libboost-system-dev liblua5.2-dev libgmp3-dev libmysqlclient-dev ccache cmake cmake-data
 before_script: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
 script: make
