@@ -17,6 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <set>
 #include "otpch.h"
 
 #include "iomap.h"
@@ -30,6 +31,8 @@
 #include "town.h"
 
 #include "bed.h"
+
+const size_t MAX_ITEM_COUNT = 16UL;
 
 /*
 	OTBM_ROOTV1
@@ -187,6 +190,9 @@ bool IOMap::loadMap(Map* map, const std::string& identifier)
 				return false;
 		}
 	}
+
+	using ItemCountMap = std::map<uint16_t, uint32_t>;
+	ItemCountMap itemCounter;
 
 	NODE nodeMapData = f.getChildNode(nodeMap, type);
 	while (nodeMapData != NO_NODE) {
@@ -356,6 +362,7 @@ bool IOMap::loadMap(Map* map, const std::string& identifier)
 						setLastErrorString(ss.str());
 						return false;
 					}
+					++itemCounter[item->getID()];
 
 					if (!item->unserializeItemNode(f, nodeItem, stream)) {
 						std::ostringstream ss;
@@ -480,6 +487,21 @@ bool IOMap::loadMap(Map* map, const std::string& identifier)
 
 		nodeMapData = f.getNextNode(nodeMapData, type);
 	}
+
+	using pair_id_count = std::pair<uint16_t, uint32_t>;
+	std::vector<pair_id_count> itemCounterSet(itemCounter.begin(), itemCounter.end());
+	std::sort(itemCounterSet.begin(), itemCounterSet.end(), [](const pair_id_count& lhs, const pair_id_count& rhs) {
+		return lhs.second > rhs.second;
+	});
+
+	std::cout << std::endl;
+	std::cout << ">> Most used " << MAX_ITEM_COUNT << " items, by count:" << std::endl;
+	auto end = std::next(itemCounterSet.begin(), std::min(MAX_ITEM_COUNT, itemCounterSet.size()));
+	for (auto it = itemCounterSet.begin(); it != end; ++it) {
+		const ItemType& i = Item::items.getItemType(it->first);
+		std::cout << ">>> " << it->first << " (" << i.name << "): " << it->second << std::endl;
+	}
+	std::cout << std::endl;
 
 	std::cout << "> Map loading time: " << (OTSYS_TIME() - start) / (1000.) << " seconds." << std::endl;
 	return true;
