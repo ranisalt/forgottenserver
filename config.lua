@@ -72,7 +72,8 @@ emoteSpells = false
 classicEquipmentSlots = false
 
 -- Rates
--- NOTE: rateExp is not used if you have enabled stages in data/XML/stages.xml
+-- NOTE: rateExp is used as a fallback only. To configure experience rate,
+-- see data/events/scripts/player.lua
 rateExp = 5
 rateSkill = 3
 rateLoot = 2
