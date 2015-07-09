@@ -24,6 +24,36 @@ local experienceStages = {
 	}
 }
 
+local skillStages = {
+	{
+		minlevel = 10,
+		maxlevel = 50,
+		multiplier = 3
+	}, {
+		minlevel = 51,
+		maxlevel = 100,
+		multiplier = 2
+	}, {
+		minlevel = 101,
+		multiplier = 1
+	}
+}
+
+local magicLevelStages = {
+	{
+		minlevel = 10,
+		maxlevel = 50,
+		multiplier = 3
+	}, {
+		minlevel = 51,
+		maxlevel = 100,
+		multiplier = 2
+	}, {
+		minlevel = 101,
+		multiplier = 1
+	}
+}
+
 function Player:onBrowseField(position)
 	return true
 end
@@ -214,7 +244,7 @@ function Player:onGainSkillTries(skill, tries)
 	end
 
 	if skill == SKILL_MAGLEVEL then
-		return tries * configManager.getNumber(configKeys.RATE_MAGIC)
+		return tries * getRateFromTable(magicStages, self:getSkillLevel(skill), configManager.getNumber(configKeys.RATE_MAGIC))
 	end
-	return tries * configManager.getNumber(configKeys.RATE_SKILL)
+	return tries * getRateFromTable(skillStages, self:getSkillLevel(skill), configManager.getNumber(configKeys.RATE_SKILL))
 end

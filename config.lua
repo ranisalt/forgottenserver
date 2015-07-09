@@ -72,8 +72,8 @@ emoteSpells = false
 classicEquipmentSlots = false
 
 -- Rates
--- NOTE: rateExp is used as a fallback only. To configure experience rate,
--- see data/events/scripts/player.lua
+-- NOTE: rates are used as a fallback only. To configure rates, see
+-- data/events/scripts/player.lua
 rateExp = 5
 rateSkill = 3
 rateLoot = 2
