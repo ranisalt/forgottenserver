@@ -86,6 +86,10 @@ class Vocation
 			return fromVocation;
 		}
 
+		bool canDualWield() const {
+			return dualWield;
+		}
+
 		float meleeDamageMultiplier, distDamageMultiplier, defenseMultiplier, armorMultiplier;
 
 	protected:
@@ -116,6 +120,8 @@ class Vocation
 
 		uint8_t soulMax;
 		uint8_t clientId;
+
+		bool dualWield;
 
 		static uint32_t skillBase[SKILL_LAST + 1];
 };

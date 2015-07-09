@@ -109,6 +109,10 @@ bool Vocations::loadFromXml()
 			voc.fromVocation = pugi::cast<uint32_t>(attr.value());
 		}
 
+		if ((attr = vocationNode.attribute("dualwield"))) {
+			voc.dualWield = attr.as_bool();
+		}
+
 		for (auto childNode : vocationNode.children()) {
 			if (strcasecmp(childNode.name(), "skill") == 0) {
 				pugi::xml_attribute skillIdAttribute = childNode.attribute("id");
@@ -192,6 +196,7 @@ Vocation::Vocation(uint16_t id)
 
 	clientId = 0;
 	fromVocation = VOCATION_NONE;
+	dualWield = true;
 
 	gainCap = 500;
 	gainMana = 5;

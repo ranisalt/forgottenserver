@@ -1000,9 +1000,6 @@ const char* getReturnMessage(ReturnValue value)
 		case RETURNVALUE_PUTTHISOBJECTINBOTHHANDS:
 			return "Put this object in both hands.";
 
-		case RETURNVALUE_CANONLYUSEONEWEAPON:
-			return "You may only use one weapon.";
-
 		case RETURNVALUE_TOOFARAWAY:
 			return "Too far away.";
 
