@@ -88,3 +88,27 @@ function Player.addSkillTries(...)
 	APPLY_SKILL_MULTIPLIER = true
 	return ret
 end
+
+function Player.sendLocationWindow(self, windowId)
+	local window = ModalWindow(windowId, "Fast Travel", "Where do you wish to travel to?")
+	local locations = travelSystems[windowId].locations
+	local choices = 0
+
+	for i = 1, #locations do
+		local location = locations[i]
+		if self:getStorageValue(location.storage) ~= -1 then
+			window:addChoice(i, location.name)
+			choices = choices + 1
+		end
+	end
+
+	if choices > 0 then
+		window:addButton(1, "Travel")
+		window:setDefaultEnterButton(1)
+	end
+	window:addButton(2, "Cancel")
+	window:setDefaultEscapeButton(2)
+
+	window:sendToPlayer(self)
+	return true
+end

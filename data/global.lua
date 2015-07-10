@@ -1,5 +1,24 @@
 dofile('data/lib/lib.lua')
 
+caravanWindowId = 15000
+caravanLocations = {
+	{
+		name = "Initial Temple",
+		pos = { x = 95, y = 122, z = 7 },
+		storage = 15001,
+		mapmark = MAPMARK_TEMPLE
+	}
+}
+
+-- fast travel systems
+-- storages are reserved for each location AND window id
+travelSystems = {
+	[caravanWindowId] = {
+		cooldown = 15 * 1000,
+		locations = caravanLocations
+	}
+}
+
 STORAGEVALUE_PROMOTION = 30018
 
 ropeSpots = {384, 418, 8278, 8592, 13189, 14435, 14436, 15635, 19518}
