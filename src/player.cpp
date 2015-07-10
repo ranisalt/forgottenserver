@@ -1229,6 +1229,9 @@ void Player::onWalk(Direction& dir)
 	Creature::onWalk(dir);
 	setNextActionTask(nullptr);
 	setNextAction(OTSYS_TIME() + getStepDuration(dir));
+
+	//scripting event - onWalk
+	g_creatureEvents->playerWalk(this, getNextPosition(dir, _position));
 }
 
 void Player::onCreatureMove(Creature* creature, const Tile* newTile, const Position& newPos,

@@ -126,6 +126,19 @@ bool CreatureEvents::playerLogout(Player* player) const
 	return true;
 }
 
+bool CreatureEvents::playerWalk(Player* player, const Position& position) const
+{
+	//fire global event if is registered
+	for (const auto& it : creatureEvents) {
+		if (it.second->getEventType() == CREATURE_EVENT_WALK) {
+			if (!it.second->executeOnWalk(player, position)) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 bool CreatureEvents::playerAdvance(Player* player, skills_t skill, uint32_t oldLevel,
                                        uint32_t newLevel)
 {
@@ -169,6 +182,8 @@ bool CreatureEvent::configureEvent(const pugi::xml_node& node)
 		type = CREATURE_EVENT_LOGOUT;
 	} else if (tmpStr == "think") {
 		type = CREATURE_EVENT_THINK;
+	} else if (tmpStr == "walk") {
+		type = CREATURE_EVENT_WALK;
 	} else if (tmpStr == "preparedeath") {
 		type = CREATURE_EVENT_PREPAREDEATH;
 	} else if (tmpStr == "death") {
@@ -208,6 +223,9 @@ std::string CreatureEvent::getScriptEventName() const
 
 		case CREATURE_EVENT_THINK:
 			return "onThink";
+
+		case CREATURE_EVENT_WALK:
+			return "onWalk";
 
 		case CREATURE_EVENT_PREPAREDEATH:
 			return "onPrepareDeath";
@@ -313,6 +331,27 @@ bool CreatureEvent::executeOnThink(Creature* creature, uint32_t interval)
 	LuaScriptInterface::pushUserdata<Creature>(L, creature);
 	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
 	lua_pushnumber(L, interval);
+
+	return scriptInterface->callFunction(2);
+}
+
+bool CreatureEvent::executeOnWalk(Creature* creature, const Position& position)
+{
+	//onWalk(creature, position)
+	if (!scriptInterface->reserveScriptEnv()) {
+		std::cout << "[Error - CreatureEvent::executeOnWalk] Call stack overflow" << std::endl;
+		return false;
+	}
+
+	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	env->setScriptId(scriptId, scriptInterface);
+
+	lua_State* L = scriptInterface->getLuaState();
+
+	scriptInterface->pushFunction(scriptId);
+	LuaScriptInterface::pushUserdata<Creature>(L, creature);
+	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	LuaScriptInterface::pushPosition(L, position);
 
 	return scriptInterface->callFunction(2);
 }
