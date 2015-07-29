@@ -67,9 +67,9 @@ std::multimap<ScriptEnvironment*, Item*> ScriptEnvironment::tempItems;
 
 LuaEnvironment g_luaEnvironment;
 
-ScriptEnvironment::ScriptEnvironment()
+ScriptEnvironment::ScriptEnvironment() :
+	curCreature(nullptr)
 {
-	m_curNpc = nullptr;
 	resetEnv();
 	m_lastUID = std::numeric_limits<uint16_t>::max();
 }
@@ -310,7 +310,7 @@ int LuaScriptInterface::protectedCall(lua_State* L, int nargs, int nresults)
 	return ret;
 }
 
-int32_t LuaScriptInterface::loadFile(const std::string& file, Npc* npc /* = nullptr*/)
+int32_t LuaScriptInterface::loadFile(const std::string& file, Creature* creature /* = nullptr*/)
 {
 	//loads file as a chunk at stack top
 	int ret = luaL_loadfile(m_luaState, file.c_str());
@@ -332,7 +332,7 @@ int32_t LuaScriptInterface::loadFile(const std::string& file, Npc* npc /* = null
 
 	ScriptEnvironment* env = getScriptEnv();
 	env->setScriptId(EVENT_ID_LOADING, this);
-	env->setNpc(npc);
+	env->setCreature(creature);
 
 	//execute it
 	ret = protectedCall(m_luaState, 0, 0);
@@ -9490,7 +9490,12 @@ int LuaScriptInterface::luaNpcCreate(lua_State* L)
 			npc = nullptr;
 		}
 	} else {
-		npc = getScriptEnv()->getNpc();
+		Creature* creature = getScriptEnv()->getCreature();
+		if (creature) {
+			npc = creature->getNpc();
+		} else {
+			npc = nullptr;
+		}
 	}
 
 	if (npc) {

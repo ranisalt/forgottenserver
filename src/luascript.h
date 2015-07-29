@@ -150,11 +150,11 @@ class ScriptEnvironment
 		static uint32_t addResult(DBResult_ptr res);
 		static bool removeResult(uint32_t id);
 
-		void setNpc(Npc* npc) {
-			m_curNpc = npc;
+		void setCreature(Creature* creature) {
+			curCreature = creature;
 		}
-		Npc* getNpc() const {
-			return m_curNpc;
+		Creature* getCreature() const {
+			return curCreature;
 		}
 
 		Thing* getThingByUID(uint32_t uid);
@@ -186,8 +186,8 @@ class ScriptEnvironment
 		static uint32_t m_lastResultId;
 		static DBResultMap m_tempResults;
 
-		//for npc scripts
-		Npc* m_curNpc;
+		//for creature scripts
+		Creature* curCreature;
 };
 
 #define reportErrorFunc(a)  reportError(__FUNCTION__, a, true)
@@ -221,7 +221,7 @@ class LuaScriptInterface
 		virtual bool initState();
 		bool reInitState();
 
-		int32_t loadFile(const std::string& file, Npc* npc = nullptr);
+		int32_t loadFile(const std::string& file, Creature* creature = nullptr);
 
 		const std::string& getFileById(int32_t scriptId);
 		int32_t getEvent(const std::string& eventName);

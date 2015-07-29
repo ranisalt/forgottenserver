@@ -595,7 +595,12 @@ void NpcScriptInterface::registerFunctions()
 int NpcScriptInterface::luaActionSay(lua_State* L)
 {
 	//selfSay(words[, target])
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		return 0;
 	}
@@ -616,7 +621,12 @@ int NpcScriptInterface::luaActionSay(lua_State* L)
 int NpcScriptInterface::luaActionMove(lua_State* L)
 {
 	//selfMove(direction)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (npc) {
 		g_game.internalMoveCreature(npc, getNumber<Direction>(L, 1));
 	}
@@ -626,7 +636,12 @@ int NpcScriptInterface::luaActionMove(lua_State* L)
 int NpcScriptInterface::luaActionMoveTo(lua_State* L)
 {
 	//selfMoveTo(x,y,z)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		return 0;
 	}
@@ -642,7 +657,12 @@ int NpcScriptInterface::luaActionMoveTo(lua_State* L)
 int NpcScriptInterface::luaActionTurn(lua_State* L)
 {
 	//selfTurn(direction)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (npc) {
 		g_game.internalCreatureTurn(npc, getNumber<Direction>(L, 1));
 	}
@@ -652,7 +672,12 @@ int NpcScriptInterface::luaActionTurn(lua_State* L)
 int NpcScriptInterface::luaActionFollow(lua_State* L)
 {
 	//selfFollow(player)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		pushBoolean(L, false);
 		return 1;
@@ -667,7 +692,12 @@ int NpcScriptInterface::luagetDistanceTo(lua_State* L)
 	//getDistanceTo(uid)
 	ScriptEnvironment* env = getScriptEnv();
 
-	Npc* npc = env->getNpc();
+	Creature* creature = env->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		reportErrorFunc(getErrorDesc(LUA_ERROR_THING_NOT_FOUND));
 		lua_pushnil(L);
@@ -697,7 +727,12 @@ int NpcScriptInterface::luagetDistanceTo(lua_State* L)
 int NpcScriptInterface::luaSetNpcFocus(lua_State* L)
 {
 	//doNpcSetCreatureFocus(cid)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (npc) {
 		npc->setCreatureFocus(getCreature(L, -1));
 	}
@@ -707,7 +742,12 @@ int NpcScriptInterface::luaSetNpcFocus(lua_State* L)
 int NpcScriptInterface::luaGetNpcCid(lua_State* L)
 {
 	//getNpcCid()
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (npc) {
 		lua_pushnumber(L, npc->getID());
 	} else {
@@ -719,7 +759,12 @@ int NpcScriptInterface::luaGetNpcCid(lua_State* L)
 int NpcScriptInterface::luaGetNpcParameter(lua_State* L)
 {
 	//getNpcParameter(paramKey)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		lua_pushnil(L);
 		return 1;
@@ -793,7 +838,12 @@ int NpcScriptInterface::luaOpenShopWindow(lua_State* L)
 	//Close any eventual other shop window currently open.
 	player->closeShopWindow(false);
 
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
 		pushBoolean(L, false);
@@ -811,7 +861,12 @@ int NpcScriptInterface::luaOpenShopWindow(lua_State* L)
 int NpcScriptInterface::luaCloseShopWindow(lua_State* L)
 {
 	//closeShopWindow(cid)
-	Npc* npc = getScriptEnv()->getNpc();
+	Creature* creature = getScriptEnv()->getCreature();
+	if (!creature) {
+		return 0;
+	}
+
+	Npc* npc = creature->getNpc();
 	if (!npc) {
 		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
 		pushBoolean(L, false);
@@ -1097,7 +1152,7 @@ void NpcEventsHandler::onCreatureAppear(Creature* creature)
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onCreatureAppear, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	m_scriptInterface->pushFunction(m_onCreatureAppear);
@@ -1120,7 +1175,7 @@ void NpcEventsHandler::onCreatureDisappear(Creature* creature)
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onCreatureDisappear, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	m_scriptInterface->pushFunction(m_onCreatureDisappear);
@@ -1143,7 +1198,7 @@ void NpcEventsHandler::onCreatureMove(Creature* creature, const Position& oldPos
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onCreatureMove, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	m_scriptInterface->pushFunction(m_onCreatureMove);
@@ -1168,7 +1223,7 @@ void NpcEventsHandler::onCreatureSay(Creature* creature, SpeakClasses type, cons
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onCreatureSay, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	m_scriptInterface->pushFunction(m_onCreatureSay);
@@ -1194,7 +1249,7 @@ void NpcEventsHandler::onPlayerTrade(Player* player, int32_t callback, uint16_t 
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(-1, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	LuaScriptInterface::pushCallback(L, callback);
@@ -1222,7 +1277,7 @@ void NpcEventsHandler::onPlayerCloseChannel(Player* player)
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onPlayerCloseChannel, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	m_scriptInterface->pushFunction(m_onPlayerCloseChannel);
@@ -1245,7 +1300,7 @@ void NpcEventsHandler::onPlayerEndTrade(Player* player)
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onPlayerEndTrade, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	lua_State* L = m_scriptInterface->getLuaState();
 	m_scriptInterface->pushFunction(m_onPlayerEndTrade);
@@ -1268,7 +1323,7 @@ void NpcEventsHandler::onThink()
 
 	ScriptEnvironment* env = m_scriptInterface->getScriptEnv();
 	env->setScriptId(m_onThink, m_scriptInterface);
-	env->setNpc(m_npc);
+	env->setCreature(m_npc);
 
 	m_scriptInterface->pushFunction(m_onThink);
 	m_scriptInterface->callFunction(0);
