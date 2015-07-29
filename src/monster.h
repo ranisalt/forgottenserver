@@ -37,6 +37,53 @@ enum TargetSearchType_t {
 	TARGETSEARCH_NEAREST,
 };
 
+class MonsterScriptInterface : public LuaScriptInterface
+{
+    public:
+		MonsterScriptInterface();
+
+		bool loadMonsterLib(const std::string& file);
+
+    protected:
+		void registerFunctions();
+
+		static int luaGetMonsterCid(lua_State* L);
+
+    private:
+		bool initState() final;
+		bool closeState() final;
+
+		bool m_libLoaded;
+};
+
+class MonsterEventsHandler
+{
+    public:
+		MonsterEventsHandler(const std::string& file, Monster* monster);
+		MonsterEventsHandler(const MonsterEventsHandler& other, Monster* monster);
+
+		void onCreatureAppear(Creature* creature);
+		void onCreatureDisappear(Creature* creature);
+		void onCreatureMove(Creature* creature, const Position& oldPos, const Position& newPos);
+		void onDeath();
+		void onThink(uint32_t interval);
+
+		bool isLoaded() const {
+			return loaded;
+		}
+
+    protected:
+		Monster* monster;
+		MonsterScriptInterface* scriptInterface;
+
+		int32_t onCreatureAppearEvent;
+		int32_t onCreatureDisappearEvent;
+		int32_t onCreatureMoveEvent;
+		int32_t onDeathEvent;
+		int32_t onThinkEvent;
+		bool loaded;
+};
+
 class Monster final : public Creature
 {
 	public:
@@ -173,6 +220,8 @@ class Monster final : public Creature
 		BlockType_t blockHit(Creature* attacker, CombatType_t combatType, int32_t& damage,
 		                     bool checkDefense = false, bool checkArmor = false, bool field = false);
 
+		MonsterScriptInterface* getScriptInterface();
+
 		static uint32_t monsterAutoID;
 
 	private:
@@ -268,7 +317,12 @@ class Monster final : public Creature
 		bool useCacheMap() const final {
 			return true;
 		}
+		bool dropCorpse(Creature* _lastHitCreature, Creature* mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified) final;
 
+		MonsterEventsHandler* monsterEventHandler;
+		static MonsterScriptInterface* scriptInterface;
+
+		friend class Monsters;
 		friend class LuaScriptInterface;
 };
 

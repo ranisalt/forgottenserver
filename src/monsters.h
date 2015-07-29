@@ -21,7 +21,11 @@
 #define FS_MONSTERS_H_776E8327BCE2450EB7C4A260785E6C0D
 
 #include "creature.h"
+#include "luascript.h"
 
+class MonsterEventsHandler;
+class MonsterType;
+class MonsterScriptInterface;
 
 const uint32_t MAX_LOOTCHANCE = 100000;
 const uint32_t MAX_STATICWALK = 100;
@@ -111,7 +115,7 @@ class MonsterType
 		std::string name;
 		std::string nameDescription;
 
-		LuaScriptInterface* scriptInterface;
+		std::shared_ptr<MonsterEventsHandler> monsterEventHandler;
 
 		uint64_t experience;
 
@@ -161,6 +165,9 @@ class MonsterType
 		void createLoot(Container* corpse);
 		bool createLootContainer(Container* parent, const LootBlock& lootblock);
 		std::vector<Item*> createLootItem(const LootBlock& lootBlock);
+
+		friend class Monsters;
+		friend class MonsterScriptInterface;
 };
 
 class Monsters

@@ -100,15 +100,6 @@ void MonsterType::reset()
 
 	changeTargetSpeed = 0;
 	changeTargetChance = 0;
-
-	scriptInterface = nullptr;
-	creatureAppearEvent = -1;
-	creatureDisappearEvent = -1;
-	creatureMoveEvent = -1;
-	creatureSayEvent = -1;
-	thinkEvent = -1;
-
-	scripts.clear();
 }
 
 uint32_t Monsters::getLootRandom()
@@ -251,31 +242,16 @@ bool Monsters::loadFromXml(bool reloading /*= false*/)
 	loaded = true;
 
 	std::list<std::pair<MonsterType*, std::string>> monsterScriptList;
+
+	if (!Monster::scriptInterface) {
+		Monster::scriptInterface = new MonsterScriptInterface();
+		Monster::scriptInterface->loadMonsterLib("data/monster/lib/monster.lua");
+	}
+
 	for (auto monsterNode : doc.child("monsters").children()) {
 		loadMonster("data/monster/" + std::string(monsterNode.attribute("file").as_string()), monsterNode.attribute("name").as_string(), monsterScriptList, reloading);
 	}
 
-	if (!monsterScriptList.empty()) {
-		if (!scriptInterface) {
-			scriptInterface.reset(new LuaScriptInterface("Monster Interface"));
-			scriptInterface->initState();
-		}
-
-		for (const auto& scriptEntry : monsterScriptList) {
-			MonsterType* mType = scriptEntry.first;
-			if (scriptInterface->loadFile("data/monster/scripts/" + scriptEntry.second) == 0) {
-				mType->scriptInterface = scriptInterface.get();
-				mType->creatureAppearEvent = scriptInterface->getEvent("onCreatureAppear");
-				mType->creatureDisappearEvent = scriptInterface->getEvent("onCreatureDisappear");
-				mType->creatureMoveEvent = scriptInterface->getEvent("onCreatureMove");
-				mType->creatureSayEvent = scriptInterface->getEvent("onCreatureSay");
-				mType->thinkEvent = scriptInterface->getEvent("onThink");
-			} else {
-				std::cout << "[Warning - Monsters::loadMonster] Can not load script: " << scriptEntry.second << std::endl;
-				std::cout << scriptInterface->getLastLuaError() << std::endl;
-			}
-		}
-	}
 	return true;
 }
 
@@ -283,7 +259,8 @@ bool Monsters::reload()
 {
 	loaded = false;
 
-	scriptInterface.reset();
+	delete Monster::scriptInterface;
+	Monster::scriptInterface = nullptr;
 
 	return loadFromXml(true);
 }
@@ -1151,13 +1128,12 @@ bool Monsters::loadMonster(const std::string& file, const std::string& monsterNa
 		}
 	}
 
-	if ((node = monsterNode.child("script"))) {
-		for (auto eventNode : node.children()) {
-			if ((attr = eventNode.attribute("name"))) {
-				mType->scripts.emplace_back(attr.as_string());
-			} else {
-				std::cout << "[Warning - Monsters::loadMonster] Missing name for script event. " << file << std::endl;
-			}
+	pugi::xml_attribute scriptFile = monsterNode.attribute("script");
+	if (scriptFile) {
+		mType->monsterEventHandler = std::make_shared<MonsterEventsHandler>(scriptFile.as_string(), nullptr);
+		if (!mType->monsterEventHandler->isLoaded()) {
+			mType->monsterEventHandler.reset();
+			return false;
 		}
 	}
 
@@ -1166,7 +1142,6 @@ bool Monsters::loadMonster(const std::string& file, const std::string& monsterNa
 	mType->attackSpells.shrink_to_fit();
 	mType->defenseSpells.shrink_to_fit();
 	mType->voiceVector.shrink_to_fit();
-	mType->scripts.shrink_to_fit();
 	return true;
 }
 
