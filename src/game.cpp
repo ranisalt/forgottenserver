@@ -78,11 +78,11 @@ Game::Game() :
 	lastBucket = 0;
 
 	//(1440 minutes/day)/(3600 seconds/day)*10 seconds event interval
-	int32_t dayCycle = 3600;
-	lightHourDelta = 1440 * 10 / dayCycle;
-	lightHour = SUNRISE + (SUNSET - SUNRISE) / 2;
-	lightLevel = LIGHT_LEVEL_DAY;
-	lightState = LIGHT_STATE_DAY;
+	lightHourDelta = 1;
+	lightHour = time(nullptr) % 1440;
+	lightLevel = (lightHour >= Game::SUNRISE && lightHout < Game::SUNSET) ? LIGHT_LEVEL_DAY : LIGHT_LEVEL_NIGHT;
+	lightColor = 0x90; // red
+	lightState = (lightHour >= Game::SUNRISE && lightHout < Game::SUNSET) ? LIGHT_STATE_DAY : LIGHT_STATE_NIGHT;
 
 	offlineTrainingWindow.choices.emplace_back("Sword Fighting and Shielding", SKILL_SWORD);
 	offlineTrainingWindow.choices.emplace_back("Axe Fighting and Shielding", SKILL_AXE);
@@ -107,7 +107,7 @@ void Game::start(ServiceManager* manager)
 {
 	serviceManager = manager;
 
-	g_scheduler.addEvent(createSchedulerTask(EVENT_LIGHTINTERVAL, std::bind(&Game::checkLight, this)));
+	g_scheduler.addEvent(createSchedulerTask(EVENT_LIGHTINTERVAL, std::bind(&Game::checkLight, this, false)));
 	g_scheduler.addEvent(createSchedulerTask(EVENT_CREATURE_THINK_INTERVAL, std::bind(&Game::checkCreatures, this, 0)));
 	g_scheduler.addEvent(createSchedulerTask(EVENT_DECAYINTERVAL, std::bind(&Game::checkDecay, this)));
 }
@@ -4308,19 +4308,21 @@ void Game::checkDecay()
 	cleanup();
 }
 
-void Game::checkLight()
+void Game::checkLight(bool forced /*= false*/)
 {
-	g_scheduler.addEvent(createSchedulerTask(EVENT_LIGHTINTERVAL, std::bind(&Game::checkLight, this)));
+	if (!forced) {
+		g_scheduler.addEvent(createSchedulerTask(EVENT_LIGHTINTERVAL, std::bind(&Game::checkLight, this, false)));
 
-	lightHour += lightHourDelta;
+		lightHour += lightHourDelta;
+	}
 
 	if (lightHour > 1440) {
 		lightHour -= 1440;
 	}
 
-	if (std::abs(lightHour - SUNRISE) < 2 * lightHourDelta) {
+	if (std::abs(lightHour - SUNRISE) < 8 * lightHourDelta || (lightLevel < LIGHT_LEVEL_DAY && (lightHour > SUNRISE && lightHour < SUNSET))) {
 		lightState = LIGHT_STATE_SUNRISE;
-	} else if (std::abs(lightHour - SUNSET) < 2 * lightHourDelta) {
+	} else if (std::abs(lightHour - SUNSET) < 8 * lightHourDelta || (lightLevel > LIGHT_LEVEL_NIGHT && (lightHour > SUNSET || lightHour < SUNRISE))) {
 		lightState = LIGHT_STATE_SUNSET;
 	}
 
@@ -4329,12 +4331,12 @@ void Game::checkLight()
 
 	switch (lightState) {
 		case LIGHT_STATE_SUNRISE: {
-			newLightLevel += (LIGHT_LEVEL_DAY - LIGHT_LEVEL_NIGHT) / 30;
+			newLightLevel += (LIGHT_LEVEL_DAY - LIGHT_LEVEL_NIGHT) / 120;
 			lightChange = true;
 			break;
 		}
 		case LIGHT_STATE_SUNSET: {
-			newLightLevel -= (LIGHT_LEVEL_DAY - LIGHT_LEVEL_NIGHT) / 30;
+			newLightLevel -= (LIGHT_LEVEL_DAY - LIGHT_LEVEL_NIGHT) / 120;
 			lightChange = true;
 			break;
 		}
@@ -4365,7 +4367,7 @@ void Game::checkLight()
 void Game::getWorldLightInfo(LightInfo& lightInfo) const
 {
 	lightInfo.level = lightLevel;
-	lightInfo.color = 0xD7;
+	lightInfo.color = lightColor;
 }
 
 void Game::addCommandTag(char tag)

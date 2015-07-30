@@ -71,7 +71,7 @@ enum LightState_t {
 	LIGHT_STATE_SUNRISE,
 };
 
-#define EVENT_LIGHTINTERVAL 10000
+#define EVENT_LIGHTINTERVAL 2500
 #define EVENT_DECAYINTERVAL 250
 #define EVENT_DECAY_BUCKETS 4
 
@@ -433,7 +433,7 @@ class Game
 		void updateCreatureWalk(uint32_t creatureId);
 		void checkCreatureAttack(uint32_t creatureId);
 		void checkCreatures(size_t index);
-		void checkLight();
+		void checkLight(bool forced = false);
 
 		bool combatBlockHit(CombatDamage& damage, Creature* attacker, Creature* target, bool checkDefense, bool checkArmor, bool field);
 
@@ -456,6 +456,9 @@ class Game
 		void startDecay(Item* item);
 		int32_t getLightHour() const {
 			return lightHour;
+		}
+		void setLightHour(int32_t lightHour) {
+			this->lightHour = lightHour % 1440;
 		}
 
 		bool loadExperienceStages();
@@ -505,6 +508,13 @@ class Game
 		Raids raids;
 		Quests quests;
 
+		static const int32_t LIGHT_LEVEL_DAY = 250;
+		static const int32_t LIGHT_LEVEL_NIGHT = 40;
+
+		// Average values for Florianopolis/BR
+		static const int32_t SUNSET = 1130; // 18:50
+		static const int32_t SUNRISE = 400; // 6:40
+
 	protected:
 		bool playerSayCommand(Player* player, const std::string& text);
 		bool playerSaySpell(Player* player, SpeakClasses type, const std::string& text);
@@ -546,16 +556,12 @@ class Game
 		ModalWindow offlineTrainingWindow;
 		Commands commands;
 
-		static const int32_t LIGHT_LEVEL_DAY = 250;
-		static const int32_t LIGHT_LEVEL_NIGHT = 40;
-		static const int32_t SUNSET = 1305;
-		static const int32_t SUNRISE = 430;
-
 		GameState_t gameState;
 		WorldType_t worldType;
 
 		LightState_t lightState;
 		uint8_t lightLevel;
+		uint8_t lightColor;
 		int32_t lightHour;
 		int32_t lightHourDelta;
 
