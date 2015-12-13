@@ -79,12 +79,14 @@ bool ConfigManager::load()
 	boolean[FREE_PREMIUM] = getGlobalBoolean(L, "freePremium", false);
 	boolean[REPLACE_KICK_ON_LOGIN] = getGlobalBoolean(L, "replaceKickOnLogin", true);
 	boolean[ALLOW_CLONES] = getGlobalBoolean(L, "allowClones", false);
+	boolean[ALLOW_WALKTHROUGH] = getGlobalBoolean(L, "allowWalkthrough", true);
 	boolean[MARKET_PREMIUM] = getGlobalBoolean(L, "premiumToCreateMarketOffer", true);
 	boolean[EMOTE_SPELLS] = getGlobalBoolean(L, "emoteSpells", false);
 	boolean[STAMINA_SYSTEM] = getGlobalBoolean(L, "staminaSystem", true);
 	boolean[WARN_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "warnUnsafeScripts", true);
 	boolean[CONVERT_UNSAFE_SCRIPTS] = getGlobalBoolean(L, "convertUnsafeScripts", true);
 	boolean[CLASSIC_EQUIPMENT_SLOTS] = getGlobalBoolean(L, "classicEquipmentSlots", false);
+	boolean[ALLOW_DUAL_WIELDING] = getGlobalBoolean(L, "allowDualWielding", false);
 
 	string[DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
 	string[SERVER_NAME] = getGlobalString(L, "serverName", "");
@@ -110,6 +112,8 @@ bool ConfigManager::load()
 	integer[ACTIONS_DELAY_INTERVAL] = getGlobalNumber(L, "timeBetweenActions", 200);
 	integer[EX_ACTIONS_DELAY_INTERVAL] = getGlobalNumber(L, "timeBetweenExActions", 1000);
 	integer[MAX_MESSAGEBUFFER] = getGlobalNumber(L, "maxMessageBuffer", 4);
+	integer[DUAL_WIELDING_SPEED_RATE] = getGlobalNumber(L, "dualWieldingSpeedRate", 200);
+	integer[DUAL_WIELDING_DAMAGE_RATE] = getGlobalNumber(L, "dualWieldingDamageRate", 60);
 	integer[KICK_AFTER_MINUTES] = getGlobalNumber(L, "kickIdlePlayerAfterMinutes", 15);
 	integer[PROTECTION_LEVEL] = getGlobalNumber(L, "protectionLevel", 1);
 	integer[DEATH_LOSE_PERCENT] = getGlobalNumber(L, "deathLosePercent", -1);
