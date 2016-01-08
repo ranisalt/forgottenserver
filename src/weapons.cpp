@@ -161,6 +161,10 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 		magLevel = pugi::cast<uint32_t>(attr.value());
 	}
 
+	if ((attr = node.attribute("skill"))) {
+		skillLevel = pugi::cast<uint32_t>(attr.value());
+	}
+
 	if ((attr = node.attribute("mana"))) {
 		mana = pugi::cast<uint32_t>(attr.value());
 	}
@@ -240,6 +244,10 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 		wieldInfo |= WIELDINFO_MAGLV;
 	}
 
+	if (getReqSkillLv() > 0) {
+		wieldInfo |= WIELDINFO_SKILL;
+	}
+
 	if (!vocationString.empty()) {
 		wieldInfo |= WIELDINFO_VOCREQ;
 	}
@@ -254,6 +262,7 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 		it.vocationString = vocationString;
 		it.minReqLevel = getReqLevel();
 		it.minReqMagicLevel = getReqMagLv();
+		it.minReqSkillLevel = getReqSkillLv();
 	}
 
 	configureWeapon(Item::items[id]);
@@ -311,6 +320,10 @@ int32_t Weapon::playerWeaponCheck(Player* player, Creature* target, uint8_t shoo
 		}
 
 		if (player->getMagicLevel() < getReqMagLv()) {
+			damageModifier = (isWieldedUnproperly() ? damageModifier / 2 : 0);
+		}
+
+		if (player->getSkillLevel(player->getWeaponType()) < getReqSkillLv()) {
 			damageModifier = (isWieldedUnproperly() ? damageModifier / 2 : 0);
 		}
 		return damageModifier;

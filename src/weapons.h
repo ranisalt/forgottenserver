@@ -91,6 +91,9 @@ class Weapon : public Event
 		uint32_t getReqMagLv() const {
 			return magLevel;
 		}
+		uint32_t getReqSkillLv() const {
+			return skillLevel;
+		}
 		bool isPremium() const {
 			return premium;
 		}
@@ -118,6 +121,7 @@ class Weapon : public Event
 		uint32_t magLevel = 0;
 		uint32_t mana = 0;
 		uint32_t manaPercent = 0;
+		uint32_t skillLevel = 0;
 		uint32_t soul = 0;
 		uint16_t id = 0;
 		WeaponAction_t action = WEAPONACTION_NONE;

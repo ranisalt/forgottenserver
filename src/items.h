@@ -194,6 +194,7 @@ class ItemType
 		uint32_t wieldInfo = 0;
 		uint32_t minReqLevel = 0;
 		uint32_t minReqMagicLevel = 0;
+		uint32_t minReqSkillLevel = 0;
 		uint32_t charges = 0;
 		int32_t maxHitChance = -1;
 		int32_t decayTo = -1;
