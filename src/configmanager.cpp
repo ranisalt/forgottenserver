@@ -103,13 +103,8 @@ bool ConfigManager::load()
 		string[MAP_NAME] = getGlobalString(L, "mapName", "forgotten");
 		string[MAP_AUTHOR] = getGlobalString(L, "mapAuthor", "Unknown");
 		string[HOUSE_RENT_PERIOD] = getGlobalString(L, "houseRentPeriod", "never");
-		string[MYSQL_HOST] = getGlobalString(L, "mysqlHost", "127.0.0.1");
-		string[MYSQL_USER] = getGlobalString(L, "mysqlUser", "forgottenserver");
-		string[MYSQL_PASS] = getGlobalString(L, "mysqlPass", "");
-		string[MYSQL_DB] = getGlobalString(L, "mysqlDatabase", "forgottenserver");
-		string[MYSQL_SOCK] = getGlobalString(L, "mysqlSock", "");
+		string[SQLITE_DB] = getGlobalString(L, "sqliteDatabase", "forgottenserver.s3db");
 
-		integer[SQL_PORT] = getGlobalNumber(L, "mysqlPort", 3306);
 		integer[GAME_PORT] = getGlobalNumber(L, "gameProtocolPort", 7172);
 		integer[LOGIN_PORT] = getGlobalNumber(L, "loginProtocolPort", 7171);
 		integer[STATUS_PORT] = getGlobalNumber(L, "statusProtocolPort", 7171);

@@ -22,134 +22,89 @@
 #include "configmanager.h"
 #include "database.h"
 
-#include <errmsg.h>
-
 extern ConfigManager g_config;
 
 Database::~Database()
 {
-	if (handle != nullptr) {
-		mysql_close(handle);
-	}
+	sqlite3_close(handle);
 }
 
 bool Database::connect()
 {
 	// connection handle initialization
-	handle = mysql_init(nullptr);
-	if (!handle) {
-		std::cout << std::endl << "Failed to initialize MySQL connection handle." << std::endl;
+	if (sqlite3_open(g_config.getString(ConfigManager::SQLITE_DB).c_str(), &handle) != SQLITE_OK) {
+		std::cout << std::endl << "Failed to initialize SQLite connection handle." << std::endl;
+		sqlite3_close(handle);
 		return false;
-	}
-
-	// automatic reconnect
-	my_bool reconnect = true;
-	mysql_options(handle, MYSQL_OPT_RECONNECT, &reconnect);
-
-	// connects to database
-	if (!mysql_real_connect(handle, g_config.getString(ConfigManager::MYSQL_HOST).c_str(), g_config.getString(ConfigManager::MYSQL_USER).c_str(), g_config.getString(ConfigManager::MYSQL_PASS).c_str(), g_config.getString(ConfigManager::MYSQL_DB).c_str(), g_config.getNumber(ConfigManager::SQL_PORT), g_config.getString(ConfigManager::MYSQL_SOCK).c_str(), 0)) {
-		std::cout << std::endl << "MySQL Error Message: " << mysql_error(handle) << std::endl;
-		return false;
-	}
-
-	DBResult_ptr result = storeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'");
-	if (result) {
-		maxPacketSize = result->getNumber<uint64_t>("Value");
 	}
 	return true;
 }
 
 bool Database::beginTransaction()
 {
-	if (!executeQuery("BEGIN")) {
-		return false;
-	}
-
-	databaseLock.lock();
-	return true;
+	return executeQuery("BEGIN");
 }
 
 bool Database::rollback()
 {
-	if (mysql_rollback(handle) != 0) {
-		std::cout << "[Error - mysql_rollback] Message: " << mysql_error(handle) << std::endl;
-		databaseLock.unlock();
+	if (!executeQuery("ROLLBACK")) {
+		std::cout << "[Error - sqlite3_rollback] Message: " << sqlite3_errmsg(handle) << std::endl;
 		return false;
 	}
-
-	databaseLock.unlock();
 	return true;
 }
 
 bool Database::commit()
 {
-	if (mysql_commit(handle) != 0) {
-		std::cout << "[Error - mysql_commit] Message: " << mysql_error(handle) << std::endl;
-		databaseLock.unlock();
+	if (!executeQuery("COMMIT")) {
+		std::cout << "[Error - sqlite3_commit] Message: " << sqlite3_errmsg(handle) << std::endl;
 		return false;
 	}
-
-	databaseLock.unlock();
 	return true;
 }
 
 bool Database::executeQuery(const std::string& query)
 {
-	bool success = true;
-
 	// executes the query
-	databaseLock.lock();
+	std::lock_guard<std::recursive_mutex> lock(databaseLock);
 
-	while (mysql_real_query(handle, query.c_str(), query.length()) != 0) {
-		std::cout << "[Error - mysql_real_query] Query: " << query.substr(0, 256) << std::endl << "Message: " << mysql_error(handle) << std::endl;
-		auto error = mysql_errno(handle);
-		if (error != CR_SERVER_LOST && error != CR_SERVER_GONE_ERROR && error != CR_CONN_HOST_ERROR && error != 1053/*ER_SERVER_SHUTDOWN*/ && error != CR_CONNECTION_ERROR) {
-			success = false;
-			break;
-		}
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+	sqlite3_stmt* stmt;
+	if (sqlite3_prepare_v2(handle, query.c_str(), static_cast<int>(query.size()), &stmt, nullptr) != SQLITE_OK) {
+		sqlite3_finalize(stmt);
+		std::cout << "[Error - sqlite3_prepare] Query: " << query.substr(0, 256) << std::endl << "Message: " << sqlite3_errmsg(handle) << std::endl;
+		return false;
 	}
 
-	MYSQL_RES* m_res = mysql_store_result(handle);
-	databaseLock.unlock();
-
-	if (m_res) {
-		mysql_free_result(m_res);
+	auto rc = sqlite3_step(stmt);
+	while (rc != SQLITE_OK && rc != SQLITE_DONE && rc != SQLITE_ROW) {
+		sqlite3_finalize(stmt);
+		std::cout << "[Error - sqlite3_step] Query: " << query.substr(0, 256) << std::endl << "Message: " << sqlite3_errmsg(handle) << std::endl;
+		return false;
 	}
 
-	return success;
+	sqlite3_finalize(stmt);
+	return true;
 }
 
 DBResult_ptr Database::storeQuery(const std::string& query)
 {
-	databaseLock.lock();
+	std::lock_guard<std::recursive_mutex> lock(databaseLock);
 
-	retry:
-	while (mysql_real_query(handle, query.c_str(), query.length()) != 0) {
-		std::cout << "[Error - mysql_real_query] Query: " << query << std::endl << "Message: " << mysql_error(handle) << std::endl;
-		auto error = mysql_errno(handle);
-		if (error != CR_SERVER_LOST && error != CR_SERVER_GONE_ERROR && error != CR_CONN_HOST_ERROR && error != 1053/*ER_SERVER_SHUTDOWN*/ && error != CR_CONNECTION_ERROR) {
-			break;
-		}
+	sqlite3_stmt* stmt;
+	if (sqlite3_prepare_v2(handle, query.c_str(), static_cast<int>(query.size()), &stmt, nullptr) != SQLITE_OK) {
+		sqlite3_finalize(stmt);
+		std::cout << "[Error - sqlite3_prepare] Query: " << query.substr(0, 256) << std::endl << "Message: " << sqlite3_errmsg(handle) << std::endl;
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
-	// we should call that every time as someone would call executeQuery('SELECT...')
-	// as it is described in MySQL manual: "it doesn't hurt" :P
-	MYSQL_RES* res = mysql_store_result(handle);
-	if (res == nullptr) {
-		std::cout << "[Error - mysql_store_result] Query: " << query << std::endl << "Message: " << mysql_error(handle) << std::endl;
-		auto error = mysql_errno(handle);
-		if (error != CR_SERVER_LOST && error != CR_SERVER_GONE_ERROR && error != CR_CONN_HOST_ERROR && error != 1053/*ER_SERVER_SHUTDOWN*/ && error != CR_CONNECTION_ERROR) {
-			databaseLock.unlock();
-			return nullptr;
-		}
-		goto retry;
+	auto rc = sqlite3_step(stmt);
+	if (rc != SQLITE_OK && rc != SQLITE_DONE && rc != SQLITE_ROW) {
+		sqlite3_finalize(stmt);
+		std::cout << "[Error - sqlite3_step] Query: " << query.substr(0, 256) << std::endl << "Message: " << sqlite3_errmsg(handle) << std::endl;
+		return nullptr;
 	}
-	databaseLock.unlock();
 
-	// retrieving results of query
-	DBResult_ptr result = std::make_shared<DBResult>(res);
+	DBResult_ptr result = std::make_shared<DBResult>(stmt, rc == SQLITE_ROW);
 	if (!result->hasNext()) {
 		return nullptr;
 	}
@@ -158,47 +113,42 @@ DBResult_ptr Database::storeQuery(const std::string& query)
 
 std::string Database::escapeString(const std::string& s) const
 {
-	return escapeBlob(s.c_str(), s.length());
+	return escapeBlob(s.c_str(), s.length(), false);
 }
 
-std::string Database::escapeBlob(const char* s, uint32_t length) const
+std::string Database::escapeBlob(const char* s, uint32_t length, bool binary/* = true*/) const
 {
 	// the worst case is 2n + 1
 	size_t maxLength = (length * 2) + 1;
 
 	std::string escaped;
-	escaped.reserve(maxLength + 2);
+	escaped.reserve(maxLength + 3); // maxLength + x + quotation marks
+	/*if (binary) {
+		escaped.push_back('x');
+	}*/
 	escaped.push_back('\'');
 
-	if (length != 0) {
-		char* output = new char[maxLength];
-		mysql_real_escape_string(handle, output, s, length);
-		escaped.append(output);
-		delete[] output;
+	for (const char* ch = s; ch < s + length; ++ch) {
+		if (*ch == '\'' || *ch == '\\') {
+			escaped.push_back('\\');
+		}
+		escaped.push_back(*ch);
 	}
 
 	escaped.push_back('\'');
 	return escaped;
 }
 
-DBResult::DBResult(MYSQL_RES* res)
+DBResult::DBResult(sqlite3_stmt* res, bool rowAvailable): handle(res), rowAvailable(rowAvailable)
 {
-	handle = res;
-
-	size_t i = 0;
-
-	MYSQL_FIELD* field = mysql_fetch_field(handle);
-	while (field) {
-		listNames[field->name] = i++;
-		field = mysql_fetch_field(handle);
+	for (int i = 0; i < sqlite3_column_count(handle); ++i) {
+		listNames[sqlite3_column_name(handle, i)] = i;
 	}
-
-	row = mysql_fetch_row(handle);
 }
 
 DBResult::~DBResult()
 {
-	mysql_free_result(handle);
+	sqlite3_finalize(handle);
 }
 
 std::string DBResult::getString(const std::string& s) const
@@ -209,11 +159,11 @@ std::string DBResult::getString(const std::string& s) const
 		return std::string();
 	}
 
-	if (row[it->second] == nullptr) {
+	const char* data = reinterpret_cast<const char*>(sqlite3_column_text(handle, it->second));
+	if (data == nullptr) {
 		return std::string();
 	}
-
-	return std::string(row[it->second]);
+	return data;
 }
 
 const char* DBResult::getStream(const std::string& s, unsigned long& size) const
@@ -225,24 +175,20 @@ const char* DBResult::getStream(const std::string& s, unsigned long& size) const
 		return nullptr;
 	}
 
-	if (row[it->second] == nullptr) {
-		size = 0;
-		return nullptr;
-	}
-
-	size = mysql_fetch_lengths(handle)[it->second];
-	return row[it->second];
+	const char* data = reinterpret_cast<const char*>(sqlite3_column_blob(handle, it->second));
+	size = static_cast<unsigned long>(sqlite3_column_bytes(handle, it->second));
+	return data;
 }
 
 bool DBResult::hasNext() const
 {
-	return row != nullptr;
+	return rowAvailable;
 }
 
 bool DBResult::next()
 {
-	row = mysql_fetch_row(handle);
-	return row != nullptr;
+	rowAvailable = sqlite3_step(handle) == SQLITE_ROW;
+	return rowAvailable;
 }
 
 DBInsert::DBInsert(std::string query) : query(std::move(query))
@@ -255,7 +201,7 @@ bool DBInsert::addRow(const std::string& row)
 	// adds new row to buffer
 	const size_t rowLength = row.length();
 	length += rowLength;
-	if (length > Database::getInstance().getMaxPacketSize() && !execute()) {
+	if (length > SQLITE_LIMIT_LENGTH && !execute()) {
 		return false;
 	}
 

@@ -63,7 +63,7 @@ bool IOBan::isAccountBanned(uint32_t accountId, BanInfo& banInfo)
 	Database& db = Database::getInstance();
 
 	std::ostringstream query;
-	query << "SELECT `reason`, `expires_at`, `banned_at`, `banned_by`, (SELECT `name` FROM `players` WHERE `id` = `banned_by`) AS `name` FROM `account_bans` WHERE `account_id` = " << accountId;
+	query << "SELECT `reason`, `expires_at`, `banned_at`, `banned_by`, (SELECT `name` FROM `players` WHERE `rowid` = `banned_by`) AS `name` FROM `account_bans` WHERE `account_id` = " << accountId;
 
 	DBResult_ptr result = db.storeQuery(query.str());
 	if (!result) {
@@ -98,7 +98,7 @@ bool IOBan::isIpBanned(uint32_t clientip, BanInfo& banInfo)
 	Database& db = Database::getInstance();
 
 	std::ostringstream query;
-	query << "SELECT `reason`, `expires_at`, (SELECT `name` FROM `players` WHERE `id` = `banned_by`) AS `name` FROM `ip_bans` WHERE `ip` = " << clientip;
+	query << "SELECT `reason`, `expires_at`, (SELECT `name` FROM `players` WHERE `rowid` = `banned_by`) AS `name` FROM `ip_bans` WHERE `ip` = " << clientip;
 
 	DBResult_ptr result = db.storeQuery(query.str());
 	if (!result) {

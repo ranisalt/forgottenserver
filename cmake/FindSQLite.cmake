@@ -1,0 +1,7 @@
+find_path(SQLite_INCLUDE_DIR NAMES sqlite3.h)
+find_library(SQLite_LIBRARIES NAMES sqlite3)
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(SQLite REQUIRED_VARS SQLite_INCLUDE_DIR SQLite_LIBRARIES)
+
+mark_as_advanced(SQLite_INCLUDE_DIR SQLite_LIBRARIES)

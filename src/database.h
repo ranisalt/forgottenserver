@@ -22,7 +22,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <mysql.h>
+#include <sqlite3.h>
 
 class DBResult;
 using DBResult_ptr = std::shared_ptr<DBResult>;
@@ -93,7 +93,7 @@ class Database
 		 * @param length stream length
 		 * @return quoted string
 		 */
-		std::string escapeBlob(const char* s, uint32_t length) const;
+		std::string escapeBlob(const char* s, uint32_t length, bool binary = true) const;
 
 		/**
 		 * Retrieve id of last inserted row
@@ -101,7 +101,7 @@ class Database
 		 * @return id on success, 0 if last query did not result on any rows with auto_increment keys
 		 */
 		uint64_t getLastInsertId() const {
-			return static_cast<uint64_t>(mysql_insert_id(handle));
+			return static_cast<uint64_t>(sqlite3_last_insert_rowid(handle));
 		}
 
 		/**
@@ -110,11 +110,7 @@ class Database
 		 * @return the database engine version
 		 */
 		static const char* getClientVersion() {
-			return mysql_get_client_info();
-		}
-
-		uint64_t getMaxPacketSize() const {
-			return maxPacketSize;
+			return SQLITE_VERSION;
 		}
 
 	protected:
@@ -130,9 +126,8 @@ class Database
 		bool commit();
 
 	private:
-		MYSQL* handle = nullptr;
+		sqlite3* handle = nullptr;
 		std::recursive_mutex databaseLock;
-		uint64_t maxPacketSize = 1048576;
 
 	friend class DBTransaction;
 };
@@ -140,7 +135,7 @@ class Database
 class DBResult
 {
 	public:
-		explicit DBResult(MYSQL_RES* res);
+		DBResult(sqlite3_stmt* res, bool rowAvailable);
 		~DBResult();
 
 		// non-copyable
@@ -156,17 +151,8 @@ class DBResult
 				return static_cast<T>(0);
 			}
 
-			if (row[it->second] == nullptr) {
-				return static_cast<T>(0);
-			}
-
-			T data;
-			try {
-				data = boost::lexical_cast<T>(row[it->second]);
-			} catch (boost::bad_lexical_cast&) {
-				data = 0;
-			}
-			return data;
+			int64_t data = sqlite3_column_int64(handle, it->second);
+			return static_cast<T>(data);
 		}
 
 		std::string getString(const std::string& s) const;
@@ -176,10 +162,10 @@ class DBResult
 		bool next();
 
 	private:
-		MYSQL_RES* handle;
-		MYSQL_ROW row;
+		sqlite3_stmt* handle;
+		bool rowAvailable = true;
 
-		std::map<std::string, size_t> listNames;
+		std::map<std::string, int> listNames;
 
 	friend class Database;
 };
