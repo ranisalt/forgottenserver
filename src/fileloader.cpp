@@ -19,6 +19,7 @@
 
 #include "otpch.h"
 
+#include <fcntl.h>
 #include <sys/mman.h>
 
 #include "fileloader.h"
@@ -79,6 +80,8 @@ bool FileLoader::openFile(const char* filename, const char* accept_identifier)
 	lseek(fd, 0, SEEK_END);
 	file_size = lseek(fd, 0, SEEK_CUR);
 	cache_size = std::min<uint32_t>(32768, std::max<uint32_t>(file_size / 20, 8192)) & ~0x1FFF;
+
+	posix_fadvise(fd, 0, file_size, POSIX_FADV_SEQUENTIAL);
 
 	if (!safeSeek(4)) {
 		lastError = ERROR_INVALID_FORMAT;
