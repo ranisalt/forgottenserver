@@ -135,7 +135,8 @@ class FileLoader
 
 		uint8_t* buffer;
 		NODE root;
-		FILE* file;
+		int fd;
+		uint32_t file_size;
 
 		FILELOADER_ERRORS lastError;
 		uint32_t buffer_size;

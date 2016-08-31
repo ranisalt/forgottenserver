@@ -19,11 +19,12 @@
 
 #include "otpch.h"
 
+#include <sys/mman.h>
+
 #include "fileloader.h"
 
 FileLoader::FileLoader() : cached_data()
 {
-	file = nullptr;
 	root = nullptr;
 	buffer = new uint8_t[1024];
 	buffer_size = 1024;
@@ -37,45 +38,46 @@ FileLoader::FileLoader() : cached_data()
 
 FileLoader::~FileLoader()
 {
-	if (file) {
-		fclose(file);
-		file = nullptr;
+	if (fd) {
+		close(fd);
 	}
 
 	NodeStruct::clearNet(root);
 	delete[] buffer;
 
-	for (int32_t i = 0; i < CACHE_BLOCKS; i++) {
-		delete[] cached_data[i].data;
+	for (auto& cache : cached_data) {
+		munmap(cache.data, cache.size);
 	}
 }
 
 bool FileLoader::openFile(const char* filename, const char* accept_identifier)
 {
-	file = fopen(filename, "rb");
-	if (!file) {
+	fd = open(filename, O_RDONLY);
+	if (!fd) {
+		close(fd);
+		fd = 0;
 		lastError = ERROR_CAN_NOT_OPEN;
 		return false;
 	}
 
 	char identifier[4];
-	if (fread(identifier, 1, 4, file) < 4) {
-		fclose(file);
-		file = nullptr;
+	if (read(fd, identifier, 4) < 4) {
+		close(fd);
+		fd = 0;
 		lastError = ERROR_EOF;
 		return false;
 	}
 
 	// The first four bytes must either match the accept identifier or be 0x00000000 (wildcard)
 	if (memcmp(identifier, accept_identifier, 4) != 0 && memcmp(identifier, "\0\0\0\0", 4) != 0) {
-		fclose(file);
-		file = nullptr;
+		close(fd);
+		fd = 0;
 		lastError = ERROR_INVALID_FILE_VERSION;
 		return false;
 	}
 
-	fseek(file, 0, SEEK_END);
-	int32_t file_size = ftell(file);
+	lseek(fd, 0, SEEK_END);
+	file_size = lseek(fd, 0, SEEK_CUR);
 	cache_size = std::min<uint32_t>(32768, std::max<uint32_t>(file_size / 20, 8192)) & ~0x1FFF;
 
 	if (!safeSeek(4)) {
@@ -395,18 +397,20 @@ int32_t FileLoader::loadCacheBlock(uint32_t pos)
 		}
 	}
 
-	if (cached_data[loading_cache].data == nullptr) {
-		cached_data[loading_cache].data = new uint8_t[cache_size];
+	if (cached_data[loading_cache].data != nullptr) {
+		munmap(cached_data[loading_cache].data, cached_data[loading_cache].size);
+		cached_data[loading_cache].data = nullptr;
 	}
 
 	cached_data[loading_cache].base = base_pos;
 
-	if (fseek(file, cached_data[loading_cache].base, SEEK_SET) != 0) {
+	if (lseek(fd, base_pos, SEEK_SET) == -1) {
 		lastError = ERROR_SEEK_ERROR;
 		return -1;
 	}
 
-	uint32_t size = fread(cached_data[loading_cache].data, 1, cache_size, file);
+	uint32_t size = std::min(cache_size, file_size - base_pos);
+	cached_data[loading_cache].data = reinterpret_cast<uint8_t*>(mmap(nullptr, size, PROT_READ, MAP_POPULATE | MAP_PRIVATE, fd, base_pos));
 	cached_data[loading_cache].size = size;
 
 	if (size < (pos - cached_data[loading_cache].base)) {
