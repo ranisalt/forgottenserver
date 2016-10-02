@@ -35,7 +35,6 @@ class IOLoginData
 		static bool loginserverAuthentication(const std::string& name, const std::string& password, Account& account);
 		static uint32_t gameworldAuthentication(const std::string& accountName, const std::string& password, std::string& characterName);
 
-		static AccountType_t getAccountType(uint32_t accountId);
 		static void setAccountType(uint32_t accountId, AccountType_t accountType);
 		static void updateOnlineStatus(uint32_t guid, bool login);
 		static bool preloadPlayer(Player* player, const std::string& name);
@@ -63,7 +62,7 @@ class IOLoginData
 		typedef std::map<uint32_t, std::pair<Item*, uint32_t>> ItemMap;
 
 		static void loadItems(ItemMap& itemMap, DBResult_ptr result);
-		static bool saveItems(const Player* player, const ItemBlockList& itemList, DBInsert& query_insert, PropWriteStream& stream);
+		static bool saveItems(const Player* player, const ItemBlockList& itemList, Query& query_insert, PropWriteStream& stream);
 };
 
 #endif

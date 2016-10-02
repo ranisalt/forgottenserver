@@ -1,0 +1,7 @@
+find_path(MYSQLPP_INCLUDE_DIR NAMES mysql++.h PATHS /usr/include/mysql++)
+find_library(MYSQLPP_LIBRARY NAMES mysqlpp)
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(MySQL++ REQUIRED_VARS MYSQLPP_INCLUDE_DIR MYSQLPP_LIBRARY)
+
+mark_as_advanced(MYSQLPP_INCLUDE_DIR MYSQLPP_LIBRARY)

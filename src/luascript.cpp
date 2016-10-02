@@ -3948,14 +3948,14 @@ int LuaScriptInterface::luaDatabaseAsyncStoreQuery(lua_State* L)
 
 int LuaScriptInterface::luaDatabaseEscapeString(lua_State* L)
 {
-	pushString(L, Database::getInstance().escapeString(getString(L, -1)));
+	//pushString(L, Database::getInstance().escapeString(getString(L, -1)));
 	return 1;
 }
 
 int LuaScriptInterface::luaDatabaseEscapeBlob(lua_State* L)
 {
-	uint32_t length = getNumber<uint32_t>(L, 2);
-	pushString(L, Database::getInstance().escapeBlob(getString(L, 1).c_str(), length));
+	//uint32_t length = getNumber<uint32_t>(L, 2);
+	//pushString(L, Database::getInstance().escapeBlob(getString(L, 1).c_str(), length));
 	return 1;
 }
 

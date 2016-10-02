@@ -28,10 +28,10 @@ extern ConfigManager g_config;
 bool DatabaseManager::optimizeTables()
 {
 	Database& db = Database::getInstance();
-	std::ostringstream query;
 
-	query << "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = " << db.escapeString(g_config.getString(ConfigManager::MYSQL_DB)) << " AND `DATA_FREE` > 0";
-	DBResult_ptr result = db.storeQuery(query.str());
+	auto query = db.createQuery("SELECT `TABLE_NAME` FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = %0q AND `DATA_FREE` > 0");
+	query << query.escapeString(g_config.getString(ConfigManager::MYSQL_DB));
+	DBResult_ptr result = db.storeQuery(query);
 	if (!result) {
 		return false;
 	}
@@ -40,10 +40,10 @@ bool DatabaseManager::optimizeTables()
 		std::string tableName = result->getString("TABLE_NAME");
 		std::cout << "> Optimizing table " << tableName << "..." << std::flush;
 
-		query.str(std::string());
-		query << "OPTIMIZE TABLE `" << tableName << '`';
+		query = db.createQuery("OPTIMIZE TABLE `%0`");
+		query << tableName;
 
-		if (db.executeQuery(query.str())) {
+		if (db.executeQuery(query)) {
 			std::cout << " [success]" << std::endl;
 		} else {
 			std::cout << " [failed]" << std::endl;
@@ -56,17 +56,18 @@ bool DatabaseManager::tableExists(const std::string& tableName)
 {
 	Database& db = Database::getInstance();
 
-	std::ostringstream query;
-	query << "SELECT `TABLE_NAME` FROM `information_schema`.`tables` WHERE `TABLE_SCHEMA` = " << db.escapeString(g_config.getString(ConfigManager::MYSQL_DB)) << " AND `TABLE_NAME` = " << db.escapeString(tableName) << " LIMIT 1";
-	return db.storeQuery(query.str()).get() != nullptr;
+	auto query = db.createQuery("SELECT `TABLE_NAME` FROM `information_schema`.`tables` WHERE `TABLE_SCHEMA` = %0q AND `TABLE_NAME` = %1q LIMIT 1");
+	query << query.escapeString(g_config.getString(ConfigManager::MYSQL_DB)) << query.escapeString(tableName);
+	return db.storeQuery(query).get() != nullptr;
 }
 
 bool DatabaseManager::isDatabaseSetup()
 {
 	Database& db = Database::getInstance();
-	std::ostringstream query;
-	query << "SELECT `TABLE_NAME` FROM `information_schema`.`tables` WHERE `TABLE_SCHEMA` = " << db.escapeString(g_config.getString(ConfigManager::MYSQL_DB));
-	return db.storeQuery(query.str()).get() != nullptr;
+
+	auto query = db.createQuery("SELECT `TABLE_NAME` FROM `information_schema`.`tables` WHERE `TABLE_SCHEMA` = %0q");
+	query << query.escapeString(g_config.getString(ConfigManager::MYSQL_DB));
+	return db.storeQuery(query).get() != nullptr;
 }
 
 int32_t DatabaseManager::getDatabaseVersion()
@@ -143,9 +144,9 @@ void DatabaseManager::updateDatabase()
 bool DatabaseManager::getDatabaseConfig(const std::string& config, int32_t& value)
 {
 	Database& db = Database::getInstance();
-	std::ostringstream query;
-	query << "SELECT `value` FROM `server_config` WHERE `config` = " << db.escapeString(config);
 
+	auto query = db.createQuery("SELECT `value` FROM `server_config` WHERE `config` = %0");
+	query << query.escapeString(config);
 	DBResult_ptr result = db.storeQuery(query.str());
 	if (!result) {
 		return false;
@@ -158,15 +159,15 @@ bool DatabaseManager::getDatabaseConfig(const std::string& config, int32_t& valu
 void DatabaseManager::registerDatabaseConfig(const std::string& config, int32_t value)
 {
 	Database& db = Database::getInstance();
-	std::ostringstream query;
-
 	int32_t tmp;
 
 	if (!getDatabaseConfig(config, tmp)) {
-		query << "INSERT INTO `server_config` VALUES (" << db.escapeString(config) << ", '" << value << "')";
+		auto query = db.createQuery("INSERT INTO `server_config` VALUES (%0q, %1)");
+		query << query.escapeString(config) << value;
+		db.executeQuery(query);
 	} else {
-		query << "UPDATE `server_config` SET `value` = '" << value << "' WHERE `config` = " << db.escapeString(config);
+		auto query = db.createQuery("UPDATE `server_config` SET `value` = %0 WHERE `config` = %1q");
+		query << value << query.escapeString(config);
+		db.executeQuery(query);
 	}
-
-	db.executeQuery(query.str());
 }

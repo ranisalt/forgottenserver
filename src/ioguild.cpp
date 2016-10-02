@@ -26,10 +26,10 @@ uint32_t IOGuild::getGuildIdByName(const std::string& name)
 {
 	Database& db = Database::getInstance();
 
-	std::ostringstream query;
-	query << "SELECT `id` FROM `guilds` WHERE `name` = " << db.escapeString(name);
+	auto query = db.createQuery("SELECT `id` FROM `guilds` WHERE `name` = ?");
+	query << query.escapeString(name);
 
-	DBResult_ptr result = db.storeQuery(query.str());
+	DBResult_ptr result = db.storeQuery(query);
 	if (!result) {
 		return 0;
 	}
@@ -38,10 +38,12 @@ uint32_t IOGuild::getGuildIdByName(const std::string& name)
 
 void IOGuild::getWarList(uint32_t guildId, GuildWarList& guildWarList)
 {
-	std::ostringstream query;
-	query << "SELECT `guild1`, `guild2` FROM `guild_wars` WHERE (`guild1` = " << guildId << " OR `guild2` = " << guildId << ") AND `ended` = 0 AND `status` = 1";
+	Database& db = Database::getInstance();
 
-	DBResult_ptr result = Database::getInstance().storeQuery(query.str());
+	auto query = db.createQuery("SELECT `guild1`, `guild2` FROM `guild_wars` WHERE (`guild1` = ? OR `guild2` = ?) AND `ended` = 0 AND `status` = 1");
+	query << guildId << guildId;
+
+	DBResult_ptr result = db.storeQuery(query);
 	if (!result) {
 		return;
 	}
