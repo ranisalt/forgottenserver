@@ -56,17 +56,8 @@ Npc* Npc::createNpc(const std::string& name)
 Npc::Npc(const std::string& name) :
 	Creature(),
 	filename("data/npc/" + name + ".xml"),
-	npcEventHandler(nullptr),
-	masterRadius(-1),
-	loaded(false)
-{
-	reset();
-}
-
-Npc::~Npc()
-{
-	reset();
-}
+	masterRadius(-1)
+{}
 
 void Npc::addList()
 {
@@ -80,7 +71,7 @@ void Npc::removeList()
 
 bool Npc::load()
 {
-	if (loaded) {
+	if (info.loaded) {
 		return true;
 	}
 
@@ -91,25 +82,13 @@ bool Npc::load()
 		scriptInterface->loadNpcLib("data/npc/lib/npc.lua");
 	}
 
-	loaded = loadFromXml();
-	return loaded;
+	info.loaded = loadFromXml();
+	return info.loaded;
 }
 
 void Npc::reset()
 {
-	loaded = false;
-	walkTicks = 1500;
-	floorChange = false;
-	attackable = false;
-	ignoreHeight = true;
-	focusCreature = 0;
-	speechBubble = SPEECHBUBBLE_NONE;
-
-	delete npcEventHandler;
-	npcEventHandler = nullptr;
-
-	parameters.clear();
-	shopPlayerSet.clear();
+	info = {};
 }
 
 void Npc::reload()
@@ -118,11 +97,11 @@ void Npc::reload()
 	load();
 
 	// Simulate that the creature is placed on the map again.
-	if (npcEventHandler) {
-		npcEventHandler->onCreatureAppear(this);
+	if (info.npcEventHandler) {
+		info.npcEventHandler->onCreatureAppear(this);
 	}
 
-	if (walkTicks > 0) {
+	if (info.walkTicks > 0) {
 		addEventWalk();
 	}
 }
@@ -143,8 +122,8 @@ bool Npc::loadFromXml()
 	}
 
 	name = npcNode.attribute("name").as_string();
-	attackable = npcNode.attribute("attackable").as_bool();
-	floorChange = npcNode.attribute("floorchange").as_bool();
+	info.attackable = npcNode.attribute("attackable").as_bool();
+	info.floorChange = npcNode.attribute("floorchange").as_bool();
 
 	pugi::xml_attribute attr;
 	if ((attr = npcNode.attribute("speed"))) {
@@ -154,7 +133,7 @@ bool Npc::loadFromXml()
 	}
 
 	if ((attr = npcNode.attribute("walkinterval"))) {
-		walkTicks = pugi::cast<uint32_t>(attr.value());
+		info.walkTicks = pugi::cast<uint32_t>(attr.value());
 	}
 
 	if ((attr = npcNode.attribute("walkradius"))) {
@@ -162,11 +141,11 @@ bool Npc::loadFromXml()
 	}
 
 	if ((attr = npcNode.attribute("ignoreheight"))) {
-		ignoreHeight = attr.as_bool();
+		info.ignoreHeight = attr.as_bool();
 	}
 
 	if ((attr = npcNode.attribute("speechbubble"))) {
-		speechBubble = pugi::cast<uint32_t>(attr.value());
+		info.speechBubble = pugi::cast<uint32_t>(attr.value());
 	}
 
 	if ((attr = npcNode.attribute("skull"))) {
@@ -207,15 +186,14 @@ bool Npc::loadFromXml()
 	}
 
 	for (auto parameterNode : npcNode.child("parameters").children()) {
-		parameters[parameterNode.attribute("key").as_string()] = parameterNode.attribute("value").as_string();
+		info.parameters[parameterNode.attribute("key").as_string()] = parameterNode.attribute("value").as_string();
 	}
 
 	pugi::xml_attribute scriptFile = npcNode.attribute("script");
 	if (scriptFile) {
-		npcEventHandler = new NpcEventsHandler(scriptFile.as_string(), this);
-		if (!npcEventHandler->isLoaded()) {
-			delete npcEventHandler;
-			npcEventHandler = nullptr;
+		info.npcEventHandler.reset(new NpcEventsHandler(scriptFile.as_string(), this));
+		if (!info.npcEventHandler->isLoaded()) {
+			info.npcEventHandler.release();
 			return false;
 		}
 	}
@@ -244,16 +222,16 @@ void Npc::onCreatureAppear(Creature* creature, bool isLogin)
 	Creature::onCreatureAppear(creature, isLogin);
 
 	if (creature == this) {
-		if (walkTicks > 0) {
+		if (info.walkTicks > 0) {
 			addEventWalk();
 		}
 
-		if (npcEventHandler) {
-			npcEventHandler->onCreatureAppear(creature);
+		if (info.npcEventHandler) {
+			info.npcEventHandler->onCreatureAppear(creature);
 		}
 	} else if (creature->getPlayer()) {
-		if (npcEventHandler) {
-			npcEventHandler->onCreatureAppear(creature);
+		if (info.npcEventHandler) {
+			info.npcEventHandler->onCreatureAppear(creature);
 		}
 	}
 }
@@ -264,12 +242,12 @@ void Npc::onRemoveCreature(Creature* creature, bool isLogout)
 
 	if (creature == this) {
 		closeAllShopWindows();
-		if (npcEventHandler) {
-			npcEventHandler->onCreatureDisappear(creature);
+		if (info.npcEventHandler) {
+			info.npcEventHandler->onCreatureDisappear(creature);
 		}
 	} else if (creature->getPlayer()) {
-		if (npcEventHandler) {
-			npcEventHandler->onCreatureDisappear(creature);
+		if (info.npcEventHandler) {
+			info.npcEventHandler->onCreatureDisappear(creature);
 		}
 	}
 }
@@ -280,8 +258,8 @@ void Npc::onCreatureMove(Creature* creature, const Tile* newTile, const Position
 	Creature::onCreatureMove(creature, newTile, newPos, oldTile, oldPos, teleport);
 
 	if (creature == this || creature->getPlayer()) {
-		if (npcEventHandler) {
-			npcEventHandler->onCreatureMove(creature, oldPos, newPos);
+		if (info.npcEventHandler) {
+			info.npcEventHandler->onCreatureMove(creature, oldPos, newPos);
 		}
 	}
 }
@@ -295,16 +273,16 @@ void Npc::onCreatureSay(Creature* creature, SpeakClasses type, const std::string
 	//only players for script events
 	Player* player = creature->getPlayer();
 	if (player) {
-		if (npcEventHandler) {
-			npcEventHandler->onCreatureSay(player, type, text);
+		if (info.npcEventHandler) {
+			info.npcEventHandler->onCreatureSay(player, type, text);
 		}
 	}
 }
 
 void Npc::onPlayerCloseChannel(Player* player)
 {
-	if (npcEventHandler) {
-		npcEventHandler->onPlayerCloseChannel(player);
+	if (info.npcEventHandler) {
+		info.npcEventHandler->onPlayerCloseChannel(player);
 	}
 }
 
@@ -312,11 +290,11 @@ void Npc::onThink(uint32_t interval)
 {
 	Creature::onThink(interval);
 
-	if (npcEventHandler) {
-		npcEventHandler->onThink();
+	if (info.npcEventHandler) {
+		info.npcEventHandler->onThink();
 	}
 
-	if (getTimeSinceLastMove() >= walkTicks) {
+	if (getTimeSinceLastMove() >= info.walkTicks) {
 		addEventWalk();
 	}
 }
@@ -337,8 +315,8 @@ void Npc::doSayToPlayer(Player* player, const std::string& text)
 void Npc::onPlayerTrade(Player* player, int32_t callback, uint16_t itemId, uint8_t count,
                         uint8_t amount, bool ignore/* = false*/, bool inBackpacks/* = false*/)
 {
-	if (npcEventHandler) {
-		npcEventHandler->onPlayerTrade(player, callback, itemId, count, amount, ignore, inBackpacks);
+	if (info.npcEventHandler) {
+		info.npcEventHandler->onPlayerTrade(player, callback, itemId, count, amount, ignore, inBackpacks);
 	}
 	player->sendSaleItemList();
 }
@@ -357,8 +335,8 @@ void Npc::onPlayerEndTrade(Player* player, int32_t buyCallback, int32_t sellCall
 
 	removeShopPlayer(player);
 
-	if (npcEventHandler) {
-		npcEventHandler->onPlayerEndTrade(player);
+	if (info.npcEventHandler) {
+		info.npcEventHandler->onPlayerEndTrade(player);
 	}
 }
 
@@ -368,15 +346,15 @@ bool Npc::getNextStep(Direction& dir, uint32_t& flags)
 		return true;
 	}
 
-	if (walkTicks <= 0) {
+	if (info.walkTicks <= 0) {
 		return false;
 	}
 
-	if (focusCreature != 0) {
+	if (info.focusCreature != 0) {
 		return false;
 	}
 
-	if (getTimeSinceLastMove() < walkTicks) {
+	if (getTimeSinceLastMove() < info.walkTicks) {
 		return false;
 	}
 
@@ -399,11 +377,11 @@ bool Npc::canWalkTo(const Position& fromPos, Direction dir) const
 		return false;
 	}
 
-	if (!floorChange && (tile->hasFlag(TILESTATE_FLOORCHANGE) || tile->getTeleportItem())) {
+	if (!info.floorChange && (tile->hasFlag(TILESTATE_FLOORCHANGE) || tile->getTeleportItem())) {
 		return false;
 	}
 
-	if (!ignoreHeight && tile->hasHeight(1)) {
+	if (!info.ignoreHeight && tile->hasHeight(1)) {
 		return false;
 	}
 
@@ -481,27 +459,27 @@ void Npc::turnToCreature(Creature* creature)
 void Npc::setCreatureFocus(Creature* creature)
 {
 	if (creature) {
-		focusCreature = creature->getID();
+		info.focusCreature = creature->getID();
 		turnToCreature(creature);
 	} else {
-		focusCreature = 0;
+		info.focusCreature = 0;
 	}
 }
 
 void Npc::addShopPlayer(Player* player)
 {
-	shopPlayerSet.insert(player);
+	info.shopPlayerSet.insert(player);
 }
 
 void Npc::removeShopPlayer(Player* player)
 {
-	shopPlayerSet.erase(player);
+	info.shopPlayerSet.erase(player);
 }
 
 void Npc::closeAllShopWindows()
 {
-	while (!shopPlayerSet.empty()) {
-		Player* player = *shopPlayerSet.begin();
+	while (!info.shopPlayerSet.empty()) {
+		Player* player = *info.shopPlayerSet.begin();
 		if (!player->closeShopWindow()) {
 			removeShopPlayer(player);
 		}
@@ -716,8 +694,8 @@ int NpcScriptInterface::luaGetNpcParameter(lua_State* L)
 
 	std::string paramKey = getString(L, -1);
 
-	auto it = npc->parameters.find(paramKey);
-	if (it != npc->parameters.end()) {
+	auto it = npc->info.parameters.find(paramKey);
+	if (it != npc->info.parameters.end()) {
 		LuaScriptInterface::pushString(L, it->second);
 	} else {
 		lua_pushnil(L);
@@ -910,8 +888,8 @@ int NpcScriptInterface::luaNpcGetParameter(lua_State* L)
 	const std::string& key = getString(L, 2);
 	Npc* npc = getUserdata<Npc>(L, 1);
 	if (npc) {
-		auto it = npc->parameters.find(key);
-		if (it != npc->parameters.end()) {
+		auto it = npc->info.parameters.find(key);
+		if (it != npc->info.parameters.end()) {
 			pushString(L, it->second);
 		} else {
 			lua_pushnil(L);

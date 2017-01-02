@@ -104,8 +104,6 @@ class NpcEventsHandler
 class Npc final : public Creature
 {
 	public:
-		~Npc();
-
 		// non-copyable
 		Npc(const Npc&) = delete;
 		Npc& operator=(const Npc&) = delete;
@@ -118,7 +116,7 @@ class Npc final : public Creature
 		}
 
 		bool isPushable() const final {
-			return walkTicks > 0;
+			return info.walkTicks > 0;
 		}
 
 		void setID() final {
@@ -149,10 +147,10 @@ class Npc final : public Creature
 		}
 
 		uint8_t getSpeechBubble() const final {
-			return speechBubble;
+			return info.speechBubble;
 		}
 		void setSpeechBubble(const uint8_t bubble) {
-			speechBubble = bubble;
+			info.speechBubble = bubble;
 		}
 
 		void doSay(const std::string& text);
@@ -198,13 +196,13 @@ class Npc final : public Creature
 		std::string getDescription(int32_t lookDistance) const final;
 
 		bool isImmune(CombatType_t) const final {
-			return !attackable;
+			return !info.attackable;
 		}
 		bool isImmune(ConditionType_t) const final {
-			return !attackable;
+			return !info.attackable;
 		}
 		bool isAttackable() const final {
-			return attackable;
+			return info.attackable;
 		}
 		bool getNextStep(Direction& dir, uint32_t& flags) final;
 
@@ -218,27 +216,29 @@ class Npc final : public Creature
 		void removeShopPlayer(Player* player);
 		void closeAllShopWindows();
 
-		std::map<std::string, std::string> parameters;
-
-		std::set<Player*> shopPlayerSet;
-
 		std::string name;
 		std::string filename;
 
-		NpcEventsHandler* npcEventHandler;
-
 		Position masterPos;
 
-		uint32_t walkTicks;
-		int32_t focusCreature;
+		struct {
+			std::unique_ptr<NpcEventsHandler> npcEventHandler;
+
+			std::map<std::string, std::string> parameters;
+			std::set<Player*> shopPlayerSet;
+
+			uint32_t walkTicks = 1500;
+			int32_t focusCreature = 0;
+
+			uint8_t speechBubble = SPEECHBUBBLE_NONE;
+
+			bool loaded = false;
+			bool floorChange = false;
+			bool attackable = false;
+			bool ignoreHeight = true;
+		} info;
+
 		int32_t masterRadius;
-
-		uint8_t speechBubble;
-
-		bool floorChange;
-		bool attackable;
-		bool ignoreHeight;
-		bool loaded;
 
 		static NpcScriptInterface* scriptInterface;
 
