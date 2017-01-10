@@ -22,6 +22,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 #include "luascript.h"
+#include "luautils.h"
 #include "chat.h"
 #include "player.h"
 #include "game.h"
@@ -85,7 +86,7 @@ bool ScriptEnvironment::setCallbackId(int32_t callbackId, LuaScriptInterface* sc
 	if (this->callbackId != 0) {
 		//nested callbacks are not allowed
 		if (interface) {
-			interface->reportErrorFunc("Nested callbacks!");
+			reportErrorFunc("Nested callbacks!");
 		}
 		return false;
 	}
@@ -419,41 +420,6 @@ std::string LuaScriptInterface::getStackTrace(const std::string& error_desc)
 	return popString(luaState);
 }
 
-void LuaScriptInterface::reportError(const char* function, const std::string& error_desc, bool stack_trace/* = false*/)
-{
-	int32_t scriptId;
-	int32_t callbackId;
-	bool timerEvent;
-	LuaScriptInterface* scriptInterface;
-	getScriptEnv()->getEventInfo(scriptId, scriptInterface, callbackId, timerEvent);
-
-	std::cout << std::endl << "Lua Script Error: ";
-
-	if (scriptInterface) {
-		std::cout << '[' << scriptInterface->getInterfaceName() << "] " << std::endl;
-
-		if (timerEvent) {
-			std::cout << "in a timer event called from: " << std::endl;
-		}
-
-		if (callbackId) {
-			std::cout << "in callback: " << scriptInterface->getFileById(callbackId) << std::endl;
-		}
-
-		std::cout << scriptInterface->getFileById(scriptId) << std::endl;
-	}
-
-	if (function) {
-		std::cout << function << "(). ";
-	}
-
-	if (stack_trace && scriptInterface) {
-		std::cout << scriptInterface->getStackTrace(error_desc) << std::endl;
-	} else {
-		std::cout << error_desc << std::endl;
-	}
-}
-
 bool LuaScriptInterface::pushFunction(int32_t functionId)
 {
 	lua_rawgeti(luaState, LUA_REGISTRYINDEX, eventTableRef);
@@ -509,14 +475,14 @@ bool LuaScriptInterface::callFunction(int params)
 	bool result = false;
 	int size = lua_gettop(luaState);
 	if (protectedCall(luaState, params, 1) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::getString(luaState, -1));
+		reportError(nullptr, LuaScriptInterface::getString(luaState, -1));
 	} else {
 		result = LuaScriptInterface::getBoolean(luaState, -1);
 	}
 
 	lua_pop(luaState, 1);
 	if ((lua_gettop(luaState) + params + 1) != size) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		reportError(nullptr, "Stack size changed!");
 	}
 
 	resetScriptEnv();
@@ -527,11 +493,11 @@ void LuaScriptInterface::callVoidFunction(int params)
 {
 	int size = lua_gettop(luaState);
 	if (protectedCall(luaState, params, 0) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(luaState));
+		reportError(nullptr, LuaScriptInterface::popString(luaState));
 	}
 
 	if ((lua_gettop(luaState) + params + 1) != size) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		reportError(nullptr, "Stack size changed!");
 	}
 
 	resetScriptEnv();

@@ -20,6 +20,7 @@
 #include "otpch.h"
 
 #include "events.h"
+#include "luautils.h"
 #include "tools.h"
 #include "item.h"
 #include "player.h"
@@ -180,7 +181,7 @@ ReturnValue Events::eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bo
 	ReturnValue returnValue;
 	if (scriptInterface.protectedCall(L, 3, 1) != 0) {
 		returnValue = RETURNVALUE_NOTPOSSIBLE;
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		returnValue = LuaScriptInterface::getNumber<ReturnValue>(L, -1);
 		lua_pop(L, 1);
@@ -221,7 +222,7 @@ ReturnValue Events::eventCreatureOnTargetCombat(Creature* creature, Creature* ta
 	ReturnValue returnValue;
 	if (scriptInterface.protectedCall(L, 2, 1) != 0) {
 		returnValue = RETURNVALUE_NOTPOSSIBLE;
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		returnValue = LuaScriptInterface::getNumber<ReturnValue>(L, -1);
 		lua_pop(L, 1);
@@ -678,7 +679,7 @@ void Events::eventPlayerOnGainExperience(Player* player, Creature* source, uint6
 	lua_pushnumber(L, rawExp);
 
 	if (scriptInterface.protectedCall(L, 4, 1) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		exp = LuaScriptInterface::getNumber<uint64_t>(L, -1);
 		lua_pop(L, 1);
@@ -711,7 +712,7 @@ void Events::eventPlayerOnLoseExperience(Player* player, uint64_t& exp)
 	lua_pushnumber(L, exp);
 
 	if (scriptInterface.protectedCall(L, 2, 1) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		exp = LuaScriptInterface::getNumber<uint64_t>(L, -1);
 		lua_pop(L, 1);
@@ -745,7 +746,7 @@ void Events::eventPlayerOnGainSkillTries(Player* player, skills_t skill, uint64_
 	lua_pushnumber(L, tries);
 
 	if (scriptInterface.protectedCall(L, 3, 1) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		tries = LuaScriptInterface::getNumber<uint64_t>(L, -1);
 		lua_pop(L, 1);

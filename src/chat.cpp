@@ -21,6 +21,7 @@
 
 #include "chat.h"
 #include "game.h"
+#include "luautils.h"
 #include "pugicast.h"
 #include "scheduler.h"
 
@@ -260,7 +261,7 @@ bool ChatChannel::executeOnSpeakEvent(const Player& player, SpeakClasses& type, 
 	int size0 = lua_gettop(L);
 	int ret = scriptInterface->protectedCall(L, 3, 1);
 	if (ret != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else if (lua_gettop(L) > 0) {
 		if (lua_isboolean(L, -1)) {
 			result = LuaScriptInterface::getBoolean(L, -1);
@@ -272,7 +273,7 @@ bool ChatChannel::executeOnSpeakEvent(const Player& player, SpeakClasses& type, 
 	}
 
 	if ((lua_gettop(L) + 4) != size0) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		reportError(nullptr, "Stack size changed!");
 	}
 	scriptInterface->resetScriptEnv();
 	return result;

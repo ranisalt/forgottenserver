@@ -22,6 +22,7 @@
 #include "combat.h"
 
 #include "game.h"
+#include "luautils.h"
 #include "weapons.h"
 #include "configmanager.h"
 #include "events.h"
@@ -961,7 +962,7 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage, bool u
 
 	int size0 = lua_gettop(L);
 	if (lua_pcall(L, parameters, 2, 0) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		damage.primary.value = normal_random(
 			LuaScriptInterface::getNumber<int32_t>(L, -2),
@@ -971,7 +972,7 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage, bool u
 	}
 
 	if ((lua_gettop(L) + parameters + 1) != size0) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		reportError(nullptr, "Stack size changed!");
 	}
 
 	scriptInterface->resetScriptEnv();
@@ -1044,11 +1045,11 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 	int size0 = lua_gettop(L);
 
 	if (lua_pcall(L, 2, 0 /*nReturnValues*/, 0) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	}
 
 	if ((lua_gettop(L) + 2 /*nParams*/ + 1) != size0) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		reportError(nullptr, "Stack size changed!");
 	}
 
 	scriptInterface->resetScriptEnv();

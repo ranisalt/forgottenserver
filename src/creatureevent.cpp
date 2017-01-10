@@ -20,6 +20,7 @@
 #include "otpch.h"
 
 #include "creatureevent.h"
+#include "luautils.h"
 #include "tools.h"
 #include "player.h"
 
@@ -506,7 +507,7 @@ void CreatureEvent::executeHealthChange(Creature* creature, Creature* attacker, 
 	lua_pushnumber(L, damage.origin);
 
 	if (scriptInterface->protectedCall(L, 7, 4) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, LuaScriptInterface::popString(L));
 	} else {
 		damage.primary.value = std::abs(LuaScriptInterface::getNumber<int32_t>(L, -4));
 		damage.primary.type = LuaScriptInterface::getNumber<CombatType_t>(L, -3);
@@ -550,7 +551,7 @@ void CreatureEvent::executeManaChange(Creature* creature, Creature* attacker, in
 	lua_pushnumber(L, origin);
 
 	if (scriptInterface->protectedCall(L, 4, 1) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::getString(L, -1));
+		reportError(nullptr, LuaScriptInterface::getString(L, -1));
 	} else {
 		manaChange = LuaScriptInterface::getNumber<int32_t>(L, -1);
 	}

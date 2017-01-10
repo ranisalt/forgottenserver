@@ -74,12 +74,7 @@ enum LuaDataType {
 	LuaData_Tile,
 };
 
-struct LuaVariant {
-	LuaVariantType_t type = VARIANT_NONE;
-	std::string text;
-	Position pos;
-	uint32_t number = 0;
-};
+struct LuaVariant;
 
 struct LuaTimerEventDesc {
 	int32_t scriptId = -1;
@@ -174,8 +169,6 @@ class ScriptEnvironment
 		static DBResultMap tempResults;
 };
 
-#define reportErrorFunc(a)  reportError(__FUNCTION__, a, true)
-
 enum ErrorCode_t {
 	LUA_ERROR_PLAYER_NOT_FOUND,
 	LUA_ERROR_CREATURE_NOT_FOUND,
@@ -224,8 +217,6 @@ class LuaScriptInterface
 			assert(scriptEnvIndex >= 0);
 			scriptEnv[scriptEnvIndex--].resetEnv();
 		}
-
-		static void reportError(const char* function, const std::string& error_desc, bool stack_trace = false);
 
 		const std::string& getInterfaceName() const {
 			return interfaceName;
@@ -396,6 +387,8 @@ class LuaScriptInterface
 
 		static int protectedCall(lua_State* L, int nargs, int nresults);
 
+		std::string getStackTrace(const std::string& error_desc);
+
 	protected:
 		virtual bool closeState();
 
@@ -409,8 +402,6 @@ class LuaScriptInterface
 		void registerVariable(const std::string& tableName, const std::string& name, lua_Number value);
 		void registerGlobalVariable(const std::string& name, lua_Number value);
 		void registerGlobalBoolean(const std::string& name, bool value);
-
-		std::string getStackTrace(const std::string& error_desc);
 
 		static std::string getErrorDesc(ErrorCode_t code);
 		static bool getArea(lua_State* L, std::list<uint32_t>& list, uint32_t& rows);

@@ -22,6 +22,7 @@
 #include "combat.h"
 #include "configmanager.h"
 #include "game.h"
+#include "luautils.h"
 #include "pugicast.h"
 #include "weapons.h"
 
