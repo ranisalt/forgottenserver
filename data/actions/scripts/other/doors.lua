@@ -22,7 +22,7 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 				target:transform(doors[target.itemid])
 				return true
 			end
-			player:sendTextMessage(MESSAGE_STATUS_SMALL, "The key does not match.")
+			player:sendCancelMessage("The key does not match.")
 			return true
 		end
 		return false
@@ -40,7 +40,7 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 			end
 
 			if query ~= RETURNVALUE_NOERROR then
-				player:sendTextMessage(MESSAGE_STATUS_SMALL, query)
+				player:sendCancelMessage(query)
 				return true
 			end
 

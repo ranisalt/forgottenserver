@@ -28,7 +28,7 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 
 	if target:isCreature() then
 		if item.type == 0 then
-			player:sendTextMessage(MESSAGE_STATUS_SMALL, "It is empty.")
+			player:sendCancelMessage("It is empty.")
 		elseif target == player then
 			item:transform(item:getId(), 0)
 			if item.type == 3 or item.type == 15 then
@@ -58,7 +58,7 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 		if fluidSource ~= 0 then
 			item:transform(item:getId(), fluidSource)
 		elseif item.type == 0 then
-			player:sendTextMessage(MESSAGE_STATUS_SMALL, "It is empty.")
+			player:sendCancelMessage("It is empty.")
 		else
 			if toPosition.x == CONTAINER_POSITION then
 				toPosition = player:getPosition()

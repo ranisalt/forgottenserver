@@ -29,7 +29,7 @@ function onUse(player, item, fromPosition, target, toPosition, isHotkey)
 
 	local targetItemId = target:getId()
 	if targetItemId == newBed[1][1] or targetItemId == newBed[2][1] then
-		player:sendTextMessage(MESSAGE_STATUS_SMALL, "You already have this bed modification.")
+		player:sendCancelMessage("You already have this bed modification.")
 		return true
 	end
 
