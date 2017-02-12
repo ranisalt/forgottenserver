@@ -21,7 +21,7 @@
 #define FS_CHAT_H_F1574642D0384ABFAB52B7ED906E5628
 
 #include "const.h"
-#include "luascript.h"
+#include "luaengine/luascript.h"
 
 class Party;
 class Player;

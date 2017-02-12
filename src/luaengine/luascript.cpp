@@ -17,25 +17,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "otpch.h"
+#include "../otpch.h"
 
 #include <boost/range/adaptor/reversed.hpp>
 
 #include "luascript.h"
 #include "luautils.h"
-#include "chat.h"
-#include "player.h"
-#include "game.h"
-#include "protocolstatus.h"
-#include "spells.h"
-#include "iologindata.h"
-#include "configmanager.h"
-#include "teleport.h"
-#include "databasemanager.h"
-#include "bed.h"
-#include "monster.h"
-#include "scheduler.h"
-#include "databasetasks.h"
+#include "../chat.h"
+#include "../player.h"
+#include "../game.h"
+#include "../protocolstatus.h"
+#include "../spells.h"
+#include "../iologindata.h"
+#include "../configmanager.h"
+#include "../teleport.h"
+#include "../databasemanager.h"
+#include "../bed.h"
+#include "../monster.h"
+#include "../scheduler.h"
+#include "../databasetasks.h"
 
 extern Chat* g_chat;
 extern Game g_game;

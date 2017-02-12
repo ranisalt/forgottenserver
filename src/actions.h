@@ -22,7 +22,7 @@
 
 #include "baseevents.h"
 #include "enums.h"
-#include "luascript.h"
+#include "luaengine/luascript.h"
 
 using ActionFunction = std::function<bool(Player* player, Item* item, const Position& fromPosition, Thing* target, const Position& toPosition, bool isHotkey)>;
 

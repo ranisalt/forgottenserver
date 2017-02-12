@@ -20,7 +20,7 @@
 #include "otpch.h"
 
 #include "events.h"
-#include "luautils.h"
+#include "luaengine/luautils.h"
 #include "tools.h"
 #include "item.h"
 #include "player.h"

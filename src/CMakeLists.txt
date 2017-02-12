@@ -1,3 +1,5 @@
+add_subdirectory(luaengine)
+
 set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/otpch.cpp
 	${CMAKE_CURRENT_LIST_DIR}/actions.cpp
@@ -34,8 +36,6 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/iomarket.cpp
 	${CMAKE_CURRENT_LIST_DIR}/item.cpp
 	${CMAKE_CURRENT_LIST_DIR}/items.cpp
-	${CMAKE_CURRENT_LIST_DIR}/luascript.cpp
-	${CMAKE_CURRENT_LIST_DIR}/luautils.cpp
 	${CMAKE_CURRENT_LIST_DIR}/mailbox.cpp
 	${CMAKE_CURRENT_LIST_DIR}/map.cpp
 	${CMAKE_CURRENT_LIST_DIR}/monster.cpp
@@ -75,5 +75,6 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/waitlist.cpp
 	${CMAKE_CURRENT_LIST_DIR}/weapons.cpp
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.cpp
+	$<TARGET_OBJECTS:luaengine>
 	PARENT_SCOPE)
 

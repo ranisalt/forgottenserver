@@ -21,7 +21,7 @@
 #define FS_NPC_H_B090D0CB549D4435AFA03647195D156F
 
 #include "creature.h"
-#include "luascript.h"
+#include "luaengine/luascript.h"
 
 #include <set>
 

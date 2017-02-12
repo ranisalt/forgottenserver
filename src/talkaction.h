@@ -20,7 +20,7 @@
 #ifndef FS_TALKACTION_H_E6AABAC0F89843469526ADF310F3131C
 #define FS_TALKACTION_H_E6AABAC0F89843469526ADF310F3131C
 
-#include "luascript.h"
+#include "luaengine/luascript.h"
 #include "baseevents.h"
 #include "const.h"
 

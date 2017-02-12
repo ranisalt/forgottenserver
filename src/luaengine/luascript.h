@@ -32,9 +32,9 @@
 #endif
 #endif
 
-#include "database.h"
-#include "enums.h"
-#include "position.h"
+#include "../database.h"
+#include "../enums.h"
+#include "../position.h"
 
 class Thing;
 class Creature;

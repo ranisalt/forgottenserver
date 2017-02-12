@@ -20,7 +20,7 @@
 #ifndef FS_CREATUREEVENT_H_73FCAF4608CB41399D53C919316646A9
 #define FS_CREATUREEVENT_H_73FCAF4608CB41399D53C919316646A9
 
-#include "luascript.h"
+#include "luaengine/luascript.h"
 #include "baseevents.h"
 #include "enums.h"
 

@@ -2,7 +2,7 @@
 #define TFS_LUAUTILS_H
 
 #include "luascript.h"
-#include "position.h"
+#include "../position.h"
 
 struct LuaVariant {
 	LuaVariantType_t type = VARIANT_NONE;

@@ -22,7 +22,7 @@
 
 #include "baseevents.h"
 #include "item.h"
-#include "luascript.h"
+#include "luaengine/luascript.h"
 
 enum MoveEvent_t {
 	MOVE_EVENT_STEP_IN,

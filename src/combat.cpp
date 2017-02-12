@@ -22,7 +22,7 @@
 #include "combat.h"
 
 #include "game.h"
-#include "luautils.h"
+#include "luaengine/luautils.h"
 #include "weapons.h"
 #include "configmanager.h"
 #include "events.h"
