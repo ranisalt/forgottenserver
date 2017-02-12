@@ -22,6 +22,7 @@
 #include "configmanager.h"
 #include "databasemanager.h"
 #include "luaengine/luascript.h"
+#include "luaengine/functions.h"
 
 extern ConfigManager g_config;
 

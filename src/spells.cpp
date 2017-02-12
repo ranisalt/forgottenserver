@@ -22,7 +22,7 @@
 #include "combat.h"
 #include "configmanager.h"
 #include "game.h"
-#include "luaengine/luautils.h"
+#include "luaengine/functions.h"
 #include "monster.h"
 #include "pugicast.h"
 #include "spells.h"

@@ -21,7 +21,7 @@
 
 #include "chat.h"
 #include "game.h"
-#include "luaengine/luautils.h"
+#include "luaengine/functions.h"
 #include "pugicast.h"
 #include "scheduler.h"
 

@@ -22,6 +22,7 @@
 #include "monster.h"
 #include "game.h"
 #include "spells.h"
+#include "luaengine/functions.h"
 
 extern Game g_game;
 extern Monsters g_monsters;

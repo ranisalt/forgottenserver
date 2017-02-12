@@ -24,6 +24,7 @@
 #include "pugicast.h"
 
 #include "movement.h"
+#include "luaengine/functions.h"
 
 extern Game g_game;
 extern Vocations g_vocations;

@@ -22,6 +22,7 @@
 #include "player.h"
 #include "talkaction.h"
 #include "pugicast.h"
+#include "luaengine/functions.h"
 
 TalkActions::TalkActions()
 	: scriptInterface("TalkAction Interface")

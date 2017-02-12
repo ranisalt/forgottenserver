@@ -22,7 +22,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 #include "luascript.h"
-#include "luautils.h"
+#include "functions.h"
 #include "../chat.h"
 #include "../player.h"
 #include "../game.h"
