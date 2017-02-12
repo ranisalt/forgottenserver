@@ -53,15 +53,6 @@ enum {
 	EVENT_ID_USER = 1000,
 };
 
-enum LuaVariantType_t {
-	VARIANT_NONE,
-
-	VARIANT_NUMBER,
-	VARIANT_POSITION,
-	VARIANT_TARGETPOSITION,
-	VARIANT_STRING,
-};
-
 enum LuaDataType {
 	LuaData_Unknown,
 
@@ -169,22 +160,6 @@ class ScriptEnvironment
 		static DBResultMap tempResults;
 };
 
-enum ErrorCode_t {
-	LUA_ERROR_PLAYER_NOT_FOUND,
-	LUA_ERROR_CREATURE_NOT_FOUND,
-	LUA_ERROR_ITEM_NOT_FOUND,
-	LUA_ERROR_THING_NOT_FOUND,
-	LUA_ERROR_TILE_NOT_FOUND,
-	LUA_ERROR_HOUSE_NOT_FOUND,
-	LUA_ERROR_COMBAT_NOT_FOUND,
-	LUA_ERROR_CONDITION_NOT_FOUND,
-	LUA_ERROR_AREA_NOT_FOUND,
-	LUA_ERROR_CONTAINER_NOT_FOUND,
-	LUA_ERROR_VARIANT_NOT_FOUND,
-	LUA_ERROR_VARIANT_UNKNOWN,
-	LUA_ERROR_SPELL_NOT_FOUND,
-};
-
 class LuaScriptInterface
 {
 	public:
@@ -235,149 +210,6 @@ class LuaScriptInterface
 		bool callFunction(int params);
 		void callVoidFunction(int params);
 
-		//push/pop common structures
-		static void pushThing(lua_State* L, Thing* thing);
-		static void pushVariant(lua_State* L, const LuaVariant& var);
-		static void pushString(lua_State* L, const std::string& value);
-		static void pushCallback(lua_State* L, int32_t callback);
-		static void pushCylinder(lua_State* L, Cylinder* cylinder);
-
-		static std::string popString(lua_State* L);
-		static int32_t popCallback(lua_State* L);
-
-		// Userdata
-		template<class T>
-		static void pushUserdata(lua_State* L, T* value)
-		{
-			T** userdata = static_cast<T**>(lua_newuserdata(L, sizeof(T*)));
-			*userdata = value;
-		}
-
-		// Metatables
-		static void setMetatable(lua_State* L, int32_t index, const std::string& name);
-		static void setWeakMetatable(lua_State* L, int32_t index, const std::string& name);
-
-		static void setItemMetatable(lua_State* L, int32_t index, const Item* item);
-		static void setCreatureMetatable(lua_State* L, int32_t index, const Creature* creature);
-
-		// Get
-		template<typename T>
-		static typename std::enable_if<std::is_enum<T>::value, T>::type
-			getNumber(lua_State* L, int32_t arg)
-		{
-			return static_cast<T>(static_cast<int64_t>(lua_tonumber(L, arg)));
-		}
-		template<typename T>
-		static typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type
-			getNumber(lua_State* L, int32_t arg)
-		{
-			return static_cast<T>(lua_tonumber(L, arg));
-		}
-		template<typename T>
-		static T getNumber(lua_State *L, int32_t arg, T defaultValue)
-		{
-			const auto parameters = lua_gettop(L);
-			if (parameters == 0 || arg > parameters) {
-				return defaultValue;
-			}
-			return getNumber<T>(L, arg);
-		}
-		template<class T>
-		static T* getUserdata(lua_State* L, int32_t arg)
-		{
-			T** userdata = getRawUserdata<T>(L, arg);
-			if (!userdata) {
-				return nullptr;
-			}
-			return *userdata;
-		}
-		template<class T>
-		static T** getRawUserdata(lua_State* L, int32_t arg)
-		{
-			return static_cast<T**>(lua_touserdata(L, arg));
-		}
-
-		static bool getBoolean(lua_State* L, int32_t arg)
-		{
-			return lua_toboolean(L, arg) != 0;
-		}
-		static bool getBoolean(lua_State* L, int32_t arg, bool defaultValue)
-		{
-			const auto parameters = lua_gettop(L);
-			if (parameters == 0 || arg > parameters) {
-				return defaultValue;
-			}
-			return lua_toboolean(L, arg) != 0;
-		}
-
-		static std::string getString(lua_State* L, int32_t arg);
-		static Position getPosition(lua_State* L, int32_t arg, int32_t& stackpos);
-		static Position getPosition(lua_State* L, int32_t arg);
-		static Outfit_t getOutfit(lua_State* L, int32_t arg);
-		static LuaVariant getVariant(lua_State* L, int32_t arg);
-
-		static Thing* getThing(lua_State* L, int32_t arg);
-		static Creature* getCreature(lua_State* L, int32_t arg);
-		static Player* getPlayer(lua_State* L, int32_t arg);
-
-		template<typename T>
-		static T getField(lua_State* L, int32_t arg, const std::string& key)
-		{
-			lua_getfield(L, arg, key.c_str());
-			return getNumber<T>(L, -1);
-		}
-
-		static std::string getFieldString(lua_State* L, int32_t arg, const std::string& key);
-
-		static LuaDataType getUserdataType(lua_State* L, int32_t arg);
-
-		// Is
-		static bool isNumber(lua_State* L, int32_t arg)
-		{
-			return lua_type(L, arg) == LUA_TNUMBER;
-		}
-		static bool isString(lua_State* L, int32_t arg)
-		{
-			return lua_isstring(L, arg) != 0;
-		}
-		static bool isBoolean(lua_State* L, int32_t arg)
-		{
-			return lua_isboolean(L, arg);
-		}
-		static bool isTable(lua_State* L, int32_t arg)
-		{
-			return lua_istable(L, arg);
-		}
-		static bool isFunction(lua_State* L, int32_t arg)
-		{
-			return lua_isfunction(L, arg);
-		}
-		static bool isUserdata(lua_State* L, int32_t arg)
-		{
-			return lua_isuserdata(L, arg) != 0;
-		}
-
-		// Push
-		static void pushBoolean(lua_State* L, bool value);
-		static void pushInstantSpell(lua_State* L, const InstantSpell& spell);
-		static void pushPosition(lua_State* L, const Position& position, int32_t stackpos = 0);
-		static void pushOutfit(lua_State* L, const Outfit_t& outfit);
-
-		//
-		static void setField(lua_State* L, const char* index, lua_Number value)
-		{
-			lua_pushnumber(L, value);
-			lua_setfield(L, -2, index);
-		}
-
-		static void setField(lua_State* L, const char* index, const std::string& value)
-		{
-			pushString(L, value);
-			lua_setfield(L, -2, index);
-		}
-
-		static std::string escapeString(const std::string& string);
-
 #ifndef LUAJIT_VERSION
 		static const luaL_Reg luaBitReg[7];
 #endif
@@ -402,9 +234,6 @@ class LuaScriptInterface
 		void registerVariable(const std::string& tableName, const std::string& name, lua_Number value);
 		void registerGlobalVariable(const std::string& name, lua_Number value);
 		void registerGlobalBoolean(const std::string& name, bool value);
-
-		static std::string getErrorDesc(ErrorCode_t code);
-		static bool getArea(lua_State* L, std::list<uint32_t>& list, uint32_t& rows);
 
 		//lua functions
 		static int luaDoPlayerAddItem(lua_State* L);

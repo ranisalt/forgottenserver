@@ -354,10 +354,10 @@ bool CombatSpell::executeCastSpell(Creature* creature, const LuaVariant& var)
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	pushUserdata<Creature>(L, creature);
+	setCreatureMetatable(L, -1, creature);
 
-	LuaScriptInterface::pushVariant(L, var);
+	pushVariant(L, var);
 
 	return scriptInterface->callFunction(2);
 }
@@ -1163,10 +1163,10 @@ bool InstantSpell::executeCastSpell(Creature* creature, const LuaVariant& var)
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	pushUserdata<Creature>(L, creature);
+	setCreatureMetatable(L, -1, creature);
 
-	LuaScriptInterface::pushVariant(L, var);
+	pushVariant(L, var);
 
 	return scriptInterface->callFunction(2);
 }
@@ -1526,12 +1526,12 @@ bool RuneSpell::executeCastSpell(Creature* creature, const LuaVariant& var, bool
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	pushUserdata<Creature>(L, creature);
+	setCreatureMetatable(L, -1, creature);
 
-	LuaScriptInterface::pushVariant(L, var);
+	pushVariant(L, var);
 
-	LuaScriptInterface::pushBoolean(L, isHotkey);
+	pushBoolean(L, isHotkey);
 
 	return scriptInterface->callFunction(3);
 }

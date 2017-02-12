@@ -108,11 +108,11 @@ void Monster::onCreatureAppear(Creature* creature, bool isLogin)
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureAppearEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		pushUserdata<Monster>(L, this);
+		setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		pushUserdata<Creature>(L, creature);
+		setCreatureMetatable(L, -1, creature);
 
 		if (scriptInterface->callFunction(2)) {
 			return;
@@ -150,11 +150,11 @@ void Monster::onRemoveCreature(Creature* creature, bool isLogout)
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureDisappearEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		pushUserdata<Monster>(L, this);
+		setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		pushUserdata<Creature>(L, creature);
+		setCreatureMetatable(L, -1, creature);
 
 		if (scriptInterface->callFunction(2)) {
 			return;
@@ -191,14 +191,14 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureMoveEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		pushUserdata<Monster>(L, this);
+		setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		pushUserdata<Creature>(L, creature);
+		setCreatureMetatable(L, -1, creature);
 
-		LuaScriptInterface::pushPosition(L, oldPos);
-		LuaScriptInterface::pushPosition(L, newPos);
+		pushPosition(L, oldPos);
+		pushPosition(L, newPos);
 
 		if (scriptInterface->callFunction(4)) {
 			return;
@@ -273,14 +273,14 @@ void Monster::onCreatureSay(Creature* creature, SpeakClasses type, const std::st
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureSayEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		pushUserdata<Monster>(L, this);
+		setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		pushUserdata<Creature>(L, creature);
+		setCreatureMetatable(L, -1, creature);
 
 		lua_pushnumber(L, type);
-		LuaScriptInterface::pushString(L, text);
+		pushString(L, text);
 
 		scriptInterface->callVoidFunction(4);
 	}
@@ -692,8 +692,8 @@ void Monster::onThink(uint32_t interval)
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.thinkEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		pushUserdata<Monster>(L, this);
+		setMetatable(L, -1, "Monster");
 
 		lua_pushnumber(L, interval);
 

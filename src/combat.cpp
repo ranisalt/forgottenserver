@@ -908,8 +908,8 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage, bool u
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	pushUserdata<Player>(L, player);
+	setMetatable(L, -1, "Player");
 
 	int parameters = 1;
 	switch (type) {
@@ -962,11 +962,11 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage, bool u
 
 	int size0 = lua_gettop(L);
 	if (lua_pcall(L, parameters, 2, 0) != 0) {
-		reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, popString(L));
 	} else {
 		damage.primary.value = normal_random(
-			LuaScriptInterface::getNumber<int32_t>(L, -2),
-			LuaScriptInterface::getNumber<int32_t>(L, -1)
+			getNumber<int32_t>(L, -2),
+			getNumber<int32_t>(L, -1)
 		);
 		lua_pop(L, 2);
 	}
@@ -998,12 +998,12 @@ void TileCallback::onTileCombat(Creature* creature, Tile* tile) const
 
 	scriptInterface->pushFunction(scriptId);
 	if (creature) {
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		pushUserdata<Creature>(L, creature);
+		setCreatureMetatable(L, -1, creature);
 	} else {
 		lua_pushnil(L);
 	}
-	LuaScriptInterface::pushPosition(L, tile->getPosition());
+	pushPosition(L, tile->getPosition());
 
 	scriptInterface->callFunction(2);
 }
@@ -1029,15 +1029,15 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 	scriptInterface->pushFunction(scriptId);
 
 	if (creature) {
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		pushUserdata<Creature>(L, creature);
+		setCreatureMetatable(L, -1, creature);
 	} else {
 		lua_pushnil(L);
 	}
 
 	if (target) {
-		LuaScriptInterface::pushUserdata<Creature>(L, target);
-		LuaScriptInterface::setCreatureMetatable(L, -1, target);
+		pushUserdata<Creature>(L, target);
+		setCreatureMetatable(L, -1, target);
 	} else {
 		lua_pushnil(L);
 	}
@@ -1045,7 +1045,7 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 	int size0 = lua_gettop(L);
 
 	if (lua_pcall(L, 2, 0 /*nReturnValues*/, 0) != 0) {
-		reportError(nullptr, LuaScriptInterface::popString(L));
+		reportError(nullptr, popString(L));
 	}
 
 	if ((lua_gettop(L) + 2 /*nParams*/ + 1) != size0) {

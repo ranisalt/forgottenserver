@@ -809,11 +809,11 @@ bool MoveEvent::executeStep(Creature* creature, Item* item, const Position& pos)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
-	LuaScriptInterface::pushThing(L, item);
-	LuaScriptInterface::pushPosition(L, pos);
-	LuaScriptInterface::pushPosition(L, creature->getLastPosition());
+	pushUserdata<Creature>(L, creature);
+	setCreatureMetatable(L, -1, creature);
+	pushThing(L, item);
+	pushPosition(L, pos);
+	pushPosition(L, creature->getLastPosition());
 
 	return scriptInterface->callFunction(4);
 }
@@ -842,9 +842,9 @@ bool MoveEvent::executeEquip(Player* player, Item* item, slots_t slot)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
-	LuaScriptInterface::pushThing(L, item);
+	pushUserdata<Player>(L, player);
+	setMetatable(L, -1, "Player");
+	pushThing(L, item);
 	lua_pushnumber(L, slot);
 
 	return scriptInterface->callFunction(3);
@@ -874,9 +874,9 @@ bool MoveEvent::executeAddRemItem(Item* item, Item* tileItem, const Position& po
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushThing(L, item);
-	LuaScriptInterface::pushThing(L, tileItem);
-	LuaScriptInterface::pushPosition(L, pos);
+	pushThing(L, item);
+	pushThing(L, tileItem);
+	pushPosition(L, pos);
 
 	return scriptInterface->callFunction(3);
 }
