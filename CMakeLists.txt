@@ -21,7 +21,14 @@ include(FindCXX11)
 find_package(GMP REQUIRED)
 find_package(PugiXML REQUIRED)
 find_package(MySQL)
+find_package(OpenMP)
 find_package(Threads)
+
+if(OPENMP_FOUND)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+else()
+	add_compile_options(-Wno-unknown-pragmas)
+endif()
 
 # Selects LuaJIT if user defines or auto-detected
 if(DEFINED USE_LUAJIT AND NOT USE_LUAJIT)

@@ -46,7 +46,9 @@ void OutputMessagePool::scheduleSendAll()
 void OutputMessagePool::sendAll()
 {
 	//dispatcher thread
-	for (auto& protocol : bufferedProtocols) {
+	#pragma omp parallel for
+	for (auto i = 0u; i < bufferedProtocols.size(); ++i) {
+		auto& protocol = bufferedProtocols[i];
 		auto& msg = protocol->getCurrentBuffer();
 		if (msg) {
 			protocol->send(std::move(msg));
