@@ -126,26 +126,27 @@ void ProtocolGame::login(const std::string& name, uint32_t accountId, OperatingS
 			return;
 		}
 
-		if (!IOLoginData::loadPlayerById(player, player->getGUID())) {
+		auto&& FIXME_player = IOLoginData::loadPlayerById(player->getGUID());
+		if (!FIXME_player) {
 			disconnectClient("Your character could not be loaded.");
 			return;
 		}
 
-		player->setOperatingSystem(operatingSystem);
+		FIXME_player->setOperatingSystem(operatingSystem);
 
-		if (!g_game.placeCreature(player, player->getLoginPosition())) {
-			if (!g_game.placeCreature(player, player->getTemplePosition(), false, true)) {
+		if (!g_game.placeCreature(&FIXME_player.value(), FIXME_player->getLoginPosition())) {
+			if (!g_game.placeCreature(&FIXME_player.value(), FIXME_player->getTemplePosition(), false, true)) {
 				disconnectClient("Temple position is wrong. Contact the administrator.");
 				return;
 			}
 		}
 
 		if (operatingSystem >= CLIENTOS_OTCLIENT_LINUX) {
-			player->registerCreatureEvent("ExtendedOpcode");
+			FIXME_player->registerCreatureEvent("ExtendedOpcode");
 		}
 
-		player->lastIP = player->getIP();
-		player->lastLoginSaved = std::max<time_t>(time(nullptr), player->lastLoginSaved + 1);
+		FIXME_player->lastIP = FIXME_player->getIP();
+		FIXME_player->lastLoginSaved = std::max<time_t>(time(nullptr), FIXME_player->lastLoginSaved + 1);
 		acceptPackets = true;
 	} else {
 		if (eventConnect != 0 || !g_config.getBoolean(ConfigManager::REPLACE_KICK_ON_LOGIN)) {

@@ -5169,9 +5169,8 @@ void Game::playerAcceptMarketOffer(uint32_t playerId, uint32_t timestamp, uint16
 
 		Player* buyerPlayer = getPlayerByGUID(offer.playerId);
 		if (!buyerPlayer) {
-			buyerPlayer = new Player(nullptr);
-			if (!IOLoginData::loadPlayerById(buyerPlayer, offer.playerId)) {
-				delete buyerPlayer;
+			auto&& FIXME_buyerPlayer = IOLoginData::loadPlayerById(offer.playerId);
+			if (!FIXME_buyerPlayer) {
 				return;
 			}
 		}

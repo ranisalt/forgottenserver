@@ -109,15 +109,15 @@ bool Mailbox::sendItem(Item* item) const
 			return true;
 		}
 	} else {
-		Player tmpPlayer(nullptr);
-		if (!IOLoginData::loadPlayerByName(&tmpPlayer, receiver)) {
+		auto&& tmpPlayer = IOLoginData::loadPlayerByName(receiver);
+		if (!tmpPlayer){
 			return false;
 		}
 
-		if (g_game.internalMoveItem(item->getParent(), tmpPlayer.getInbox(), INDEX_WHEREEVER,
+		if (g_game.internalMoveItem(item->getParent(), tmpPlayer->getInbox(), INDEX_WHEREEVER,
 		                            item, item->getItemCount(), nullptr, FLAG_NOLIMIT) == RETURNVALUE_NOERROR) {
 			g_game.transformItem(item, item->getID() + 1);
-			IOLoginData::savePlayer(&tmpPlayer);
+			IOLoginData::savePlayer(&tmpPlayer.value());
 			return true;
 		}
 	}

@@ -107,12 +107,12 @@ bool BedItem::canUse(Player* player)
 		return true;
 	}
 
-	Player sleeper(nullptr);
-	if (!IOLoginData::loadPlayerById(&sleeper, sleeperGUID)) {
+	auto&& sleeper = IOLoginData::loadPlayerById(sleeperGUID);
+	if (!sleeper) {
 		return false;
 	}
 
-	if (house->getHouseAccessLevel(&sleeper) > house->getHouseAccessLevel(player)) {
+	if (house->getHouseAccessLevel(&sleeper.value()) > house->getHouseAccessLevel(player)) {
 		return false;
 	}
 	return true;
@@ -184,10 +184,10 @@ void BedItem::wakeUp(Player* player)
 
 	if (sleeperGUID != 0) {
 		if (!player) {
-			Player regenPlayer(nullptr);
-			if (IOLoginData::loadPlayerById(&regenPlayer, sleeperGUID)) {
-				regeneratePlayer(&regenPlayer);
-				IOLoginData::savePlayer(&regenPlayer);
+			auto&& regenPlayer = IOLoginData::loadPlayerById(sleeperGUID);
+			if (regenPlayer) {
+				regeneratePlayer(&regenPlayer.value());
+				IOLoginData::savePlayer(&regenPlayer.value());
 			}
 		} else {
 			regeneratePlayer(player);

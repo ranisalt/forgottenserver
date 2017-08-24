@@ -23,6 +23,7 @@
 #include "account.h"
 #include "player.h"
 #include "database.h"
+#include "optional.h"
 
 using ItemBlockList = std::list<std::pair<int32_t, Item*>>;
 
@@ -40,9 +41,9 @@ class IOLoginData
 		static void updateOnlineStatus(uint32_t guid, bool login);
 		static bool preloadPlayer(Player* player, const std::string& name);
 
-		static bool loadPlayerById(Player* player, uint32_t id);
-		static bool loadPlayerByName(Player* player, const std::string& name);
-		static bool loadPlayer(Player* player, DBResult_ptr result);
+		static tfs::optional<Player> loadPlayerById(uint32_t id, ProtocolGame_ptr p = nullptr);
+		static tfs::optional<Player> loadPlayerByName(const std::string& name, ProtocolGame_ptr p = nullptr);
+		static tfs::optional<Player> loadPlayer(DBResult_ptr result, ProtocolGame_ptr p = nullptr);
 		static bool savePlayer(Player* player);
 		static uint32_t getGuidByName(const std::string& name);
 		static bool getGuidByNameEx(uint32_t& guid, bool& specialVip, std::string& name);

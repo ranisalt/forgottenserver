@@ -138,9 +138,8 @@ void IOMarket::processExpiredOffers(DBResult_ptr result, bool)
 
 			Player* player = g_game.getPlayerByGUID(playerId);
 			if (!player) {
-				player = new Player(nullptr);
-				if (!IOLoginData::loadPlayerById(player, playerId)) {
-					delete player;
+				auto&& FIXME_player = IOLoginData::loadPlayerById(playerId);
+				if (!FIXME_player) {
 					continue;
 				}
 			}

@@ -104,6 +104,10 @@ class Creature : virtual public Thing
 		Creature(const Creature&) = delete;
 		Creature& operator=(const Creature&) = delete;
 
+		// moveable
+		Creature(Creature&&) = default;
+		Creature& operator=(Creature&&) = default;
+
 		Creature* getCreature() final {
 			return this;
 		}

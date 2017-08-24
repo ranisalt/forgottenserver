@@ -39,6 +39,10 @@ class Thing
 		Thing(const Thing&) = delete;
 		Thing& operator=(const Thing&) = delete;
 
+		// moveable
+		Thing(Thing&&) = default;
+		Thing& operator=(Thing&&) = default;
+
 		virtual std::string getDescription(int32_t lookDistance) const = 0;
 
 		virtual Cylinder* getParent() const {

@@ -118,6 +118,10 @@ class Player final : public Creature, public Cylinder
 		Player(const Player&) = delete;
 		Player& operator=(const Player&) = delete;
 
+		// moveable
+		Player(Player&&) = default;
+		Player& operator=(Player&&) = default;
+
 		Player* getPlayer() final {
 			return this;
 		}

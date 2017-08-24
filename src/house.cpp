@@ -208,13 +208,13 @@ bool House::transferToDepot() const
 	if (player) {
 		transferToDepot(player);
 	} else {
-		Player tmpPlayer(nullptr);
-		if (!IOLoginData::loadPlayerById(&tmpPlayer, owner)) {
+		auto&& tmpPlayer = IOLoginData::loadPlayerById(owner);
+		if (!tmpPlayer) {
 			return false;
 		}
 
-		transferToDepot(&tmpPlayer);
-		IOLoginData::savePlayer(&tmpPlayer);
+		transferToDepot(&tmpPlayer.value());
+		IOLoginData::savePlayer(&tmpPlayer.value());
 	}
 	return true;
 }
@@ -658,15 +658,15 @@ void Houses::payHouses(RentPeriod_t rentPeriod) const
 			continue;
 		}
 
-		Player player(nullptr);
-		if (!IOLoginData::loadPlayerById(&player, ownerId)) {
+		auto&& player = IOLoginData::loadPlayerById(ownerId);
+		if (!player) {
 			// Player doesn't exist, reset house owner
 			house->setOwner(0);
 			continue;
 		}
 
-		if (player.getBankBalance() >= rent) {
-			player.setBankBalance(player.getBankBalance() - rent);
+		if (player->getBankBalance() >= rent) {
+			player->setBankBalance(player->getBankBalance() - rent);
 
 			time_t paidUntil = currentTime;
 			switch (rentPeriod) {
@@ -718,13 +718,13 @@ void Houses::payHouses(RentPeriod_t rentPeriod) const
 				std::ostringstream ss;
 				ss << "Warning! \nThe " << period << " rent of " << house->getRent() << " gold for your house \"" << house->getName() << "\" is payable. Have it within " << daysLeft << " days or you will lose this house.";
 				letter->setText(ss.str());
-				g_game.internalAddItem(player.getInbox(), letter, INDEX_WHEREEVER, FLAG_NOLIMIT);
+				g_game.internalAddItem(player->getInbox(), letter, INDEX_WHEREEVER, FLAG_NOLIMIT);
 				house->setPayRentWarnings(house->getPayRentWarnings() + 1);
 			} else {
-				house->setOwner(0, true, &player);
+				house->setOwner(0, true, &player.value());
 			}
 		}
 
-		IOLoginData::savePlayer(&player);
+		IOLoginData::savePlayer(&player.value());
 	}
 }
