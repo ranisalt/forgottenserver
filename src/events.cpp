@@ -149,7 +149,7 @@ bool Events::eventCreatureOnChangeOutfit(Creature* creature, const Outfit_t& out
 	return scriptInterface.callFunction(2);
 }
 
-ReturnValue Events::eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bool aggressive)
+ReturnValue Events::eventCreatureOnAreaCombat(tfs::optional<Creature&> creature, Tile* tile, bool aggressive)
 {
 	// Creature:onAreaCombat(tile, aggressive) or Creature.onAreaCombat(self, tile, aggressive)
 	if (info.creatureOnAreaCombat == -1) {
@@ -168,8 +168,8 @@ ReturnValue Events::eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bo
 	scriptInterface.pushFunction(info.creatureOnAreaCombat);
 
 	if (creature) {
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		LuaScriptInterface::pushUserdata<Creature>(L, &creature.value());
+		LuaScriptInterface::setCreatureMetatable(L, -1, &creature.value());
 	} else {
 		lua_pushnil(L);
 	}
@@ -192,7 +192,7 @@ ReturnValue Events::eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bo
 	return returnValue;
 }
 
-ReturnValue Events::eventCreatureOnTargetCombat(Creature* creature, Creature* target)
+ReturnValue Events::eventCreatureOnTargetCombat(tfs::optional<Creature&> creature, tfs::optional<Creature&> target)
 {
 	// Creature:onTargetCombat(target) or Creature.onTargetCombat(self, target)
 	if (info.creatureOnTargetCombat == -1) {
@@ -211,14 +211,14 @@ ReturnValue Events::eventCreatureOnTargetCombat(Creature* creature, Creature* ta
 	scriptInterface.pushFunction(info.creatureOnTargetCombat);
 
 	if (creature) {
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		LuaScriptInterface::pushUserdata<Creature>(L, &creature.value());
+		LuaScriptInterface::setCreatureMetatable(L, -1, &creature.value());
 	} else {
 		lua_pushnil(L);
 	}
 
-	LuaScriptInterface::pushUserdata<Creature>(L, target);
-	LuaScriptInterface::setCreatureMetatable(L, -1, target);
+	LuaScriptInterface::pushUserdata<Creature>(L, &target.value());
+	LuaScriptInterface::setCreatureMetatable(L, -1, &target.value());
 
 	ReturnValue returnValue;
 	if (scriptInterface.protectedCall(L, 2, 1) != 0) {

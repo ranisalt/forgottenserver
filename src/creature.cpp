@@ -46,7 +46,7 @@ Creature::~Creature()
 	}
 
 	for (Condition* condition : conditions) {
-		condition->endCondition(this);
+		condition->endCondition(*this);
 		delete condition;
 	}
 }
@@ -158,9 +158,8 @@ void Creature::onThink(uint32_t interval)
 	}
 
 	//scripting event - onThink
-	const CreatureEventList& thinkEvents = getCreatureEvents(CREATURE_EVENT_THINK);
-	for (CreatureEvent* thinkEvent : thinkEvents) {
-		thinkEvent->executeOnThink(this, interval);
+	for (CreatureEvent& thinkEvent : getCreatureEvents(CREATURE_EVENT_THINK)) {
+		thinkEvent.executeOnThink(this, interval);
 	}
 }
 
@@ -612,7 +611,7 @@ void Creature::onDeath()
 {
 	bool lastHitUnjustified = false;
 	bool mostDamageUnjustified = false;
-	Creature* lastHitCreature = g_game.getCreatureByID(lastHitCreatureId);
+	tfs::optional<Creature&> lastHitCreature = g_game.getCreatureByID(lastHitCreatureId);
 	Creature* lastHitCreatureMaster;
 	if (lastHitCreature) {
 		lastHitUnjustified = lastHitCreature->onKilledCreature(this);
@@ -621,34 +620,34 @@ void Creature::onDeath()
 		lastHitCreatureMaster = nullptr;
 	}
 
-	Creature* mostDamageCreature = nullptr;
+	tfs::optional<Creature&> mostDamageCreature;
 
 	const int64_t timeNow = OTSYS_TIME();
 	const uint32_t inFightTicks = g_config.getNumber(ConfigManager::PZ_LOCKED);
 	int32_t mostDamage = 0;
-	std::map<Creature*, uint64_t> experienceMap;
+	std::map<Creature&, uint64_t> experienceMap;
 	for (const auto& it : damageMap) {
-		if (Creature* attacker = g_game.getCreatureByID(it.first)) {
+		if (tfs::optional<Creature&> attacker = g_game.getCreatureByID(it.first)) {
 			CountBlock_t cb = it.second;
 			if ((cb.total > mostDamage && (timeNow - cb.ticks <= inFightTicks))) {
 				mostDamage = cb.total;
 				mostDamageCreature = attacker;
 			}
 
-			if (attacker != this) {
-				uint64_t gainExp = getGainedExperience(attacker);
+			if (&attacker.value() != this) {
+				uint64_t gainExp = getGainedExperience(attacker.value());
 				if (Player* attackerPlayer = attacker->getPlayer()) {
 					attackerPlayer->removeAttacked(getPlayer());
 
 					Party* party = attackerPlayer->getParty();
 					if (party && party->getLeader() && party->isSharedExperienceActive() && party->isSharedExperienceEnabled()) {
-						attacker = party->getLeader();
+						attacker = *party->getLeader();
 					}
 				}
 
-				auto tmpIt = experienceMap.find(attacker);
+				auto tmpIt = experienceMap.find(attacker.value());
 				if (tmpIt == experienceMap.end()) {
-					experienceMap[attacker] = gainExp;
+					experienceMap[attacker.value()] = gainExp;
 				} else {
 					tmpIt->second += gainExp;
 				}
@@ -657,7 +656,7 @@ void Creature::onDeath()
 	}
 
 	for (const auto& it : experienceMap) {
-		it.first->onGainExperience(it.second, this);
+		it.first.onGainExperience(it.second, this);
 	}
 
 	if (mostDamageCreature) {
@@ -681,14 +680,13 @@ void Creature::onDeath()
 	}
 }
 
-bool Creature::dropCorpse(Creature* lastHitCreature, Creature* mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified)
+bool Creature::dropCorpse(Creature& lastHitCreature, Creature& mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified)
 {
 	if (!lootDrop && getMonster()) {
 		if (master) {
 			//scripting event - onDeath
-			const CreatureEventList& deathEvents = getCreatureEvents(CREATURE_EVENT_DEATH);
-			for (CreatureEvent* deathEvent : deathEvents) {
-				deathEvent->executeOnDeath(this, nullptr, lastHitCreature, mostDamageCreature, lastHitUnjustified, mostDamageUnjustified);
+			for (CreatureEvent& deathEvent : getCreatureEvents(CREATURE_EVENT_DEATH)) {
+				deathEvent.executeOnDeath(*this, {}, lastHitCreature, mostDamageCreature, lastHitUnjustified, mostDamageUnjustified);
 			}
 		}
 
@@ -723,8 +721,8 @@ bool Creature::dropCorpse(Creature* lastHitCreature, Creature* mostDamageCreatur
 		}
 
 		//scripting event - onDeath
-		for (CreatureEvent* deathEvent : getCreatureEvents(CREATURE_EVENT_DEATH)) {
-			deathEvent->executeOnDeath(this, corpse, lastHitCreature, mostDamageCreature, lastHitUnjustified, mostDamageUnjustified);
+		for (CreatureEvent& deathEvent : getCreatureEvents(CREATURE_EVENT_DEATH)) {
+			deathEvent.executeOnDeath(this, corpse, lastHitCreature, mostDamageCreature, lastHitUnjustified, mostDamageUnjustified);
 		}
 
 		if (corpse) {
@@ -744,7 +742,7 @@ bool Creature::hasBeenAttacked(uint32_t attackerId)
 	return (OTSYS_TIME() - it->second.ticks) <= g_config.getNumber(ConfigManager::PZ_LOCKED);
 }
 
-Item* Creature::getCorpse(Creature*, Creature*)
+tfs::optional<Item> Creature::getCorpse(Creature&, Creature&)
 {
 	return Item::CreateItem(getLookCorpse());
 }
@@ -963,7 +961,7 @@ bool Creature::setFollowCreature(Creature* creature)
 	return true;
 }
 
-double Creature::getDamageRatio(Creature* attacker) const
+double Creature::getDamageRatio(const Creature& attacker) const
 {
 	uint32_t totalDamage = 0;
 	uint32_t attackerDamage = 0;
@@ -971,7 +969,7 @@ double Creature::getDamageRatio(Creature* attacker) const
 	for (const auto& it : damageMap) {
 		const CountBlock_t& cb = it.second;
 		totalDamage += cb.total;
-		if (it.first == attacker->getID()) {
+		if (it.first == attacker.getID()) {
 			attackerDamage += cb.total;
 		}
 	}
@@ -983,7 +981,7 @@ double Creature::getDamageRatio(Creature* attacker) const
 	return (static_cast<double>(attackerDamage) / totalDamage);
 }
 
-uint64_t Creature::getGainedExperience(Creature* attacker) const
+uint64_t Creature::getGainedExperience(const Creature& attacker) const
 {
 	return std::floor(getDamageRatio(attacker) * getLostExperience());
 }
@@ -1484,9 +1482,9 @@ bool Creature::unregisterCreatureEvent(const std::string& name)
 	return true;
 }
 
-CreatureEventList Creature::getCreatureEvents(CreatureEventType_t type)
+std::vector<std::reference_wrapper<CreatureEvent>> Creature::getCreatureEvents(CreatureEventType_t type)
 {
-	CreatureEventList tmpEventList;
+	std::vector<std::reference_wrapper<CreatureEvent>> tmpEventList;
 
 	if (!hasEventRegistered(type)) {
 		return tmpEventList;
@@ -1494,7 +1492,7 @@ CreatureEventList Creature::getCreatureEvents(CreatureEventType_t type)
 
 	for (CreatureEvent* creatureEvent : eventsList) {
 		if (creatureEvent->getEventType() == type) {
-			tmpEventList.push_back(creatureEvent);
+			tmpEventList.emplace_back(*creatureEvent);
 		}
 	}
 

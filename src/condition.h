@@ -20,8 +20,9 @@
 #ifndef FS_CONDITION_H_F92FF8BDDD5B4EA59E2B1BB5C9C0A086
 #define FS_CONDITION_H_F92FF8BDDD5B4EA59E2B1BB5C9C0A086
 
-#include "fileloader.h"
 #include "enums.h"
+#include "fileloader.h"
+#include "optional.h"
 
 class Creature;
 class Player;
@@ -75,10 +76,10 @@ class Condition
 			subId(subId), ticks(ticks),	conditionType(type), id(id), isBuff(buff) {}
 		virtual ~Condition() = default;
 
-		virtual bool startCondition(Creature* creature);
-		virtual bool executeCondition(Creature* creature, int32_t interval);
-		virtual void endCondition(Creature* creature) = 0;
-		virtual void addCondition(Creature* creature, const Condition* condition) = 0;
+		virtual bool startCondition(Creature& creature);
+		virtual bool executeCondition(Creature& creature, int32_t interval);
+		virtual void endCondition(Creature& creature) = 0;
+		virtual void addCondition(Creature& creature, const Condition* condition) = 0;
 		virtual uint32_t getIcons() const;
 		ConditionId_t getId() const {
 			return id;
@@ -129,10 +130,10 @@ class ConditionGeneric : public Condition
 		ConditionGeneric(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0):
 			Condition(id, type, ticks, buff, subId) {}
 
-		bool startCondition(Creature* creature) override;
-		bool executeCondition(Creature* creature, int32_t interval) override;
-		void endCondition(Creature* creature) override;
-		void addCondition(Creature* creature, const Condition* condition) override;
+		bool startCondition(Creature& creature) override;
+		bool executeCondition(Creature& creature, int32_t interval) override;
+		void endCondition(Creature& creature) override;
+		void addCondition(Creature& creature, const Condition* condition) override;
 		uint32_t getIcons() const override;
 
 		ConditionGeneric* clone() const override {
@@ -146,10 +147,10 @@ class ConditionAttributes final : public ConditionGeneric
 		ConditionAttributes(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0) :
 			ConditionGeneric(id, type, ticks, buff, subId) {}
 
-		bool startCondition(Creature* creature) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
-		void endCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* condition) final;
+		bool startCondition(Creature& creature) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
+		void endCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* condition) final;
 
 		bool setParam(ConditionParam_t param, int32_t value) final;
 
@@ -181,8 +182,8 @@ class ConditionRegeneration final : public ConditionGeneric
 		ConditionRegeneration(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0):
 			ConditionGeneric(id, type, ticks, buff, subId) {}
 
-		void addCondition(Creature* creature, const Condition* addCondition) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
+		void addCondition(Creature& creature, const Condition* addCondition) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
 
 		bool setParam(ConditionParam_t param, int32_t value) final;
 
@@ -210,8 +211,8 @@ class ConditionSoul final : public ConditionGeneric
 		ConditionSoul(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0) :
 			ConditionGeneric(id, type, ticks, buff, subId) {}
 
-		void addCondition(Creature* creature, const Condition* addCondition) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
+		void addCondition(Creature& creature, const Condition* addCondition) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
 
 		bool setParam(ConditionParam_t param, int32_t value) final;
 
@@ -235,8 +236,8 @@ class ConditionInvisible final : public ConditionGeneric
 		ConditionInvisible(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0) :
 			ConditionGeneric(id, type, ticks, buff, subId) {}
 
-		bool startCondition(Creature* creature) final;
-		void endCondition(Creature* creature) final;
+		bool startCondition(Creature& creature) final;
+		void endCondition(Creature& creature) final;
 
 		ConditionInvisible* clone() const final {
 			return new ConditionInvisible(*this);
@@ -252,10 +253,10 @@ class ConditionDamage final : public Condition
 
 		static void generateDamageList(int32_t amount, int32_t start, std::list<int32_t>& list);
 
-		bool startCondition(Creature* creature) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
-		void endCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* condition) final;
+		bool startCondition(Creature& creature) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
+		void endCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* condition) final;
 		uint32_t getIcons() const final;
 
 		ConditionDamage* clone() const final {
@@ -292,7 +293,7 @@ class ConditionDamage final : public Condition
 		std::list<IntervalInfo> damageList;
 
 		bool getNextDamage(int32_t& damage);
-		bool doDamage(Creature* creature, int32_t healthChange);
+		bool doDamage(Creature& creature, int32_t healthChange);
 
 		bool updateCondition(const Condition* addCondition) final;
 };
@@ -303,10 +304,10 @@ class ConditionSpeed final : public Condition
 		ConditionSpeed(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff, uint32_t subId, int32_t changeSpeed) :
 			Condition(id, type, ticks, buff, subId), speedDelta(changeSpeed) {}
 
-		bool startCondition(Creature* creature) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
-		void endCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* condition) final;
+		bool startCondition(Creature& creature) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
+		void endCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* condition) final;
 		uint32_t getIcons() const final;
 
 		ConditionSpeed* clone() const final {
@@ -339,10 +340,10 @@ class ConditionOutfit final : public Condition
 		ConditionOutfit(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0) :
 			Condition(id, type, ticks, buff, subId) {}
 
-		bool startCondition(Creature* creature) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
-		void endCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* condition) final;
+		bool startCondition(Creature& creature) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
+		void endCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* condition) final;
 
 		ConditionOutfit* clone() const final {
 			return new ConditionOutfit(*this);
@@ -364,10 +365,10 @@ class ConditionLight final : public Condition
 		ConditionLight(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff, uint32_t subId, uint8_t lightlevel, uint8_t lightcolor) :
 			Condition(id, type, ticks, buff, subId), lightInfo(lightlevel, lightcolor) {}
 
-		bool startCondition(Creature* creature) final;
-		bool executeCondition(Creature* creature, int32_t interval) final;
-		void endCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* addCondition) final;
+		bool startCondition(Creature& creature) final;
+		bool executeCondition(Creature& creature, int32_t interval) final;
+		void endCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* addCondition) final;
 
 		ConditionLight* clone() const final {
 			return new ConditionLight(*this);
@@ -391,8 +392,8 @@ class ConditionSpellCooldown final : public ConditionGeneric
 		ConditionSpellCooldown(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0) :
 			ConditionGeneric(id, type, ticks, buff, subId) {}
 
-		bool startCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* condition) final;
+		bool startCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* condition) final;
 
 		ConditionSpellCooldown* clone() const final {
 			return new ConditionSpellCooldown(*this);
@@ -405,8 +406,8 @@ class ConditionSpellGroupCooldown final : public ConditionGeneric
 		ConditionSpellGroupCooldown(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0) :
 			ConditionGeneric(id, type, ticks, buff, subId) {}
 
-		bool startCondition(Creature* creature) final;
-		void addCondition(Creature* creature, const Condition* condition) final;
+		bool startCondition(Creature& creature) final;
+		void addCondition(Creature& creature, const Condition* condition) final;
 
 		ConditionSpellGroupCooldown* clone() const final {
 			return new ConditionSpellGroupCooldown(*this);

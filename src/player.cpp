@@ -2058,7 +2058,7 @@ void Player::death(Creature* lastHitCreature)
 	}
 }
 
-bool Player::dropCorpse(Creature* lastHitCreature, Creature* mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified)
+bool Player::dropCorpse(Creature& lastHitCreature, Creature& mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified)
 {
 	if (getZone() != ZONE_PVP || !Player::lastHitIsPlayer(lastHitCreature)) {
 		return Creature::dropCorpse(lastHitCreature, mostDamageCreature, lastHitUnjustified, mostDamageUnjustified);
@@ -3151,20 +3151,20 @@ void Player::doAttacking(uint32_t)
 		bool result = false;
 
 		Item* tool = getWeapon();
-		const Weapon* weapon = g_weapons->getWeapon(tool);
+		auto&& weapon = g_weapons->getWeapon(*tool);
 		if (weapon) {
 			if (!weapon->interruptSwing()) {
-				result = weapon->useWeapon(this, tool, attackedCreature);
+				result = weapon->useWeapon(*this, tool, attackedCreature);
 			} else if (!canDoAction()) {
 				uint32_t delay = getNextActionTime();
 				SchedulerTask* task = createSchedulerTask(delay, std::bind(&Game::checkCreatureAttack,
 				                      &g_game, getID()));
 				setNextActionTask(task);
 			} else {
-				result = weapon->useWeapon(this, tool, attackedCreature);
+				result = weapon->useWeapon(*this, tool, attackedCreature);
 			}
 		} else {
-			result = Weapon::useFist(this, attackedCreature);
+			result = Weapon::useFist(*this, attackedCreature);
 		}
 
 		if (result) {
@@ -3173,10 +3173,10 @@ void Player::doAttacking(uint32_t)
 	}
 }
 
-uint64_t Player::getGainedExperience(Creature* attacker) const
+uint64_t Player::getGainedExperience(const Creature& attacker) const
 {
 	if (g_config.getBoolean(ConfigManager::EXPERIENCE_FROM_PLAYERS)) {
-		Player* attackerPlayer = attacker->getPlayer();
+		const Player* attackerPlayer = attacker.getPlayer();
 		if (attackerPlayer && attackerPlayer != this && skillLoss && std::abs(static_cast<int32_t>(attackerPlayer->getLevel() - level)) <= g_config.getNumber(ConfigManager::EXP_FROM_PLAYERS_LEVEL_RANGE)) {
 			return std::max<uint64_t>(0, std::floor(getLostExperience() * getDamageRatio(attacker) * 0.75));
 		}
@@ -3552,7 +3552,7 @@ bool Player::isAttackable() const
 	return !hasFlag(PlayerFlag_CannotBeAttacked);
 }
 
-bool Player::lastHitIsPlayer(Creature* lastHitCreature)
+bool Player::lastHitIsPlayer(tfs::optional<const Creature&> lastHitCreature)
 {
 	if (!lastHitCreature) {
 		return false;
@@ -3562,7 +3562,7 @@ bool Player::lastHitIsPlayer(Creature* lastHitCreature)
 		return true;
 	}
 
-	Creature* lastHitMaster = lastHitCreature->getMaster();
+	const Creature* lastHitMaster = lastHitCreature->getMaster();
 	return lastHitMaster && lastHitMaster->getPlayer();
 }
 
@@ -3721,7 +3721,7 @@ Skulls_t Player::getSkull() const
 	return skull;
 }
 
-Skulls_t Player::getSkullClient(const Creature* creature) const
+Skulls_t Player::getSkullClient(tfs::optional<const Creature&> creature) const
 {
 	if (!creature || g_game.getWorldType() != WORLD_TYPE_PVP) {
 		return SKULL_NONE;

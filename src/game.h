@@ -119,33 +119,10 @@ class Game
 
 		static std::string getTradeErrorDescription(ReturnValue ret, Item* item);
 
-		/**
-		  * Returns a creature based on the unique creature identifier
-		  * \param id is the unique creature id to get a creature pointer to
-		  * \returns A Creature pointer to the creature
-		  */
-		Creature* getCreatureByID(uint32_t id);
-
-		/**
-		  * Returns a monster based on the unique creature identifier
-		  * \param id is the unique monster id to get a monster pointer to
-		  * \returns A Monster pointer to the monster
-		  */
-		Monster* getMonsterByID(uint32_t id);
-
-		/**
-		  * Returns a npc based on the unique creature identifier
-		  * \param id is the unique npc id to get a npc pointer to
-		  * \returns A NPC pointer to the npc
-		  */
-		Npc* getNpcByID(uint32_t id);
-
-		/**
-		  * Returns a player based on the unique creature identifier
-		  * \param id is the unique player id to get a player pointer to
-		  * \returns A Pointer to the player
-		  */
-		Player* getPlayerByID(uint32_t id);
+		tfs::optional<Creature&> getCreatureByID(uint32_t id);
+		tfs::optional<Monster&> getMonsterByID(uint32_t id);
+		tfs::optional<Npc&> getNpcByID(uint32_t id);
+		tfs::optional<Player&> getPlayerByID(uint32_t id);
 
 		/**
 		  * Returns a creature based on a string name identifier
@@ -414,10 +391,10 @@ class Game
 		                      int32_t rangex = Map::maxClientViewportX, int32_t rangey = Map::maxClientViewportY) const;
 		bool isSightClear(const Position& fromPos, const Position& toPos, bool sameFloor) const;
 
-		void changeSpeed(Creature* creature, int32_t varSpeedDelta);
-		void internalCreatureChangeOutfit(Creature* creature, const Outfit_t& oufit);
-		void internalCreatureChangeVisible(Creature* creature, bool visible);
-		void changeLight(const Creature* creature);
+		void changeSpeed(Creature& creature, int32_t varSpeedDelta);
+		void internalCreatureChangeOutfit(Creature& creature, const Outfit_t& oufit);
+		void internalCreatureChangeVisible(Creature& creature, bool visible);
+		void changeLight(const Creature& creature);
 		void updateCreatureSkull(const Creature* player);
 		void updatePlayerShield(Player* player);
 		void updatePlayerHelpers(const Player& player);
@@ -435,12 +412,12 @@ class Game
 		void checkCreatures(size_t index);
 		void checkLight();
 
-		bool combatBlockHit(CombatDamage& damage, Creature* attacker, Creature* target, bool checkDefense, bool checkArmor, bool field);
+		bool combatBlockHit(CombatDamage& damage, tfs::optional<Creature&> attacker, const Creature& target, bool checkDefense, bool checkArmor, bool field);
 
 		void combatGetTypeInfo(CombatType_t combatType, Creature* target, TextColor_t& color, uint8_t& effect);
 
-		bool combatChangeHealth(Creature* attacker, Creature* target, CombatDamage& damage);
-		bool combatChangeMana(Creature* attacker, Creature* target, int32_t manaChange, CombatOrigin origin);
+		bool combatChangeHealth(tfs::optional<Creature&> attacker, const Creature& target, CombatDamage& damage);
+		bool combatChangeMana(tfs::optional<Creature&> attacker, Creature& target, int32_t manaChange, CombatOrigin origin);
 
 		//animation help functions
 		void addCreatureHealth(const Creature* target);

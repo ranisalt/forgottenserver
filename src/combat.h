@@ -20,10 +20,11 @@
 #ifndef FS_COMBAT_H_B02CE79230FC43708699EE91FCC8F7CC
 #define FS_COMBAT_H_B02CE79230FC43708699EE91FCC8F7CC
 
-#include "thing.h"
+#include "baseevents.h"
 #include "condition.h"
 #include "map.h"
-#include "baseevents.h"
+#include "optional.h"
+#include "thing.h"
 
 class Condition;
 class Creature;
@@ -36,7 +37,7 @@ class ValueCallback final : public CallBack
 {
 	public:
 		explicit ValueCallback(formulaType_t type): type(type) {}
-		void getMinMaxValues(Player* player, CombatDamage& damage, bool useCharges) const;
+		void getMinMaxValues(Player& player, CombatDamage& damage, bool useCharges) const;
 
 	protected:
 		formulaType_t type;
@@ -45,7 +46,7 @@ class ValueCallback final : public CallBack
 class TileCallback final : public CallBack
 {
 	public:
-		void onTileCombat(Creature* creature, Tile* tile) const;
+		void onTileCombat(tfs::optional<Creature&> creature, Tile* tile) const;
 
 	protected:
 		formulaType_t type;
@@ -54,7 +55,7 @@ class TileCallback final : public CallBack
 class TargetCallback final : public CallBack
 {
 	public:
-		void onTargetCombat(Creature* creature, Creature* target) const;
+		void onTargetCombat(tfs::optional<Creature&> creature, tfs::optional<Creature&> target) const;
 
 	protected:
 		formulaType_t type;
@@ -83,7 +84,7 @@ struct CombatParams {
 	bool useCharges = false;
 };
 
-using CombatFunction = std::function<void(Creature*, Creature*, const CombatParams&, CombatDamage*)>;
+using CombatFunction = std::function<void(tfs::optional<Creature&>, Creature&, const CombatParams&, CombatDamage*)>;
 
 class MatrixArea
 {
@@ -248,34 +249,34 @@ class Combat
 		Combat(const Combat&) = delete;
 		Combat& operator=(const Combat&) = delete;
 
-		static void doCombatHealth(Creature* caster, Creature* target, CombatDamage& damage, const CombatParams& params);
-		static void doCombatHealth(Creature* caster, const Position& position, const AreaCombat* area, CombatDamage& damage, const CombatParams& params);
+		static void doCombatHealth(tfs::optional<Creature&> caster, Creature& target, CombatDamage& damage, const CombatParams& params);
+		static void doCombatHealth(tfs::optional<Creature&> caster, const Position& position, const AreaCombat* area, CombatDamage& damage, const CombatParams& params);
 
-		static void doCombatMana(Creature* caster, Creature* target, CombatDamage& damage, const CombatParams& params);
-		static void doCombatMana(Creature* caster, const Position& position, const AreaCombat* area, CombatDamage& damage, const CombatParams& params);
+		static void doCombatMana(tfs::optional<Creature&> caster, Creature& target, CombatDamage& damage, const CombatParams& params);
+		static void doCombatMana(tfs::optional<Creature&> caster, const Position& position, const AreaCombat* area, CombatDamage& damage, const CombatParams& params);
 
-		static void doCombatCondition(Creature* caster, Creature* target, const CombatParams& params);
-		static void doCombatCondition(Creature* caster, const Position& position, const AreaCombat* area, const CombatParams& params);
+		static void doCombatCondition(tfs::optional<Creature&>, Creature& target, const CombatParams& params);
+		static void doCombatCondition(tfs::optional<Creature&>, const Position& position, const AreaCombat* area, const CombatParams& params);
 
-		static void doCombatDispel(Creature* caster, Creature* target, const CombatParams& params);
-		static void doCombatDispel(Creature* caster, const Position& position, const AreaCombat* area, const CombatParams& params);
+		static void doCombatDispel(tfs::optional<Creature&>, Creature& target, const CombatParams& params);
+		static void doCombatDispel(tfs::optional<Creature&>, const Position& position, const AreaCombat* area, const CombatParams& params);
 
 		static void getCombatArea(const Position& centerPos, const Position& targetPos, const AreaCombat* area, std::forward_list<Tile*>& list);
 
-		static bool isInPvpZone(const Creature* attacker, const Creature* target);
-		static bool isProtected(const Player* attacker, const Player* target);
-		static bool isPlayerCombat(const Creature* target);
+		static bool isInPvpZone(const Creature& attacker, const Creature& target);
+		static bool isProtected(const Player& attacker, const Player& target);
+		static bool isPlayerCombat(const Creature& target);
 		static CombatType_t ConditionToDamageType(ConditionType_t type);
 		static ConditionType_t DamageToConditionType(CombatType_t type);
-		static ReturnValue canTargetCreature(Player* attacker, Creature* target);
-		static ReturnValue canDoCombat(Creature* caster, Tile* tile, bool aggressive);
-		static ReturnValue canDoCombat(Creature* attacker, Creature* target);
-		static void postCombatEffects(Creature* caster, const Position& pos, const CombatParams& params);
+		static ReturnValue canTargetCreature(Player& attacker, Creature& target);
+		static ReturnValue canDoCombat(tfs::optional<Creature&> caster, Tile* tile, bool aggressive);
+		static ReturnValue canDoCombat(tfs::optional<Creature&> attacker, tfs::optional<Creature&> target);
+		static void postCombatEffects(tfs::optional<const Creature&> caster, const Position& pos, const CombatParams& params);
 
-		static void addDistanceEffect(Creature* caster, const Position& fromPos, const Position& toPos, uint8_t effect);
+		static void addDistanceEffect(tfs::optional<const Creature&> caster, const Position& fromPos, const Position& toPos, uint8_t effect);
 
-		void doCombat(Creature* caster, Creature* target) const;
-		void doCombat(Creature* caster, const Position& pos) const;
+		void doCombat(tfs::optional<Creature&> caster, Creature& target) const;
+		void doCombat(tfs::optional<Creature&>, const Position& pos) const;
 
 		bool setCallback(CallBackParam_t key);
 		CallBack* getCallback(CallBackParam_t key);
@@ -291,7 +292,7 @@ class Combat
 			params.conditionList.emplace_front(condition);
 		}
 		void setPlayerCombatValues(formulaType_t formulaType, double mina, double minb, double maxa, double maxb);
-		void postCombatEffects(Creature* caster, const Position& pos) const {
+		void postCombatEffects(tfs::optional<const Creature&> caster, const Position& pos) const {
 			postCombatEffects(caster, pos, params);
 		}
 
@@ -300,18 +301,18 @@ class Combat
 		}
 
 	protected:
-		static void doCombatDefault(Creature* caster, Creature* target, const CombatParams& params);
+		static void doCombatDefault(tfs::optional<Creature&>, Creature& target, const CombatParams& params);
 
-		static void CombatFunc(Creature* caster, const Position& pos, const AreaCombat* area, const CombatParams& params, CombatFunction func, CombatDamage* data);
+		static void CombatFunc(tfs::optional<Creature&> caster, const Position& pos, const AreaCombat* area, const CombatParams& params, CombatFunction func, CombatDamage* data);
 
-		static void CombatHealthFunc(Creature* caster, Creature* target, const CombatParams& params, CombatDamage* data);
-		static void CombatManaFunc(Creature* caster, Creature* target, const CombatParams& params, CombatDamage* damage);
-		static void CombatConditionFunc(Creature* caster, Creature* target, const CombatParams& params, CombatDamage* data);
-		static void CombatDispelFunc(Creature* caster, Creature* target, const CombatParams& params, CombatDamage* data);
-		static void CombatNullFunc(Creature* caster, Creature* target, const CombatParams& params, CombatDamage* data);
+		static void CombatHealthFunc(tfs::optional<Creature&> caster, Creature& target, const CombatParams& params, CombatDamage* data);
+		static void CombatManaFunc(tfs::optional<Creature&> caster, Creature& target, const CombatParams& params, CombatDamage* damage);
+		static void CombatConditionFunc(tfs::optional<Creature&> caster, Creature& target, const CombatParams& params, CombatDamage* data);
+		static void CombatDispelFunc(tfs::optional<Creature&> caster, Creature& target, const CombatParams& params, CombatDamage* data);
+		static void CombatNullFunc(tfs::optional<Creature&> caster, Creature& target, const CombatParams& params, CombatDamage* data);
 
-		static void combatTileEffects(const SpectatorHashSet& spectators, Creature* caster, Tile* tile, const CombatParams& params);
-		CombatDamage getCombatDamage(Creature* creature, Creature* target) const;
+		static void combatTileEffects(const SpectatorHashSet& spectators, tfs::optional<Creature&> caster, Tile* tile, const CombatParams& params);
+		CombatDamage getCombatDamage(tfs::optional<Creature&> creature, tfs::optional<const Creature&> target) const;
 
 		//configureable
 		CombatParams params;

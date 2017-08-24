@@ -20,13 +20,14 @@
 #ifndef FS_CREATURE_H_5363C04015254E298F84E6D59A139508
 #define FS_CREATURE_H_5363C04015254E298F84E6D59A139508
 
-#include "map.h"
-#include "position.h"
 #include "condition.h"
 #include "const.h"
-#include "tile.h"
-#include "enums.h"
 #include "creatureevent.h"
+#include "enums.h"
+#include "map.h"
+#include "optional.h"
+#include "position.h"
+#include "tile.h"
 
 using ConditionList = std::list<Condition*>;
 using CreatureEventList = std::list<CreatureEvent*>;
@@ -158,7 +159,7 @@ class Creature : virtual public Thing
 		virtual Skulls_t getSkull() const {
 			return skull;
 		}
-		virtual Skulls_t getSkullClient(const Creature* creature) const {
+		virtual Skulls_t getSkullClient(tfs::optional<const Creature&> creature) const {
 			return creature->getSkull();
 		}
 		void setSkull(Skulls_t newSkull);
@@ -358,7 +359,7 @@ class Creature : virtual public Thing
 		}
 
 		void onDeath();
-		virtual uint64_t getGainedExperience(Creature* attacker) const;
+		virtual uint64_t getGainedExperience(const Creature& attacker) const;
 		void addDamagePoints(Creature* attacker, int32_t damagePoints);
 		bool hasBeenAttacked(uint32_t attackerId);
 
@@ -456,7 +457,7 @@ class Creature : virtual public Thing
 
 		static bool canSee(const Position& myPos, const Position& pos, int32_t viewRangeX, int32_t viewRangeY);
 
-		double getDamageRatio(Creature* attacker) const;
+		double getDamageRatio(const Creature& attacker) const;
 
 		bool getPathTo(const Position& targetPos, std::forward_list<Direction>& dirList, const FindPathParams& fpp) const;
 		bool getPathTo(const Position& targetPos, std::forward_list<Direction>& dirList, int32_t minTargetDist, int32_t maxTargetDist, bool fullPathSearch = true, bool clearSight = true, int32_t maxSearchDist = 0) const;
@@ -543,7 +544,7 @@ class Creature : virtual public Thing
 		bool hasEventRegistered(CreatureEventType_t event) const {
 			return (0 != (scriptEventsBitField & (static_cast<uint32_t>(1) << event)));
 		}
-		CreatureEventList getCreatureEvents(CreatureEventType_t type);
+		std::vector<std::reference_wrapper<CreatureEvent>> getCreatureEvents(CreatureEventType_t type);
 
 		void updateMapCache();
 		void updateTileCache(const Tile* tile, int32_t dx, int32_t dy);
@@ -563,7 +564,7 @@ class Creature : virtual public Thing
 		}
 		virtual void getPathSearchParams(const Creature* creature, FindPathParams& fpp) const;
 		virtual void death(Creature*) {}
-		virtual bool dropCorpse(Creature* lastHitCreature, Creature* mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified);
+		virtual bool dropCorpse(Creature& lastHitCreature, Creature& mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified);
 		virtual Item* getCorpse(Creature* lastHitCreature, Creature* mostDamageCreature);
 
 		friend class Game;

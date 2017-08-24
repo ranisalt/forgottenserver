@@ -37,13 +37,13 @@ extern Vocations g_vocations;
 
 Items Item::items;
 
-Item* Item::CreateItem(const uint16_t type, uint16_t count /*= 0*/)
+tfs::optional<Item> Item::CreateItem(const uint16_t type, uint16_t count /*= 0*/)
 {
-	Item* newItem = nullptr;
+	tfs::optional<Item> newItem;
 
 	const ItemType& it = Item::items[type];
 	if (it.group == ITEM_GROUP_DEPRECATED) {
-		return nullptr;
+		return {};
 	}
 
 	if (it.stackable && count == 0) {
@@ -52,35 +52,35 @@ Item* Item::CreateItem(const uint16_t type, uint16_t count /*= 0*/)
 
 	if (it.id != 0) {
 		if (it.isDepot()) {
-			newItem = new DepotLocker(type);
+			newItem = DepotLocker{type};
 		} else if (it.isContainer()) {
-			newItem = new Container(type);
+			newItem = Container{type};
 		} else if (it.isTeleport()) {
-			newItem = new Teleport(type);
+			newItem = Teleport{type};
 		} else if (it.isMagicField()) {
-			newItem = new MagicField(type);
+			newItem = MagicField{type};
 		} else if (it.isDoor()) {
-			newItem = new Door(type);
+			newItem = Door{type};
 		} else if (it.isTrashHolder()) {
-			newItem = new TrashHolder(type);
+			newItem = TrashHolder{type};
 		} else if (it.isMailbox()) {
-			newItem = new Mailbox(type);
+			newItem = Mailbox{type};
 		} else if (it.isBed()) {
-			newItem = new BedItem(type);
+			newItem = BedItem{type};
 		} else if (it.id >= 2210 && it.id <= 2212) {
-			newItem = new Item(type - 3, count);
+			newItem = Item{type - 3, count};
 		} else if (it.id == 2215 || it.id == 2216) {
-			newItem = new Item(type - 2, count);
+			newItem = Item{type - 2, count};
 		} else if (it.id >= 2202 && it.id <= 2206) {
-			newItem = new Item(type - 37, count);
+			newItem = Item{type - 37, count};
 		} else if (it.id == 2640) {
-			newItem = new Item(6132, count);
+			newItem = Item{6132, count};
 		} else if (it.id == 6301) {
-			newItem = new Item(6300, count);
+			newItem = Item{6300, count};
 		} else if (it.id == 18528) {
-			newItem = new Item(18408, count);
+			newItem = Item{18408, count};
 		} else {
-			newItem = new Item(type, count);
+			newItem = Item{type, count};
 		}
 
 		newItem->incrementReferenceCounter();

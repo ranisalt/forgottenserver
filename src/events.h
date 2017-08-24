@@ -21,6 +21,7 @@
 #define FS_EVENTS_H_BD444CC0EE167E5777E4C90C766B36DC
 
 #include "luascript.h"
+#include "optional.h"
 
 class Party;
 class ItemType;
@@ -64,8 +65,8 @@ class Events
 
 		// Creature
 		bool eventCreatureOnChangeOutfit(Creature* creature, const Outfit_t& outfit);
-		ReturnValue eventCreatureOnAreaCombat(Creature* creature, Tile* tile, bool aggressive);
-		ReturnValue eventCreatureOnTargetCombat(Creature* creature, Creature* target);
+		ReturnValue eventCreatureOnAreaCombat(tfs::optional<Creature&> creature, Tile* tile, bool aggressive);
+		ReturnValue eventCreatureOnTargetCombat(tfs::optional<Creature&> creature, tfs::optional<Creature&> target);
 
 		// Party
 		bool eventPartyOnJoin(Party* party, Player* player);

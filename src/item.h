@@ -23,6 +23,7 @@
 #include "cylinder.h"
 #include "thing.h"
 #include "items.h"
+#include "optional.h"
 
 #include <deque>
 
@@ -301,7 +302,7 @@ class Item : virtual public Thing
 {
 	public:
 		//Factory member to create item of right type based on type
-		static Item* CreateItem(const uint16_t type, uint16_t count = 0);
+		static tfs::optional<Item> CreateItem(const uint16_t type, uint16_t count = 0);
 		static Container* CreateItemAsContainer(const uint16_t type, uint16_t size);
 		static Item* CreateItem(PropStream& propStream);
 		static Items items;

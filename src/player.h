@@ -587,7 +587,7 @@ class Player final : public Creature, public Cylinder
 		bool isImmune(ConditionType_t type) const final;
 		bool hasShield() const;
 		bool isAttackable() const final;
-		static bool lastHitIsPlayer(Creature* lastHitCreature);
+		static bool lastHitIsPlayer(tfs::optional<const Creature&> lastHitCreature);
 
 		void changeHealth(int32_t healthChange, bool sendHealthChange = true) final;
 		void changeMana(int32_t manaChange) final;
@@ -638,7 +638,7 @@ class Player final : public Creature, public Cylinder
 
 		void addInFightTicks(bool pzlock = false);
 
-		uint64_t getGainedExperience(Creature* attacker) const final;
+		uint64_t getGainedExperience(const Creature& attacker) const final;
 
 		//combat event functions
 		void onAddCondition(ConditionType_t type) final;
@@ -662,7 +662,7 @@ class Player final : public Creature, public Cylinder
 		LightInfo getCreatureLight() const final;
 
 		Skulls_t getSkull() const final;
-		Skulls_t getSkullClient(const Creature* creature) const final;
+		Skulls_t getSkullClient(tfs::optional<const Creature&> creature) const final;
 		int64_t getSkullTicks() const { return skullTicks; }
 		void setSkullTicks(int64_t ticks) { skullTicks = ticks; }
 
@@ -1148,7 +1148,7 @@ class Player final : public Creature, public Cylinder
 		void setNextActionTask(SchedulerTask* task);
 
 		void death(Creature* lastHitCreature) final;
-		bool dropCorpse(Creature* lastHitCreature, Creature* mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified) final;
+		bool dropCorpse(Creature& lastHitCreature, Creature& mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified) final;
 		Item* getCorpse(Creature* lastHitCreature, Creature* mostDamageCreature) final;
 
 		//cylinder implementations

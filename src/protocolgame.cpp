@@ -1000,7 +1000,7 @@ void ProtocolGame::parseRuleViolationReport(NetworkMessage &msg)
 		translation = msg.getString();
 	} else if (reportType == REPORT_TYPE_STATEMENT) {
 		translation = msg.getString();
-		msg.get<uint32_t>(); // statement id, used to get whatever player have said, we don't log that.  
+		msg.get<uint32_t>(); // statement id, used to get whatever player have said, we don't log that.
 	}
 
 	addGameTask(&Game::playerReportRuleViolation, player->getID(), targetName, reportType, reportReason, comment, translation);

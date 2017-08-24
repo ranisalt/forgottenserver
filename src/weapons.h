@@ -20,11 +20,12 @@
 #ifndef FS_WEAPONS_H_69D1993478AA42948E24C0B90B8F5BF5
 #define FS_WEAPONS_H_69D1993478AA42948E24C0B90B8F5BF5
 
-#include "luascript.h"
-#include "player.h"
 #include "baseevents.h"
 #include "combat.h"
 #include "const.h"
+#include "luascript.h"
+#include "optional.h"
+#include "player.h"
 
 class Weapon;
 class WeaponMelee;
@@ -42,7 +43,7 @@ class Weapons final : public BaseEvents
 		Weapons& operator=(const Weapons&) = delete;
 
 		void loadDefaults();
-		const Weapon* getWeapon(const Item* item) const;
+		tfs::optional<const Weapon&> getWeapon(tfs::optional<const Item&> item) const;
 
 		static int32_t getMaxMeleeDamage(int32_t attackSkill, int32_t attackValue);
 		static int32_t getMaxWeaponDamage(uint32_t level, int32_t attackSkill, int32_t attackValue, float attackFactor);
@@ -73,12 +74,12 @@ class Weapon : public Event
 			return false;
 		}
 
-		int32_t playerWeaponCheck(Player* player, Creature* target, uint8_t shootRange) const;
-		static bool useFist(Player* player, Creature* target);
-		virtual bool useWeapon(Player* player, Item* item, Creature* target) const;
+		int32_t playerWeaponCheck(const Player& player, Creature* target, uint8_t shootRange) const;
+		static bool useFist(const Player& player, Creature* target);
+		virtual bool useWeapon(const Player& player, Item* item, Creature* target) const;
 
-		virtual int32_t getWeaponDamage(const Player* player, const Creature* target, const Item* item, bool maxDamage = false) const = 0;
-		virtual int32_t getElementDamage(const Player* player, const Creature* target, const Item* item) const = 0;
+		virtual int32_t getWeaponDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item, bool maxDamage = false) const = 0;
+		virtual int32_t getElementDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item) const = 0;
 		virtual CombatType_t getElementType() const = 0;
 
 		uint16_t getID() const {
@@ -102,15 +103,15 @@ class Weapon : public Event
 		std::string getScriptEventName() const final;
 
 		bool executeUseWeapon(Player* player, const LuaVariant& var) const;
-		void internalUseWeapon(Player* player, Item* item, Creature* target, int32_t damageModifier) const;
-		void internalUseWeapon(Player* player, Item* item, Tile* tile) const;
+		void internalUseWeapon(const Player& player, Item* item, Creature* target, int32_t damageModifier) const;
+		void internalUseWeapon(const Player& player, Item* item, Tile* tile) const;
 
 		void onUsedWeapon(Player* player, Item* item, Tile* destTile) const;
 		virtual bool getSkillType(const Player*, const Item*, skills_t&, uint32_t&) const {
 			return false;
 		}
 
-		uint32_t getManaCost(const Player* player) const;
+		uint32_t getManaCost(const Player& player) const;
 
 		CombatParams params;
 
@@ -140,10 +141,10 @@ class WeaponMelee final : public Weapon
 
 		void configureWeapon(const ItemType& it) final;
 
-		bool useWeapon(Player* player, Item* item, Creature* target) const final;
+		bool useWeapon(const Player& player, Item* item, Creature* target) const final;
 
-		int32_t getWeaponDamage(const Player* player, const Creature* target, const Item* item, bool maxDamage = false) const final;
-		int32_t getElementDamage(const Player* player, const Creature* target, const Item* item) const final;
+		int32_t getWeaponDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item, bool maxDamage = false) const final;
+		int32_t getElementDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item) const final;
 		CombatType_t getElementType() const final { return elementType; }
 
 	protected:
@@ -163,10 +164,10 @@ class WeaponDistance final : public Weapon
 			return true;
 		}
 
-		bool useWeapon(Player* player, Item* item, Creature* target) const final;
+		bool useWeapon(const Player& player, Item* item, Creature* target) const final;
 
-		int32_t getWeaponDamage(const Player* player, const Creature* target, const Item* item, bool maxDamage = false) const final;
-		int32_t getElementDamage(const Player* player, const Creature* target, const Item* item) const final;
+		int32_t getWeaponDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item, bool maxDamage = false) const final;
+		int32_t getElementDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item) const final;
 		CombatType_t getElementType() const final { return elementType; }
 
 	protected:
@@ -184,8 +185,8 @@ class WeaponWand final : public Weapon
 		bool configureEvent(const pugi::xml_node& node) final;
 		void configureWeapon(const ItemType& it) final;
 
-		int32_t getWeaponDamage(const Player* player, const Creature* target, const Item* item, bool maxDamage = false) const final;
-		int32_t getElementDamage(const Player*, const Creature*, const Item*) const final { return 0; }
+		int32_t getWeaponDamage(const Player& player, tfs::optional<const Creature&> target, const Item* item, bool maxDamage = false) const final;
+		int32_t getElementDamage(const Player&, tfs::optional<const Creature&>, const Item*) const final { return 0; }
 		CombatType_t getElementType() const final { return COMBAT_NONE; }
 
 	protected:

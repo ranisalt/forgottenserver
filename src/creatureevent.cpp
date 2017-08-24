@@ -345,7 +345,7 @@ bool CreatureEvent::executeOnPrepareDeath(Creature* creature, Creature* killer)
 	return scriptInterface->callFunction(2);
 }
 
-bool CreatureEvent::executeOnDeath(Creature* creature, Item* corpse, Creature* killer, Creature* mostDamageKiller, bool lastHitUnjustified, bool mostDamageUnjustified)
+bool CreatureEvent::executeOnDeath(Creature& creature, tfs::optional<Item&> corpse, tfs::optional<Creature&> killer, tfs::optional<Creature&> mostDamageKiller, bool lastHitUnjustified, bool mostDamageUnjustified)
 {
 	//onDeath(creature, corpse, lasthitkiller, mostdamagekiller, lasthitunjustified, mostdamageunjustified)
 	if (!scriptInterface->reserveScriptEnv()) {
@@ -359,21 +359,21 @@ bool CreatureEvent::executeOnDeath(Creature* creature, Item* corpse, Creature* k
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	LuaScriptInterface::pushUserdata<Creature>(L, &creature);
+	LuaScriptInterface::setCreatureMetatable(L, -1, &creature);
 
 	LuaScriptInterface::pushThing(L, corpse);
 
 	if (killer) {
-		LuaScriptInterface::pushUserdata<Creature>(L, killer);
-		LuaScriptInterface::setCreatureMetatable(L, -1, killer);
+		LuaScriptInterface::pushUserdata<Creature>(L, &killer.value());
+		LuaScriptInterface::setCreatureMetatable(L, -1, &killer.value());
 	} else {
 		lua_pushnil(L);
 	}
 
 	if (mostDamageKiller) {
-		LuaScriptInterface::pushUserdata<Creature>(L, mostDamageKiller);
-		LuaScriptInterface::setCreatureMetatable(L, -1, mostDamageKiller);
+		LuaScriptInterface::pushUserdata<Creature>(L, &mostDamageKiller.value());
+		LuaScriptInterface::setCreatureMetatable(L, -1, &mostDamageKiller.value());
 	} else {
 		lua_pushnil(L);
 	}
@@ -523,7 +523,7 @@ void CreatureEvent::executeHealthChange(Creature* creature, Creature* attacker, 
 	scriptInterface->resetScriptEnv();
 }
 
-void CreatureEvent::executeManaChange(Creature* creature, Creature* attacker, int32_t& manaChange, CombatOrigin origin)
+void CreatureEvent::executeManaChange(Creature& creature, tfs::optional<Creature&> attacker, int32_t& manaChange, CombatOrigin origin)
 {
 	//onManaChange(creature, attacker, manaChange, origin)
 	if (!scriptInterface->reserveScriptEnv()) {
@@ -537,11 +537,11 @@ void CreatureEvent::executeManaChange(Creature* creature, Creature* attacker, in
 	lua_State* L = scriptInterface->getLuaState();
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata(L, creature);
-	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+	LuaScriptInterface::pushUserdata(L, &creature);
+	LuaScriptInterface::setCreatureMetatable(L, -1, &creature);
 	if (attacker) {
-		LuaScriptInterface::pushUserdata(L, attacker);
-		LuaScriptInterface::setCreatureMetatable(L, -1, attacker);
+		LuaScriptInterface::pushUserdata(L, &attacker.value());
+		LuaScriptInterface::setCreatureMetatable(L, -1, &attacker.value());
 	} else {
 		lua_pushnil(L);
 	}

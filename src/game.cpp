@@ -359,7 +359,7 @@ void Game::internalGetPosition(Item* item, Position& pos, uint8_t& stackpos)
 	}
 }
 
-Creature* Game::getCreatureByID(uint32_t id)
+tfs::optional<Creature&> Game::getCreatureByID(uint32_t id)
 {
 	if (id <= Player::playerAutoID) {
 		return getPlayerByID(id);
@@ -368,36 +368,36 @@ Creature* Game::getCreatureByID(uint32_t id)
 	} else if (id <= Npc::npcAutoID) {
 		return getNpcByID(id);
 	}
-	return nullptr;
+	return {};
 }
 
-Monster* Game::getMonsterByID(uint32_t id)
+tfs::optional<Monster&> Game::getMonsterByID(uint32_t id)
 {
 	if (id == 0) {
-		return nullptr;
+		return {};
 	}
 
 	auto it = monsters.find(id);
 	if (it == monsters.end()) {
-		return nullptr;
+		return {};
 	}
-	return it->second;
+	return *it->second;
 }
 
-Npc* Game::getNpcByID(uint32_t id)
+tfs::optional<Npc&> Game::getNpcByID(uint32_t id)
 {
 	if (id == 0) {
-		return nullptr;
+		return {};
 	}
 
 	auto it = npcs.find(id);
 	if (it == npcs.end()) {
-		return nullptr;
+		return {};
 	}
-	return it->second;
+	return *it->second;
 }
 
-Player* Game::getPlayerByID(uint32_t id)
+tfs::optional<Player&> Game::getPlayerByID(uint32_t id)
 {
 	if (id == 0) {
 		return nullptr;
@@ -3537,52 +3537,52 @@ void Game::checkCreatures(size_t index)
 	cleanup();
 }
 
-void Game::changeSpeed(Creature* creature, int32_t varSpeedDelta)
+void Game::changeSpeed(Creature& creature, int32_t varSpeedDelta)
 {
-	int32_t varSpeed = creature->getSpeed() - creature->getBaseSpeed();
+	int32_t varSpeed = creature.getSpeed() - creature.getBaseSpeed();
 	varSpeed += varSpeedDelta;
 
-	creature->setSpeed(varSpeed);
+	creature.setSpeed(varSpeed);
 
 	//send to clients
 	SpectatorHashSet spectators;
-	map.getSpectators(spectators, creature->getPosition(), false, true);
+	map.getSpectators(spectators, creature.getPosition(), false, true);
 	for (Creature* spectator : spectators) {
-		spectator->getPlayer()->sendChangeSpeed(creature, creature->getStepSpeed());
+		spectator->getPlayer()->sendChangeSpeed(creature, creature.getStepSpeed());
 	}
 }
 
-void Game::internalCreatureChangeOutfit(Creature* creature, const Outfit_t& outfit)
+void Game::internalCreatureChangeOutfit(Creature& creature, const Outfit_t& outfit)
 {
 	if (!g_events->eventCreatureOnChangeOutfit(creature, outfit)) {
 		return;
 	}
 
-	creature->setCurrentOutfit(outfit);
+	creature.setCurrentOutfit(outfit);
 
-	if (creature->isInvisible()) {
+	if (creature.isInvisible()) {
 		return;
 	}
 
 	//send to clients
 	SpectatorHashSet spectators;
-	map.getSpectators(spectators, creature->getPosition(), true, true);
+	map.getSpectators(spectators, creature.getPosition(), true, true);
 	for (Creature* spectator : spectators) {
 		spectator->getPlayer()->sendCreatureChangeOutfit(creature, outfit);
 	}
 }
 
-void Game::internalCreatureChangeVisible(Creature* creature, bool visible)
+void Game::internalCreatureChangeVisible(Creature& creature, bool visible)
 {
 	//send to clients
 	SpectatorHashSet spectators;
-	map.getSpectators(spectators, creature->getPosition(), true, true);
+	map.getSpectators(spectators, creature.getPosition(), true, true);
 	for (Creature* spectator : spectators) {
 		spectator->getPlayer()->sendCreatureChangeVisible(creature, visible);
 	}
 }
 
-void Game::changeLight(const Creature* creature)
+void Game::changeLight(const Creature& creature)
 {
 	//send to clients
 	SpectatorHashSet spectators;
@@ -3592,13 +3592,13 @@ void Game::changeLight(const Creature* creature)
 	}
 }
 
-bool Game::combatBlockHit(CombatDamage& damage, Creature* attacker, Creature* target, bool checkDefense, bool checkArmor, bool field)
+bool Game::combatBlockHit(CombatDamage& damage, tfs::optional<Creature&> attacker, const Creature& target, bool checkDefense, bool checkArmor, bool field)
 {
 	if (damage.primary.type == COMBAT_NONE && damage.secondary.type == COMBAT_NONE) {
 		return true;
 	}
 
-	if (target->getPlayer() && target->isInGhostMode()) {
+	if (target.getPlayer() && target.isInGhostMode()) {
 		return true;
 	}
 
@@ -3761,11 +3761,11 @@ void Game::combatGetTypeInfo(CombatType_t combatType, Creature* target, TextColo
 	}
 }
 
-bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage& damage)
+bool Game::combatChangeHealth(tfs::optional<Creature&> attacker, Creature& target, CombatDamage& damage)
 {
-	const Position& targetPos = target->getPosition();
+	const Position& targetPos = target.getPosition();
 	if (damage.primary.value > 0) {
-		if (target->getHealth() <= 0) {
+		if (target.getHealth() <= 0) {
 			return false;
 		}
 
@@ -3776,13 +3776,13 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			attackerPlayer = nullptr;
 		}
 
-		Player* targetPlayer = target->getPlayer();
+		const Player* targetPlayer = target.getPlayer();
 		if (attackerPlayer && targetPlayer && attackerPlayer->getSkull() == SKULL_BLACK && attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
 			return false;
 		}
 
 		if (damage.origin != ORIGIN_NONE) {
-			const auto& events = target->getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE);
+			const auto& events = target.getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE);
 			if (!events.empty()) {
 				for (CreatureEvent* creatureEvent : events) {
 					creatureEvent->executeHealthChange(target, attacker, damage);
@@ -3792,11 +3792,11 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			}
 		}
 
-		int32_t realHealthChange = target->getHealth();
-		target->gainHealth(attacker, damage.primary.value);
-		realHealthChange = target->getHealth() - realHealthChange;
+		int32_t realHealthChange = target.getHealth();
+		target.gainHealth(attacker, damage.primary.value);
+		realHealthChange = target.getHealth() - realHealthChange;
 
-		if (realHealthChange > 0 && !target->isInGhostMode()) {
+		if (realHealthChange > 0 && !target.isInGhostMode()) {
 			std::stringstream ss;
 
 			ss << realHealthChange << (realHealthChange != 1 ? " hitpoints." : " hitpoint.");
@@ -3815,7 +3815,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 				Player* tmpPlayer = spectator->getPlayer();
 				if (tmpPlayer == attackerPlayer && attackerPlayer != targetPlayer) {
 					ss.str({});
-					ss << "You heal " << target->getNameDescription() << " for " << damageString;
+					ss << "You heal " << target.getNameDescription() << " for " << damageString;
 					message.type = MESSAGE_HEALED;
 					message.text = ss.str();
 				} else if (tmpPlayer == targetPlayer) {
@@ -3834,13 +3834,13 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 					if (spectatorMessage.empty()) {
 						ss.str({});
 						if (!attacker) {
-							ss << ucfirst(target->getNameDescription()) << " was healed";
+							ss << ucfirst(target.getNameDescription()) << " was healed";
 						} else {
 							ss << ucfirst(attacker->getNameDescription()) << " healed ";
 							if (attacker == target) {
 								ss << (targetPlayer ? (targetPlayer->getSex() == PLAYERSEX_FEMALE ? "herself" : "himself") : "itself");
 							} else {
-								ss << target->getNameDescription();
+								ss << target.getNameDescription();
 							}
 						}
 						ss << " for " << damageString;
@@ -3853,8 +3853,8 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			}
 		}
 	} else {
-		if (!target->isAttackable()) {
-			if (!target->isInGhostMode()) {
+		if (!target.isAttackable()) {
+			if (!target.isInGhostMode()) {
 				addMagicEffect(targetPos, CONST_ME_POFF);
 			}
 			return true;
@@ -3867,7 +3867,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			attackerPlayer = nullptr;
 		}
 
-		Player* targetPlayer = target->getPlayer();
+		Player* targetPlayer = target.getPlayer();
 		if (attackerPlayer && targetPlayer && attackerPlayer->getSkull() == SKULL_BLACK && attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
 			return false;
 		}
@@ -3884,11 +3884,11 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		message.position = targetPos;
 
 		SpectatorHashSet spectators;
-		if (target->hasCondition(CONDITION_MANASHIELD) && damage.primary.type != COMBAT_UNDEFINEDDAMAGE) {
-			int32_t manaDamage = std::min<int32_t>(target->getMana(), healthChange);
+		if (target.hasCondition(CONDITION_MANASHIELD) && damage.primary.type != COMBAT_UNDEFINEDDAMAGE) {
+			int32_t manaDamage = std::min<int32_t>(target.getMana(), healthChange);
 			if (manaDamage != 0) {
 				if (damage.origin != ORIGIN_NONE) {
-					const auto& events = target->getCreatureEvents(CREATURE_EVENT_MANACHANGE);
+					const auto& events = target.getCreatureEvents(CREATURE_EVENT_MANACHANGE);
 					if (!events.empty()) {
 						for (CreatureEvent* creatureEvent : events) {
 							creatureEvent->executeManaChange(target, attacker, healthChange, damage.origin);
@@ -3896,11 +3896,11 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 						if (healthChange == 0) {
 							return true;
 						}
-						manaDamage = std::min<int32_t>(target->getMana(), healthChange);
+						manaDamage = std::min<int32_t>(target.getMana(), healthChange);
 					}
 				}
 
-				target->drainMana(attacker, manaDamage);
+				target.drainMana(attacker, manaDamage);
 				map.getSpectators(spectators, targetPos, true, true);
 				addMagicEffect(spectators, targetPos, CONST_ME_LOSEENERGY);
 
@@ -3921,7 +3921,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 
 					if (tmpPlayer == attackerPlayer && attackerPlayer != targetPlayer) {
 						ss.str({});
-						ss << ucfirst(target->getNameDescription()) << " loses " << damageString + " mana due to your attack.";
+						ss << ucfirst(target.getNameDescription()) << " loses " << damageString + " mana due to your attack.";
 						message.type = MESSAGE_DAMAGE_DEALT;
 						message.text = ss.str();
 					} else if (tmpPlayer == targetPlayer) {
@@ -3939,7 +3939,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 					} else {
 						if (spectatorMessage.empty()) {
 							ss.str({});
-							ss << ucfirst(target->getNameDescription()) << " loses " << damageString + " mana";
+							ss << ucfirst(target.getNameDescription()) << " loses " << damageString + " mana";
 							if (attacker) {
 								ss << " due to ";
 								if (attacker == target) {
@@ -3971,7 +3971,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		}
 
 		if (damage.origin != ORIGIN_NONE) {
-			const auto& events = target->getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE);
+			const auto& events = target.getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE);
 			if (!events.empty()) {
 				for (CreatureEvent* creatureEvent : events) {
 					creatureEvent->executeHealthChange(target, attacker, damage);
@@ -3981,7 +3981,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			}
 		}
 
-		int32_t targetHealth = target->getHealth();
+		int32_t targetHealth = target.getHealth();
 		if (damage.primary.value >= targetHealth) {
 			damage.primary.value = targetHealth;
 			damage.secondary.value = 0;
@@ -4032,7 +4032,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 
 				if (tmpPlayer == attackerPlayer && attackerPlayer != targetPlayer) {
 					ss.str({});
-					ss << ucfirst(target->getNameDescription()) << " loses " << damageString << " due to your attack.";
+					ss << ucfirst(target.getNameDescription()) << " loses " << damageString << " due to your attack.";
 					message.type = MESSAGE_DAMAGE_DEALT;
 					message.text = ss.str();
 				} else if (tmpPlayer == targetPlayer) {
@@ -4052,7 +4052,7 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 
 					if (spectatorMessage.empty()) {
 						ss.str({});
-						ss << ucfirst(target->getNameDescription()) << " loses " << damageString;
+						ss << ucfirst(target.getNameDescription()) << " loses " << damageString;
 						if (attacker) {
 							ss << " due to ";
 							if (attacker == target) {
@@ -4076,32 +4076,32 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 		}
 
 		if (realDamage >= targetHealth) {
-			for (CreatureEvent* creatureEvent : target->getCreatureEvents(CREATURE_EVENT_PREPAREDEATH)) {
+			for (CreatureEvent* creatureEvent : target.getCreatureEvents(CREATURE_EVENT_PREPAREDEATH)) {
 				if (!creatureEvent->executeOnPrepareDeath(target, attacker)) {
 					return false;
 				}
 			}
 		}
 
-		target->drainHealth(attacker, realDamage);
+		target.drainHealth(attacker, realDamage);
 		addCreatureHealth(spectators, target);
 	}
 
 	return true;
 }
 
-bool Game::combatChangeMana(Creature* attacker, Creature* target, int32_t manaChange, CombatOrigin origin)
+bool Game::combatChangeMana(tfs::optional<Creature&> attacker, Creature& target, int32_t manaChange, CombatOrigin origin)
 {
 	if (manaChange > 0) {
 		if (attacker) {
 			const Player* attackerPlayer = attacker->getPlayer();
-			if (attackerPlayer && attackerPlayer->getSkull() == SKULL_BLACK && target->getPlayer() && attackerPlayer->getSkullClient(target) == SKULL_NONE) {
+			if (attackerPlayer && attackerPlayer->getSkull() == SKULL_BLACK && target.getPlayer() && attackerPlayer->getSkullClient(target) == SKULL_NONE) {
 				return false;
 			}
 		}
 
 		if (origin != ORIGIN_NONE) {
-			const auto& events = target->getCreatureEvents(CREATURE_EVENT_MANACHANGE);
+			const auto& events = target.getCreatureEvents(CREATURE_EVENT_MANACHANGE);
 			if (!events.empty()) {
 				for (CreatureEvent* creatureEvent : events) {
 					creatureEvent->executeManaChange(target, attacker, manaChange, origin);
@@ -4110,11 +4110,11 @@ bool Game::combatChangeMana(Creature* attacker, Creature* target, int32_t manaCh
 			}
 		}
 
-		target->changeMana(manaChange);
+		target.changeMana(manaChange);
 	} else {
-		const Position& targetPos = target->getPosition();
-		if (!target->isAttackable()) {
-			if (!target->isInGhostMode()) {
+		const Position& targetPos = target.getPosition();
+		if (!target.isAttackable()) {
+			if (!target.isInGhostMode()) {
 				addMagicEffect(targetPos, CONST_ME_POFF);
 			}
 			return false;
