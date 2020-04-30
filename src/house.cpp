@@ -508,16 +508,36 @@ void AccessList::addExpression(const std::string& expression)
 	std::string outExp;
 	outExp.reserve(expression.length());
 
-	std::string metachars = ".[{}()\\+|^$";
+	char lastChar = '\0';
 	for (const char c : expression) {
-		if (metachars.find(c) != std::string::npos) {
-			outExp.push_back('\\');
+		switch (c) {
+			case '*':
+				if (lastChar != '*') {
+					outExp.push_back('.');
+					outExp.push_back('*');
+				}
+				break;
+			case '?':
+				outExp.push_back('.');
+				break;
+			case '$':
+			case '(':
+			case ')':
+			case '+':
+			case '.':
+			case '[':
+			case '\\':
+			case ']':
+			case '^':
+			case '{':
+			case '|':
+			case '}':
+				outExp.push_back('\\');
+				[[fallthrough]];
+			default:
+				outExp.push_back(c);
 		}
-		outExp.push_back(c);
 	}
-
-	replaceString(outExp, "*", ".*");
-	replaceString(outExp, "?", ".?");
 
 	try {
 		if (!outExp.empty()) {
