@@ -71,7 +71,7 @@ public:
 	inline Iterator end() { return vec.end(); }
 	inline ConstIterator end() const { return vec.end(); }
 	inline ConstIterator cend() const { return vec.cend(); }
-	inline void emplace_back(Creature* c) { return vec.emplace_back(c); }
+	inline void emplace_back(Creature* c) { vec.emplace_back(c); }
 
 	template<class InputIterator>
 	inline void insert(Iterator pos, InputIterator first, InputIterator last) { vec.insert(pos, first, last); }

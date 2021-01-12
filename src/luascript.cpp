@@ -20,6 +20,7 @@
 #include "otpch.h"
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <sol/sol.hpp>
 
 #include "luascript.h"
 #include "chat.h"
