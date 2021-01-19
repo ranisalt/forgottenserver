@@ -20,10 +20,11 @@
 #include "otpch.h"
 
 #include "scheduler.h"
+#include <boost/asio.hpp>
 
 void Scheduler::threadMain()
 {
-	io_service.run();
+	io_context.run();
 }
 
 uint32_t Scheduler::addEvent(SchedulerTask* task)
@@ -39,19 +40,12 @@ uint32_t Scheduler::addEvent(SchedulerTask* task)
 	}
 
 	// insert the event id in the list of active events
-	io_service.post([this, task]() {
-		boost::asio::deadline_timer* timer;
-		if (timerCacheVec.empty()) {
-			timer = new boost::asio::deadline_timer(io_service);
-		} else {
-			timer = timerCacheVec.back();
-			timerCacheVec.pop_back();
-		}
-		eventIdTimerMap[task->getEventId()] = timer;
+	boost::asio::post(io_context.get_executor(), [this, task]() {
+		boost::asio::deadline_timer timer{io_context};
+		eventIdTimerMap[task->getEventId()] = &timer;
 
-		timer->expires_from_now(boost::posix_time::milliseconds(task->getDelay()));
-		timer->async_wait([this, task, timer](const boost::system::error_code& error) {
-			timerCacheVec.push_back(timer);
+		timer.expires_from_now(boost::posix_time::milliseconds(task->getDelay()));
+		timer.async_wait([this, task](const boost::system::error_code& error) {
 			eventIdTimerMap.erase(task->getEventId());
 
 			if (error == boost::asio::error::operation_aborted || getState() == THREAD_STATE_TERMINATED) {
@@ -73,35 +67,25 @@ void Scheduler::stopEvent(uint32_t eventId)
 		return;
 	}
 
-	io_service.post([this, eventId]() {
+	boost::asio::post(io_context.get_executor(), [this, eventId]() {
 		// search the event id..
 		auto it = eventIdTimerMap.find(eventId);
-		if (it == eventIdTimerMap.end()) {
-			return;
+		if (it != eventIdTimerMap.end()) {
+			it->second->cancel();
 		}
-		it->second->cancel();
 	});
 }
 
 void Scheduler::shutdown()
 {
 	setState(THREAD_STATE_TERMINATED);
-	io_service.post([this]() {
+	boost::asio::post(io_context.get_executor(), [this]() {
 		// cancel all active timers
 		for (auto& it : eventIdTimerMap) {
 			it.second->cancel();
 		}
 
-		// thanks to cancel we will have all the timers in timerCacheVec
-		// deleted them to prevent memory leak
-		// this must be a new task since timer->cancel() adds a new task for each cancel so we want to delete the timers only after all cancel callbacks were called
-		io_service.post([this]() {
-			for (auto* timer : timerCacheVec) {
-				delete timer;
-			}
-		});
-
-		io_service.stop();
+		io_context.stop();
 	});
 }
 
