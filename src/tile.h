@@ -23,7 +23,8 @@
 #include "cylinder.h"
 #include "item.h"
 #include "tools.h"
-#include "spectators.h"
+
+#include <unordered_set>
 
 class Creature;
 class Teleport;
@@ -35,6 +36,7 @@ class BedItem;
 
 using CreatureVector = std::vector<Creature*>;
 using ItemVector = std::vector<Item*>;
+using Spectators = std::unordered_set<Creature*>;
 
 enum tileflags_t : uint32_t {
 	TILESTATE_NONE = 0,
@@ -286,8 +288,8 @@ class Tile : public Cylinder
 	private:
 		void onAddTileItem(Item* item);
 		void onUpdateTileItem(Item* oldItem, const ItemType& oldType, Item* newItem, const ItemType& newType);
-		void onRemoveTileItem(const SpectatorVec& spectators, const std::vector<int32_t>& oldStackPosVector, Item* item);
-		void onUpdateTile(const SpectatorVec& spectators);
+		void onRemoveTileItem(const Spectators& spectators, const std::vector<int32_t>& oldStackPosVector, Item* item);
+		void onUpdateTile(const Spectators& spectators);
 
 		void setTileFlags(const Item* item);
 		void resetTileFlags(const Item* item);

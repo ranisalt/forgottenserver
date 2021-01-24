@@ -308,7 +308,7 @@ class Game
 		  * \param text The text to say
 		  */
 		bool internalCreatureSay(Creature* creature, SpeakClasses type, const std::string& text,
-		                         bool ghostMode, SpectatorVec* spectatorsPtr = nullptr, const Position* pos = nullptr);
+		                         bool ghostMode, Spectators* spectatorsPtr = nullptr, const Position* pos = nullptr);
 
 		void loadPlayersRecord();
 		void checkPlayersRecord();
@@ -445,11 +445,11 @@ class Game
 
 		//animation help functions
 		void addCreatureHealth(const Creature* target);
-		static void addCreatureHealth(const SpectatorVec& spectators, const Creature* target);
+		static void addCreatureHealth(const Spectators& spectators, const Creature* target);
 		void addMagicEffect(const Position& pos, uint8_t effect);
-		static void addMagicEffect(const SpectatorVec& spectators, const Position& pos, uint8_t effect);
+		static void addMagicEffect(const Spectators& spectators, const Position& pos, uint8_t effect);
 		void addDistanceEffect(const Position& fromPos, const Position& toPos, uint8_t effect);
-		static void addDistanceEffect(const SpectatorVec& spectators, const Position& fromPos, const Position& toPos, uint8_t effect);
+		static void addDistanceEffect(const Spectators& spectators, const Position& fromPos, const Position& toPos, uint8_t effect);
 
 		void startDecay(Item* item);
 		int32_t getLightHour() const {

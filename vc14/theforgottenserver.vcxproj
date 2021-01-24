@@ -309,7 +309,6 @@
     <ClInclude Include="..\src\server.h" />
     <ClInclude Include="..\src\signals.h" />
     <ClInclude Include="..\src\spawn.h" />
-    <ClInclude Include="..\src\spectators.h" />
     <ClInclude Include="..\src\spells.h" />
     <ClInclude Include="..\src\storeinbox.h" />
     <ClInclude Include="..\src\protocolstatus.h" />

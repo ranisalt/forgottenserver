@@ -287,7 +287,7 @@ class Combat
 		}
 
 	private:
-		static void combatTileEffects(const SpectatorVec& spectators, Creature* caster, Tile* tile, const CombatParams& params);
+		static void combatTileEffects(const Spectators& spectators, Creature* caster, Tile* tile, const CombatParams& params);
 		CombatDamage getCombatDamage(Creature* creature, Creature* target) const;
 
 		//configureable
