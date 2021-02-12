@@ -86,7 +86,7 @@ void ScriptEnvironment::resetEnv()
 	auto it = pair.first;
 	while (it != pair.second) {
 		Item* item = it->second;
-		if (item->getParent() == VirtualCylinder::virtualCylinder) {
+		if (item->getParent() == VirtualCylinder::get()) {
 			g_game.ReleaseItem(item);
 		}
 		it = tempItems.erase(it);
@@ -629,7 +629,7 @@ void LuaScriptInterface::pushCylinder(lua_State* L, Cylinder* cylinder)
 	} else if (Tile* tile = cylinder->getTile()) {
 		pushUserdata<Tile>(L, tile);
 		setMetatable(L, -1, "Tile");
-	} else if (cylinder == VirtualCylinder::virtualCylinder) {
+	} else if (cylinder == VirtualCylinder::get()) {
 		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
@@ -4273,7 +4273,7 @@ int LuaScriptInterface::luaGameCreateItem(lua_State* L)
 		g_game.internalAddItem(tile, item, INDEX_WHEREEVER, FLAG_NOLIMIT);
 	} else {
 		getScriptEnv()->addTempItem(item);
-		item->setParent(VirtualCylinder::virtualCylinder);
+		item->setParent(VirtualCylinder::get());
 	}
 
 	pushUserdata<Item>(L, item);
@@ -4314,7 +4314,7 @@ int LuaScriptInterface::luaGameCreateContainer(lua_State* L)
 		g_game.internalAddItem(tile, container, INDEX_WHEREEVER, FLAG_NOLIMIT);
 	} else {
 		getScriptEnv()->addTempItem(container);
-		container->setParent(VirtualCylinder::virtualCylinder);
+		container->setParent(VirtualCylinder::get());
 	}
 
 	pushUserdata<Container>(L, container);
@@ -5336,7 +5336,7 @@ int LuaScriptInterface::luaTileAddItemEx(lua_State* L)
 		return 1;
 	}
 
-	if (item->getParent() != VirtualCylinder::virtualCylinder) {
+	if (item->getParent() != VirtualCylinder::get()) {
 		reportErrorFunc("Item already has a parent");
 		lua_pushnil(L);
 		return 1;
@@ -6012,7 +6012,7 @@ int LuaScriptInterface::luaItemClone(lua_State* L)
 	}
 
 	getScriptEnv()->addTempItem(clone);
-	clone->setParent(VirtualCylinder::virtualCylinder);
+	clone->setParent(VirtualCylinder::get());
 
 	pushUserdata<Item>(L, clone);
 	setItemMetatable(L, -1, clone);
@@ -6059,7 +6059,7 @@ int LuaScriptInterface::luaItemSplit(lua_State* L)
 
 	*itemPtr = newItem;
 
-	splitItem->setParent(VirtualCylinder::virtualCylinder);
+	splitItem->setParent(VirtualCylinder::get());
 	env->addTempItem(splitItem);
 
 	pushUserdata<Item>(L, splitItem);
@@ -6495,7 +6495,7 @@ int LuaScriptInterface::luaItemMoveTo(lua_State* L)
 
 	uint32_t flags = getNumber<uint32_t>(L, 3, FLAG_NOLIMIT | FLAG_IGNOREBLOCKITEM | FLAG_IGNOREBLOCKCREATURE | FLAG_IGNORENOTMOVEABLE);
 
-	if (item->getParent() == VirtualCylinder::virtualCylinder) {
+	if (item->getParent() == VirtualCylinder::get()) {
 		pushBoolean(L, g_game.internalAddItem(toCylinder, item, INDEX_WHEREEVER, flags) == RETURNVALUE_NOERROR);
 	} else {
 		Item* moveItem = nullptr;
@@ -6810,7 +6810,7 @@ int LuaScriptInterface::luaContainerAddItemEx(lua_State* L)
 		return 1;
 	}
 
-	if (item->getParent() != VirtualCylinder::virtualCylinder) {
+	if (item->getParent() != VirtualCylinder::get()) {
 		reportErrorFunc("Item already has a parent");
 		lua_pushnil(L);
 		return 1;
@@ -9024,7 +9024,7 @@ int LuaScriptInterface::luaPlayerAddItemEx(lua_State* L)
 		return 1;
 	}
 
-	if (item->getParent() != VirtualCylinder::virtualCylinder) {
+	if (item->getParent() != VirtualCylinder::get()) {
 		reportErrorFunc("Item already has a parent");
 		pushBoolean(L, false);
 		return 1;

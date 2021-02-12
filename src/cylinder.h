@@ -208,7 +208,7 @@ class Cylinder : virtual public Thing
 class VirtualCylinder final : public Cylinder
 {
 	public:
-		static VirtualCylinder* virtualCylinder;
+		static VirtualCylinder* get();
 
 		virtual ReturnValue queryAdd(int32_t, const Thing&, uint32_t, uint32_t, Creature* = nullptr) const override {
 			return RETURNVALUE_NOTPOSSIBLE;
