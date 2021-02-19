@@ -160,25 +160,25 @@ class MoveEvent final : public Event
 		void setTileItem(bool b) {
 			tileItem = b;
 		}
-		std::vector<uint32_t> getItemIdRange() {
+		tfs::vector<uint32_t> getItemIdRange() {
 			return itemIdRange;
 		}
 		void addItemId(uint32_t id) {
 			itemIdRange.emplace_back(id);
 		}
-		std::vector<uint32_t> getActionIdRange() {
+		tfs::vector<uint32_t> getActionIdRange() {
 			return actionIdRange;
 		}
 		void addActionId(uint32_t id) {
 			actionIdRange.emplace_back(id);
 		}
-		std::vector<uint32_t> getUniqueIdRange() {
+		tfs::vector<uint32_t> getUniqueIdRange() {
 			return uniqueIdRange;
 		}
 		void addUniqueId(uint32_t id) {
 			uniqueIdRange.emplace_back(id);
 		}
-		std::vector<Position> getPosList() {
+		tfs::vector<Position> getPosList() {
 			return posList;
 		}
 		void addPosList(Position pos) {
@@ -240,10 +240,10 @@ class MoveEvent final : public Event
 		VocEquipMap vocEquipMap;
 		bool tileItem = false;
 
-		std::vector<uint32_t> itemIdRange;
-		std::vector<uint32_t> actionIdRange;
-		std::vector<uint32_t> uniqueIdRange;
-		std::vector<Position> posList;
+		tfs::vector<uint32_t> itemIdRange;
+		tfs::vector<uint32_t> actionIdRange;
+		tfs::vector<uint32_t> uniqueIdRange;
+		tfs::vector<Position> posList;
 };
 
 #endif

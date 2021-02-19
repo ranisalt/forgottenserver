@@ -20,8 +20,8 @@
 #ifndef FS_DATABASE_H_A484B0CDFDE542838F506DCE3D40C693
 #define FS_DATABASE_H_A484B0CDFDE542838F506DCE3D40C693
 
+#include "scheduler.h"
 #include <boost/lexical_cast.hpp>
-
 #include <mysql/mysql.h>
 
 class DBResult;

@@ -1208,7 +1208,7 @@ class Player final : public Creature, public Cylinder
 		std::map<uint32_t, DepotChest*> depotChests;
 		std::map<uint32_t, int32_t> storageMap;
 
-		std::vector<OutfitEntry> outfits;
+		tfs::vector<OutfitEntry> outfits;
 		GuildWarVector guildWarVector;
 
 		std::list<ShopInfo> shopItemList;

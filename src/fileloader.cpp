@@ -42,7 +42,7 @@ Loader::Loader(const std::string& fileName, const Identifier& acceptedIdentifier
 	}
 }
 
-using NodeStack = std::stack<Node*, std::vector<Node*>>;
+using NodeStack = std::stack<Node*, tfs::vector<Node*>>;
 static Node& getCurrentNode(const NodeStack& nodeStack) {
 	if (nodeStack.empty()) {
 		throw InvalidOTBFormat{};

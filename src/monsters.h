@@ -22,7 +22,6 @@
 
 #include "creature.h"
 
-
 const uint32_t MAX_LOOTCHANCE = 100000;
 
 struct LootBlock {
@@ -105,13 +104,13 @@ class MonsterType
 
 		std::map<CombatType_t, int32_t> elementMap;
 
-		std::vector<voiceBlock_t> voiceVector;
+		tfs::vector<voiceBlock_t> voiceVector;
 
 		std::vector<LootBlock> lootItems;
-		std::vector<std::string> scripts;
-		std::vector<spellBlock_t> attackSpells;
-		std::vector<spellBlock_t> defenseSpells;
-		std::vector<summonBlock_t> summons;
+		tfs::vector<std::string> scripts;
+		tfs::vector<spellBlock_t> attackSpells;
+		tfs::vector<spellBlock_t> defenseSpells;
+		tfs::vector<summonBlock_t> summons;
 
 		Skulls_t skull = SKULL_NONE;
 		Outfit_t outfit = {};

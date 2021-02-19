@@ -20,6 +20,8 @@
 #ifndef FS_GROUPS_H_EE39438337D148E1983FB79D936DD8F3
 #define FS_GROUPS_H_EE39438337D148E1983FB79D936DD8F3
 
+#include "structures.h"
+
 struct Group {
 	std::string name;
 	uint64_t flags;
@@ -35,7 +37,7 @@ class Groups {
 		Group* getGroup(uint16_t id);
 
 	private:
-		std::vector<Group> groups;
+		tfs::vector<Group> groups;
 };
 
 #endif

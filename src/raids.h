@@ -144,7 +144,7 @@ class Raid
 		void stopEvents();
 
 	private:
-		std::vector<RaidEvent*> raidEvents;
+		tfs::vector<RaidEvent*> raidEvents;
 		std::string name;
 		uint32_t interval;
 		uint32_t nextEvent = 0;

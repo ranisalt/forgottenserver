@@ -2669,7 +2669,7 @@ void ProtocolGame::sendItems()
 	NetworkMessage msg;
 	msg.addByte(0xF5);
 
-	const std::vector<uint16_t>& inventory = Item::items.getInventory();
+	const tfs::vector<uint16_t>& inventory = Item::items.getInventory();
 	msg.add<uint16_t>(inventory.size() + 11);
 	for (uint16_t i = 1; i <= 11; i++) {
 		msg.add<uint16_t>(i);
@@ -2789,7 +2789,7 @@ void ProtocolGame::sendOutfitWindow()
 
 	AddOutfit(msg, currentOutfit);
 
-	std::vector<ProtocolOutfit> protocolOutfits;
+	tfs::vector<ProtocolOutfit> protocolOutfits;
 	if (player->isAccessPlayer()) {
 		static const std::string gamemasterOutfitName = "Gamemaster";
 		protocolOutfits.emplace_back(gamemasterOutfitName, 75, 0);
@@ -2816,7 +2816,7 @@ void ProtocolGame::sendOutfitWindow()
 		msg.addByte(outfit.addons);
 	}
 
-	std::vector<const Mount*> mounts;
+	tfs::vector<const Mount*> mounts;
 	for (const Mount& mount : g_game.mounts.getMounts()) {
 		if (player->hasMount(&mount)) {
 			mounts.push_back(&mount);

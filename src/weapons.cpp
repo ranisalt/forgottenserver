@@ -778,7 +778,7 @@ bool WeaponDistance::useWeapon(Player* player, Item* item, Creature* target) con
 		Tile* destTile = target->getTile();
 
 		if (!Position::areInRange<1, 1, 0>(player->getPosition(), target->getPosition())) {
-			static std::vector<std::pair<int32_t, int32_t>> destList {
+			static tfs::vector<std::pair<int32_t, int32_t>> destList {
 				{-1, -1}, {0, -1}, {1, -1},
 				{-1,  0}, {0,  0}, {1,  0},
 				{-1,  1}, {0,  1}, {1,  1}

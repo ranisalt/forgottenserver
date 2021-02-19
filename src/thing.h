@@ -21,12 +21,13 @@
 #define FS_THING_H_6F16A8E566AF4ACEAE02CF32A7246144
 
 #include "position.h"
+#include "structures.h"
 
-class Tile;
+class Container;
+class Creature;
 class Cylinder;
 class Item;
-class Creature;
-class Container;
+class Tile;
 
 class Thing
 {

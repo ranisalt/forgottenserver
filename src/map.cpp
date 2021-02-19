@@ -212,7 +212,7 @@ bool Map::placeCreature(const Position& centerPos, Creature* creature, bool exte
 	}
 
 	if (!foundTile) {
-		static std::vector<std::pair<int32_t, int32_t>> extendedRelList {
+		static tfs::vector<std::pair<int32_t, int32_t>> extendedRelList {
 			                   {0, -2},
 			         {-1, -1}, {0, -1}, {1, -1},
 			{-2, 0}, {-1,  0},          {1,  0}, {2, 0},
@@ -220,13 +220,13 @@ bool Map::placeCreature(const Position& centerPos, Creature* creature, bool exte
 			                   {0,  2}
 		};
 
-		static std::vector<std::pair<int32_t, int32_t>> normalRelList {
+		static tfs::vector<std::pair<int32_t, int32_t>> normalRelList {
 			{-1, -1}, {0, -1}, {1, -1},
 			{-1,  0},          {1,  0},
 			{-1,  1}, {0,  1}, {1,  1}
 		};
 
-		std::vector<std::pair<int32_t, int32_t>>& relList = (extendedPos ? extendedRelList : normalRelList);
+		tfs::vector<std::pair<int32_t, int32_t>>& relList = (extendedPos ? extendedRelList : normalRelList);
 
 		if (extendedPos) {
 			std::shuffle(relList.begin(), relList.begin() + 4, getRandomGenerator());
@@ -282,7 +282,7 @@ void Map::moveCreature(Creature& creature, Tile& newTile, bool forceTeleport/* =
 	getSpectators(newPosSpectators, newPos, true);
 	spectators.addSpectators(newPosSpectators);
 
-	std::vector<int32_t> oldStackPosVector;
+	tfs::vector<int32_t> oldStackPosVector;
 	for (Creature* spectator : spectators) {
 		if (Player* tmpPlayer = spectator->getPlayer()) {
 			if (tmpPlayer->canSeeCreature(&creature)) {
@@ -997,7 +997,7 @@ uint32_t Map::clean() const
 		g_game.setGameState(GAME_STATE_MAINTAIN);
 	}
 
-	std::vector<Item*> toRemove;
+	tfs::vector<Item*> toRemove;
 
 	for (auto tile : g_game.getTilesToClean()) {
 		if (!tile) {

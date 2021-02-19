@@ -152,7 +152,7 @@ class ScriptEnvironment
 		void removeItemByUID(uint32_t uid);
 
 	private:
-		using VariantVector = std::vector<const LuaVariant*>;
+		using VariantVector = tfs::vector<const LuaVariant*>;
 		using StorageMap = std::map<uint32_t, int32_t>;
 		using DBResultMap = std::map<uint32_t, DBResult_ptr>;
 
@@ -1542,8 +1542,8 @@ class LuaEnvironment : public LuaScriptInterface
 		std::unordered_map<uint32_t, Combat*> combatMap;
 		std::unordered_map<uint32_t, AreaCombat*> areaMap;
 
-		std::unordered_map<LuaScriptInterface*, std::vector<uint32_t>> combatIdMap;
-		std::unordered_map<LuaScriptInterface*, std::vector<uint32_t>> areaIdMap;
+		std::unordered_map<LuaScriptInterface*, tfs::vector<uint32_t>> combatIdMap;
+		std::unordered_map<LuaScriptInterface*, tfs::vector<uint32_t>> areaIdMap;
 
 		LuaScriptInterface* testInterface = nullptr;
 

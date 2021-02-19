@@ -206,14 +206,14 @@ std::string DBResult::getString(const std::string& s) const
 	auto it = listNames.find(s);
 	if (it == listNames.end()) {
 		std::cout << "[Error - DBResult::getString] Column '" << s << "' does not exist in result set." << std::endl;
-		return std::string();
+		return {};
 	}
 
 	if (row[it->second] == nullptr) {
-		return std::string();
+		return {};
 	}
 
-	return std::string(row[it->second]);
+	return row[it->second];
 }
 
 const char* DBResult::getStream(const std::string& s, unsigned long& size) const
@@ -277,7 +277,7 @@ bool DBInsert::addRow(const std::string& row)
 bool DBInsert::addRow(std::ostringstream& row)
 {
 	bool ret = addRow(row.str());
-	row.str(std::string());
+	row.str("");
 	return ret;
 }
 

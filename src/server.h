@@ -86,7 +86,7 @@ class ServicePort : public std::enable_shared_from_this<ServicePort>
 
 		boost::asio::io_service& io_service;
 		std::unique_ptr<boost::asio::ip::tcp::acceptor> acceptor;
-		std::vector<Service_ptr> services;
+		tfs::vector<Service_ptr> services;
 
 		uint16_t serverPort = 0;
 		bool pendingStart = false;

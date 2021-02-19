@@ -26,7 +26,7 @@ class Creature;
 
 class SpectatorVec
 {
-	using Vec = std::vector<Creature*>;
+	using Vec = tfs::vector<Creature*>;
 	using Iterator = Vec::iterator;
 	using ConstIterator = Vec::const_iterator;
 public:

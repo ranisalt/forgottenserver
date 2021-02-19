@@ -572,7 +572,7 @@ bool Game::removeCreature(Creature* creature, bool isLogout/* = true*/)
 
 	Tile* tile = creature->getTile();
 
-	std::vector<int32_t> oldStackPosVector;
+	tfs::vector<int32_t> oldStackPosVector;
 
 	SpectatorVec spectators;
 	map.getSpectators(spectators, tile->getPosition(), true);
@@ -1410,7 +1410,7 @@ Item* Game::findItemOfType(Cylinder* cylinder, uint16_t itemId,
 		return nullptr;
 	}
 
-	std::vector<Container*> containers;
+	tfs::vector<Container*> containers;
 	for (size_t i = cylinder->getFirstIndex(), j = cylinder->getLastIndex(); i < j; ++i) {
 		Thing* thing = cylinder->getThing(i);
 		if (!thing) {
@@ -1461,7 +1461,7 @@ bool Game::removeMoney(Cylinder* cylinder, uint64_t money, uint32_t flags /*= 0*
 		return true;
 	}
 
-	std::vector<Container*> containers;
+	tfs::vector<Container*> containers;
 
 	std::multimap<uint32_t, Item*> moneyMap;
 	uint64_t moneyCount = 0;
@@ -2894,7 +2894,7 @@ void Game::playerLookInTrade(uint32_t playerId, bool lookAtCounterOffer, uint8_t
 		return;
 	}
 
-	std::vector<const Container*> containers {tradeContainer};
+	tfs::vector<const Container*> containers {tradeContainer};
 	size_t i = 0;
 	while (i < containers.size()) {
 		const Container* container = containers[i++];
@@ -4760,7 +4760,7 @@ void Game::saveMotdNum() const
 	query << "UPDATE `server_config` SET `value` = '" << motdNum << "' WHERE `config` = 'motd_num'";
 	db.executeQuery(query.str());
 
-	query.str(std::string());
+	query.str("");
 	query << "UPDATE `server_config` SET `value` = '" << transformToSHA1(g_config.getString(ConfigManager::MOTD)) << "' WHERE `config` = 'motd_hash'";
 	db.executeQuery(query.str());
 }
@@ -5582,7 +5582,7 @@ void Game::decreaseBrowseFieldRef(const Position& pos)
 	}
 }
 
-void Game::internalRemoveItems(std::vector<Item*> itemList, uint32_t amount, bool stackable)
+void Game::internalRemoveItems(tfs::vector<Item*> itemList, uint32_t amount, bool stackable)
 {
 	if (stackable) {
 		for (Item* item : itemList) {

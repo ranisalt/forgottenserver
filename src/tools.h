@@ -38,8 +38,8 @@ void toLowerCaseString(std::string& source);
 std::string asLowerCaseString(std::string source);
 std::string asUpperCaseString(std::string source);
 
-using StringVector = std::vector<std::string>;
-using IntegerVector = std::vector<int32_t>;
+using StringVector = tfs::vector<std::string>;
+using IntegerVector = tfs::vector<int32_t>;
 
 StringVector explodeString(const std::string& inString, const std::string& separator, int32_t limit = -1);
 IntegerVector vectorAtoi(const StringVector& stringVector);

@@ -20,9 +20,10 @@
 #ifndef FS_FILELOADER_H_9B663D19E58D42E6BFACFE5B09D7A05E
 #define FS_FILELOADER_H_9B663D19E58D42E6BFACFE5B09D7A05E
 
+#include "structures.h"
+#include <boost/iostreams/device/mapped_file.hpp>
 #include <limits>
 #include <vector>
-#include <boost/iostreams/device/mapped_file.hpp>
 
 class PropStream;
 
@@ -60,7 +61,7 @@ struct InvalidOTBFormat final : LoadError {
 class Loader {
 	MappedFile     fileContents;
 	Node              root;
-	std::vector<char> propBuffer;
+	tfs::vector<char> propBuffer;
 public:
 	Loader(const std::string& fileName, const Identifier& acceptedIdentifier);
 	bool getProps(const Node& node, PropStream& props);
@@ -161,7 +162,7 @@ class PropWriteStream
 		}
 
 	private:
-		std::vector<char> buffer;
+		tfs::vector<char> buffer;
 };
 
 #endif

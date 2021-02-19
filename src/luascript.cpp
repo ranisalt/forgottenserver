@@ -682,13 +682,13 @@ void LuaScriptInterface::setWeakMetatable(lua_State* L, int32_t index, const std
 		luaL_newmetatable(L, weakName.c_str());
 		int metatable = lua_gettop(L);
 
-		static const std::vector<std::string> methodKeys = {"__index", "__metatable", "__eq"};
+		static const tfs::vector<std::string> methodKeys = {"__index", "__metatable", "__eq"};
 		for (const std::string& metaKey : methodKeys) {
 			lua_getfield(L, childMetatable, metaKey.c_str());
 			lua_setfield(L, metatable, metaKey.c_str());
 		}
 
-		static const std::vector<int> methodIndexes = {'h', 'p', 't'};
+		static const tfs::vector<int> methodIndexes = {'h', 'p', 't'};
 		for (int metaIndex : methodIndexes) {
 			lua_rawgeti(L, childMetatable, metaIndex);
 			lua_rawseti(L, metatable, metaIndex);
@@ -1514,17 +1514,17 @@ void LuaScriptInterface::registerFunctions()
 
 	registerEnum(ITEM_GROUP_GROUND)
 	registerEnum(ITEM_GROUP_CONTAINER)
-	registerEnum(ITEM_GROUP_WEAPON) 
-	registerEnum(ITEM_GROUP_AMMUNITION) 
-	registerEnum(ITEM_GROUP_ARMOR) 
+	registerEnum(ITEM_GROUP_WEAPON)
+	registerEnum(ITEM_GROUP_AMMUNITION)
+	registerEnum(ITEM_GROUP_ARMOR)
 	registerEnum(ITEM_GROUP_CHARGES)
-	registerEnum(ITEM_GROUP_TELEPORT) 
-	registerEnum(ITEM_GROUP_MAGICFIELD) 
-	registerEnum(ITEM_GROUP_WRITEABLE) 
-	registerEnum(ITEM_GROUP_KEY) 
+	registerEnum(ITEM_GROUP_TELEPORT)
+	registerEnum(ITEM_GROUP_MAGICFIELD)
+	registerEnum(ITEM_GROUP_WRITEABLE)
+	registerEnum(ITEM_GROUP_KEY)
 	registerEnum(ITEM_GROUP_SPLASH)
 	registerEnum(ITEM_GROUP_FLUID)
-	registerEnum(ITEM_GROUP_DOOR) 
+	registerEnum(ITEM_GROUP_DOOR)
 	registerEnum(ITEM_GROUP_DEPRECATED)
 
 	registerEnum(ITEM_BAG)
@@ -3592,7 +3592,7 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 	}
 
 	if (g_config.getBoolean(ConfigManager::WARN_UNSAFE_SCRIPTS) || g_config.getBoolean(ConfigManager::CONVERT_UNSAFE_SCRIPTS)) {
-		std::vector<std::pair<int32_t, LuaDataType>> indexes;
+		tfs::vector<std::pair<int32_t, LuaDataType>> indexes;
 		for (int i = 3; i <= parameters; ++i) {
 			if (lua_getmetatable(globalState, i) == 0) {
 				continue;
@@ -6972,7 +6972,7 @@ int LuaScriptInterface::luaContainerGetItems(lua_State* L)
 	}
 
 	bool recursive = getBoolean(L, 2, false);
-	std::vector<Item*> items = container->getItems(recursive);
+	const auto& items = container->getItems(recursive);
 
 	lua_createtable(L, items.size(), 0);
 
@@ -9991,7 +9991,7 @@ int LuaScriptInterface::luaPlayerGetInstantSpells(lua_State* L)
 		return 1;
 	}
 
-	std::vector<const InstantSpell*> spells;
+	tfs::vector<const InstantSpell*> spells;
 	for (auto& spell : g_spells->getInstantSpells()) {
 		if (spell.second.canCast(player)) {
 			spells.push_back(&spell.second);
@@ -14797,7 +14797,7 @@ int LuaScriptInterface::luaSpellVocation(lua_State* L)
 	} else {
 		int parameters = lua_gettop(L) - 1; // - 1 because self is a parameter aswell, which we want to skip ofc
 		for (int i = 0; i < parameters; ++i) {
-			std::vector<std::string> vocList = explodeString(getString(L, 2 + i), ";");
+			tfs::vector<std::string> vocList = explodeString(getString(L, 2 + i), ";");
 			spell->addVocMap(g_vocations.getVocationId(vocList[0]), vocList.size() > 1 ? booleanString(vocList[1]) : false);
 		}
 		pushBoolean(L, true);
@@ -15832,7 +15832,7 @@ int LuaScriptInterface::luaGlobalEventTime(lua_State* L)
 	GlobalEvent* globalevent = getUserdata<GlobalEvent>(L, 1);
 	if (globalevent) {
 		std::string timer = getString(L, 2);
-		std::vector<int32_t> params = vectorAtoi(explodeString(timer, ":"));
+		tfs::vector<int32_t> params = vectorAtoi(explodeString(timer, ":"));
 
 		int32_t hour = params.front();
 		if (hour < 0 || hour > 23) {

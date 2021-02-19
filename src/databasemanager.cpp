@@ -40,7 +40,7 @@ bool DatabaseManager::optimizeTables()
 		std::string tableName = result->getString("TABLE_NAME");
 		std::cout << "> Optimizing table " << tableName << "..." << std::flush;
 
-		query.str(std::string());
+		query.str("");
 		query << "OPTIMIZE TABLE `" << tableName << '`';
 
 		if (db.executeQuery(query.str())) {

@@ -52,6 +52,17 @@ else ()
 endif ()
 option(USE_LUAJIT "Use LuaJIT" ${FORCE_LUAJIT})
 
+
+# Selects Folly if user defines
+if (USE_FOLLY)
+    find_package(Folly REQUIRED)
+	set_target_properties(tfs PROPERTIES CXX_STANDARD 17)
+    add_compile_definitions(USE_FOLLY)
+	include_directories(${FOLLY_INCLUDE_DIRS})
+	target_link_libraries(tfs PRIVATE ${FOLLY_LIBRARIES})
+endif ()
+option(USE_FOLLY "Use Folly" ON)
+
 if (FORCE_LUAJIT)
     if (APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")

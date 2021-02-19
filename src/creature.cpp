@@ -19,11 +19,12 @@
 
 #include "otpch.h"
 
+#include "configmanager.h"
 #include "creature.h"
 #include "game.h"
 #include "monster.h"
-#include "configmanager.h"
 #include "scheduler.h"
+#include <fmt/format.h>
 
 double Creature::speedA = 857.36;
 double Creature::speedB = 261.29;
@@ -1106,7 +1107,7 @@ void Creature::onGainExperience(uint64_t gainExp, Creature* target)
 		return;
 	}
 
-	TextMessage message(MESSAGE_EXPERIENCE_OTHERS, ucfirst(getNameDescription()) + " gained " + std::to_string(gainExp) + (gainExp != 1 ? " experience points." : " experience point."));
+	TextMessage message(MESSAGE_EXPERIENCE_OTHERS, fmt::format("%s gained %d experience point%s.", ucfirst(getNameDescription()), gainExp, (gainExp != 1 ? "s" : "")));
 	message.position = position;
 	message.primary.color = TEXTCOLOR_WHITE_EXP;
 	message.primary.value = gainExp;
@@ -1239,7 +1240,7 @@ void Creature::removeCondition(ConditionType_t type, ConditionId_t conditionId, 
 
 void Creature::removeCombatCondition(ConditionType_t type)
 {
-	std::vector<Condition*> removeConditions;
+	tfs::vector<Condition*> removeConditions;
 	for (Condition* condition : conditions) {
 		if (condition->getType() == type) {
 			removeConditions.push_back(condition);

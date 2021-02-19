@@ -43,7 +43,7 @@ class TalkAction : public Event
 		const std::string& getWords() const {
 			return words;
 		}
-		const std::vector<std::string>& getWordsMap() const {
+		const tfs::vector<std::string>& getWordsMap() const {
 			return wordsMap;
 		}
 		void setWords(std::string word) {
@@ -65,7 +65,7 @@ class TalkAction : public Event
 		std::string getScriptEventName() const override;
 
 		std::string words;
-		std::vector<std::string> wordsMap;
+		tfs::vector<std::string> wordsMap;
 		std::string separator = "\"";
 };
 

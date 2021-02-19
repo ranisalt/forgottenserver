@@ -21,20 +21,22 @@
 #define FS_TILE_H_96C7EE7CF8CD48E59D5D554A181F0C56
 
 #include "cylinder.h"
-#include "item.h"
 #include "tools.h"
 #include "spectators.h"
 
+class BedItem;
 class Creature;
+class Item;
+class ItemType;
+class MagicField;
+class Mailbox;
+class QTreeLeafNode;
+class Player;
 class Teleport;
 class TrashHolder;
-class Mailbox;
-class MagicField;
-class QTreeLeafNode;
-class BedItem;
 
-using CreatureVector = std::vector<Creature*>;
-using ItemVector = std::vector<Item*>;
+using CreatureVector = tfs::vector<Creature*>;
+using ItemVector = tfs::vector<Item*>;
 
 enum tileflags_t : uint32_t {
 	TILESTATE_NONE = 0,
@@ -75,37 +77,42 @@ enum ZoneType_t {
 	ZONE_NORMAL,
 };
 
-class TileItemVector : private ItemVector
+class TileItemVector
 {
 	public:
-		using ItemVector::begin;
-		using ItemVector::end;
-		using ItemVector::rbegin;
-		using ItemVector::rend;
-		using ItemVector::size;
-		using ItemVector::clear;
-		using ItemVector::at;
-		using ItemVector::insert;
-		using ItemVector::erase;
-		using ItemVector::push_back;
-		using ItemVector::value_type;
-		using ItemVector::iterator;
-		using ItemVector::const_iterator;
-		using ItemVector::reverse_iterator;
-		using ItemVector::const_reverse_iterator;
-		using ItemVector::empty;
+		// template <class ...Args> decltype(auto) begin(Args&&... args) { return vec.begin(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) begin(Args&&... args) const { return vec.begin(std::forward<Args>(args)...); };
+		// template <class ...Args> decltype(auto) end(Args&&... args) { return vec.end(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) end(Args&&... args) const { return vec.end(std::forward<Args>(args)...); };
+		// template <class ...Args> decltype(auto) rbegin(Args&&... args) { return vec.rbegin(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) rbegin(Args&&... args) const { return vec.rbegin(std::forward<Args>(args)...); };
+		// template <class ...Args> decltype(auto) rend(Args&&... args) { return vec.rend(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) rend(Args&&... args) const { return vec.rend(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) size(Args&&... args) const { return vec.size(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) clear(Args&&... args) { return vec.clear(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) at(Args&&... args) const { return vec.at(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) insert(Args&&... args) { return vec.insert(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) erase(Args&&... args) { return vec.erase(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) push_back(Args&&... args) { return vec.push_back(std::forward<Args>(args)...); };
+		template <class ...Args> decltype(auto) empty(Args&&... args) { return vec.empty(std::forward<Args>(args)...); };
+
+		using value_type = ItemVector::value_type;
+		using iterator = ItemVector::iterator;
+		using const_iterator = ItemVector::const_iterator;
+		using reverse_iterator = ItemVector::reverse_iterator;
+		using const_reverse_iterator = ItemVector::const_reverse_iterator;
 
 		iterator getBeginDownItem() {
-			return begin();
+			return vec.begin();
 		}
 		const_iterator getBeginDownItem() const {
-			return begin();
+			return vec.begin();
 		}
 		iterator getEndDownItem() {
-			return begin() + downItemCount;
+			return vec.begin() + downItemCount;
 		}
 		const_iterator getEndDownItem() const {
-			return begin() + downItemCount;
+			return vec.begin() + downItemCount;
 		}
 		iterator getBeginTopItem() {
 			return getEndDownItem();
@@ -114,14 +121,14 @@ class TileItemVector : private ItemVector
 			return getEndDownItem();
 		}
 		iterator getEndTopItem() {
-			return end();
+			return vec.end();
 		}
 		const_iterator getEndTopItem() const {
-			return end();
+			return vec.end();
 		}
 
 		uint32_t getTopItemCount() const {
-			return size() - downItemCount;
+			return vec.size() - downItemCount;
 		}
 		uint32_t getDownItemCount() const {
 			return downItemCount;
@@ -143,6 +150,7 @@ class TileItemVector : private ItemVector
 		}
 
 	private:
+		ItemVector vec;
 		uint16_t downItemCount = 0;
 };
 
@@ -151,9 +159,7 @@ class Tile : public Cylinder
 	public:
 		static Tile& nullptr_tile;
 		Tile(uint16_t x, uint16_t y, uint8_t z) : tilePos(x, y, z) {}
-		virtual ~Tile() {
-			delete ground;
-		};
+		virtual ~Tile();
 
 		// non-copyable
 		Tile(const Tile&) = delete;
@@ -285,7 +291,7 @@ class Tile : public Cylinder
 	private:
 		void onAddTileItem(Item* item);
 		void onUpdateTileItem(Item* oldItem, const ItemType& oldType, Item* newItem, const ItemType& newType);
-		void onRemoveTileItem(const SpectatorVec& spectators, const std::vector<int32_t>& oldStackPosVector, Item* item);
+		void onRemoveTileItem(const SpectatorVec& spectators, const tfs::vector<int32_t>& oldStackPosVector, Item* item);
 		void onUpdateTile(const SpectatorVec& spectators);
 
 		void setTileFlags(const Item* item);
@@ -306,11 +312,7 @@ class DynamicTile : public Tile
 
 	public:
 		DynamicTile(uint16_t x, uint16_t y, uint8_t z) : Tile(x, y, z) {}
-		~DynamicTile() {
-			for (Item* item : items) {
-				item->decrementReferenceCounter();
-			}
-		}
+		~DynamicTile();
 
 		// non-copyable
 		DynamicTile(const DynamicTile&) = delete;
@@ -346,13 +348,7 @@ class StaticTile final : public Tile
 
 	public:
 		StaticTile(uint16_t x, uint16_t y, uint8_t z) : Tile(x, y, z) {}
-		~StaticTile() {
-			if (items) {
-				for (Item* item : *items) {
-					item->decrementReferenceCounter();
-				}
-			}
-		}
+		~StaticTile();
 
 		// non-copyable
 		StaticTile(const StaticTile&) = delete;

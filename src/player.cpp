@@ -2229,7 +2229,7 @@ bool Player::editVIP(uint32_t vipGuid, const std::string& description, uint32_t 
 //close container and its child containers
 void Player::autoCloseContainers(const Container* container)
 {
-	std::vector<uint32_t> closeList;
+	tfs::vector<uint32_t> closeList;
 	for (const auto& it : openContainers) {
 		Container* tmpContainer = it.second.container;
 		while (tmpContainer) {
@@ -2605,7 +2605,7 @@ Cylinder* Player::queryDestination(int32_t& index, const Thing& thing, Item** de
 		bool autoStack = !((flags & FLAG_IGNOREAUTOSTACK) == FLAG_IGNOREAUTOSTACK);
 		bool isStackable = item->isStackable();
 
-		std::vector<Container*> containers;
+		tfs::vector<Container*> containers;
 
 		for (uint32_t slotIndex = CONST_SLOT_FIRST; slotIndex <= CONST_SLOT_LAST; ++slotIndex) {
 			Item* inventoryItem = inventory[slotIndex];
@@ -2877,7 +2877,7 @@ bool Player::removeItemOfType(uint16_t itemId, uint32_t amount, int32_t subType,
 		return true;
 	}
 
-	std::vector<Item*> itemList;
+	tfs::vector<Item*> itemList;
 
 	uint32_t count = 0;
 	for (int32_t i = CONST_SLOT_FIRST; i <= CONST_SLOT_LAST; i++) {
@@ -2987,7 +2987,7 @@ void Player::postAddNotification(Thing* thing, const Cylinder* oldParent, int32_
 	} else if (const Creature* creature = thing->getCreature()) {
 		if (creature == this) {
 			//check containers
-			std::vector<Container*> containers;
+			tfs::vector<Container*> containers;
 
 			for (const auto& it : openContainers) {
 				Container* container = it.second.container;
@@ -4485,7 +4485,7 @@ void Player::sendClosePrivate(uint16_t channelId)
 
 uint64_t Player::getMoney() const
 {
-	std::vector<const Container*> containers;
+	tfs::vector<const Container*> containers;
 	uint64_t moneyCount = 0;
 
 	for (int32_t i = CONST_SLOT_FIRST; i <= CONST_SLOT_LAST; ++i) {

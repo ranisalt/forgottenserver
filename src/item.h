@@ -42,21 +42,6 @@ class Door;
 class MagicField;
 class BedItem;
 
-enum ITEMPROPERTY {
-	CONST_PROP_BLOCKSOLID = 0,
-	CONST_PROP_HASHEIGHT,
-	CONST_PROP_BLOCKPROJECTILE,
-	CONST_PROP_BLOCKPATH,
-	CONST_PROP_ISVERTICAL,
-	CONST_PROP_ISHORIZONTAL,
-	CONST_PROP_MOVEABLE,
-	CONST_PROP_IMMOVABLEBLOCKSOLID,
-	CONST_PROP_IMMOVABLEBLOCKPATH,
-	CONST_PROP_IMMOVABLENOFIELDBLOCKPATH,
-	CONST_PROP_NOFIELDBLOCKPATH,
-	CONST_PROP_SUPPORTHANGABLE,
-};
-
 enum TradeEvents_t {
 	ON_TRADE_TRANSFER,
 	ON_TRADE_CANCEL,
@@ -414,7 +399,7 @@ class ItemAttributes
 			}
 		};
 
-		std::vector<Attribute> attributes;
+		tfs::vector<Attribute> attributes;
 		uint32_t attributeBits = 0;
 
 		const std::string& getStrAttr(itemAttrTypes type) const;
@@ -517,7 +502,7 @@ class ItemAttributes
 			return (type & ITEM_ATTRIBUTE_CUSTOM) == type;
 		}
 
-		const std::vector<Attribute>& getList() const {
+		const tfs::vector<Attribute>& getList() const {
 			return attributes;
 		}
 

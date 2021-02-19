@@ -61,21 +61,21 @@ class Action : public Event
 			checkFloor = v;
 		}
 
-		std::vector<uint16_t> getItemIdRange() {
+		tfs::vector<uint16_t> getItemIdRange() {
 			return ids;
 		}
 		void addItemId(uint16_t id) {
 			ids.emplace_back(id);
 		}
 
-		std::vector<uint16_t> getUniqueIdRange() {
+		tfs::vector<uint16_t> getUniqueIdRange() {
 			return uids;
 		}
 		void addUniqueId(uint16_t id) {
 			uids.emplace_back(id);
 		}
 
-		std::vector<uint16_t> getActionIdRange() {
+		tfs::vector<uint16_t> getActionIdRange() {
 			return aids;
 		}
 		void addActionId(uint16_t id) {
@@ -96,9 +96,9 @@ class Action : public Event
 		bool allowFarUse = false;
 		bool checkFloor = true;
 		bool checkLineOfSight = true;
-		std::vector<uint16_t> ids;
-		std::vector<uint16_t> uids;
-		std::vector<uint16_t> aids;
+		tfs::vector<uint16_t> ids;
+		tfs::vector<uint16_t> uids;
+		tfs::vector<uint16_t> aids;
 };
 
 class Actions final : public BaseEvents

@@ -98,7 +98,7 @@ class OutputMessagePool
 		OutputMessagePool() = default;
 		//NOTE: A vector is used here because this container is mostly read
 		//and relatively rarely modified (only when a client connects/disconnects)
-		std::vector<Protocol_ptr> bufferedProtocols;
+		tfs::vector<Protocol_ptr> bufferedProtocols;
 };
 
 

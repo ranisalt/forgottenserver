@@ -51,7 +51,7 @@ void PrivateChatChannel::invitePlayer(const Player& player, Player& invitePlayer
 	ss << player.getName() << " invites you to " << (player.getSex() == PLAYERSEX_FEMALE ? "her" : "his") << " private chat channel.";
 	invitePlayer.sendTextMessage(MESSAGE_INFO_DESCR, ss.str());
 
-	ss.str(std::string());
+	ss.str("");
 	ss << invitePlayer.getName() << " has been invited.";
 	player.sendTextMessage(MESSAGE_INFO_DESCR, ss.str());
 

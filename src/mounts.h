@@ -20,6 +20,8 @@
 #ifndef FS_MOUNTS_H_73716D11906A4C5C9F4A7B68D34C9BA6
 #define FS_MOUNTS_H_73716D11906A4C5C9F4A7B68D34C9BA6
 
+#include "structures.h"
+
 struct Mount
 {
 	Mount(uint8_t id, uint16_t clientId, std::string name, int32_t speed, bool premium) :
@@ -41,12 +43,12 @@ class Mounts
 		Mount* getMountByName(const std::string& name);
 		Mount* getMountByClientID(uint16_t clientId);
 
-		const std::vector<Mount>& getMounts() const {
+		const tfs::vector<Mount>& getMounts() const {
 			return mounts;
 		}
 
 	private:
-		std::vector<Mount> mounts;
+		tfs::vector<Mount> mounts;
 };
 
 #endif

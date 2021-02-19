@@ -21,6 +21,7 @@
 #define FS_TELEPORT_H_873B7F7F1DB24101A7ACFB54B25E0ABC
 
 #include "tile.h"
+#include "item.h"
 
 class Teleport final : public Item, public Cylinder
 {

@@ -26,7 +26,7 @@
 class Player;
 class Party;
 
-using PlayerVector = std::vector<Player*>;
+using PlayerVector = tfs::vector<Player*>;
 
 class Party
 {

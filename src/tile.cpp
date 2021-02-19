@@ -40,6 +40,11 @@ extern ConfigManager g_config;
 StaticTile real_nullptr_tile(0xFFFF, 0xFFFF, 0xFF);
 Tile& Tile::nullptr_tile = real_nullptr_tile;
 
+Tile::~Tile()
+{
+	delete ground;
+};
+
 bool Tile::hasProperty(ITEMPROPERTY prop) const
 {
 	if (ground && ground->hasProperty(prop)) {
@@ -446,7 +451,7 @@ void Tile::onUpdateTileItem(Item* oldItem, const ItemType& oldType, Item* newIte
 	}
 }
 
-void Tile::onRemoveTileItem(const SpectatorVec& spectators, const std::vector<int32_t>& oldStackPosVector, Item* item)
+void Tile::onRemoveTileItem(const SpectatorVec& spectators, const tfs::vector<int32_t>& oldStackPosVector, Item* item)
 {
 	if (item->hasProperty(CONST_PROP_MOVEABLE) || item->getContainer()) {
 		auto it = g_game.browseFields.find(this);
@@ -1097,7 +1102,7 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 
 		SpectatorVec spectators;
 		g_game.map.getSpectators(spectators, getPosition(), true);
-		onRemoveTileItem(spectators, std::vector<int32_t>(spectators.size(), 0), item);
+		onRemoveTileItem(spectators, tfs::vector<int32_t>(spectators.size(), 0), item);
 		return;
 	}
 
@@ -1113,7 +1118,7 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 			return;
 		}
 
-		std::vector<int32_t> oldStackPosVector;
+		tfs::vector<int32_t> oldStackPosVector;
 
 		SpectatorVec spectators;
 		g_game.map.getSpectators(spectators, getPosition(), true);
@@ -1137,7 +1142,7 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 			item->setItemCount(newCount);
 			onUpdateTileItem(item, itemType, item, itemType);
 		} else {
-			std::vector<int32_t> oldStackPosVector;
+			tfs::vector<int32_t> oldStackPosVector;
 
 			SpectatorVec spectators;
 			g_game.map.getSpectators(spectators, getPosition(), true);
@@ -1626,4 +1631,20 @@ Item* Tile::getUseItem(int32_t index) const
 	}
 
 	return nullptr;
+}
+
+DynamicTile::~DynamicTile()
+ {
+	for (Item* item : items) {
+		item->decrementReferenceCounter();
+	}
+}
+
+StaticTile::~StaticTile()
+{
+	if (items) {
+		for (Item* item : *items) {
+			item->decrementReferenceCounter();
+		}
+	}
 }

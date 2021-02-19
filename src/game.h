@@ -487,7 +487,7 @@ class Game
 
 		std::unordered_map<Tile*, Container*> browseFields;
 
-		void internalRemoveItems(std::vector<Item*> itemList, uint32_t amount, bool stackable);
+		void internalRemoveItems(tfs::vector<Item*> itemList, uint32_t amount, bool stackable);
 
 		BedItem* getBedBySleeper(uint32_t guid) const;
 		void setBedSleeper(BedItem* bed, uint32_t guid);
@@ -540,8 +540,8 @@ class Game
 		std::list<Item*> decayItems[EVENT_DECAY_BUCKETS];
 		std::list<Creature*> checkCreatureLists[EVENT_CREATURECOUNT];
 
-		std::vector<Creature*> ToReleaseCreatures;
-		std::vector<Item*> ToReleaseItems;
+		tfs::vector<Creature*> ToReleaseCreatures;
+		tfs::vector<Item*> ToReleaseItems;
 
 		size_t lastBucket = 0;
 

@@ -295,7 +295,7 @@ bool IOMarket::moveOfferToHistory(uint32_t offerId, MarketOfferState_t state)
 		return false;
 	}
 
-	query.str(std::string());
+	query.str("");
 	query << "DELETE FROM `market_offers` WHERE `id` = " << offerId;
 	if (!db.executeQuery(query.str())) {
 		return false;

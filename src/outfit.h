@@ -58,12 +58,12 @@ class Outfits
 
 		const Outfit* getOutfitByLookType(PlayerSex_t sex, uint16_t lookType) const;
 		const Outfit* getOutfitByLookType(uint16_t lookType) const;
-		const std::vector<Outfit>& getOutfits(PlayerSex_t sex) const {
+		const tfs::vector<Outfit>& getOutfits(PlayerSex_t sex) const {
 			return outfits[sex];
 		}
 
 	private:
-		std::vector<Outfit> outfits[PLAYERSEX_LAST + 1];
+		tfs::vector<Outfit> outfits[PLAYERSEX_LAST + 1];
 };
 
 #endif

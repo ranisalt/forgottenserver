@@ -392,7 +392,7 @@ class Items
 {
 	public:
 		using NameMap = std::unordered_multimap<std::string, uint16_t>;
-		using InventoryVector = std::vector<uint16_t>;
+		using InventoryVector = tfs::vector<uint16_t>;
 
 		Items();
 
@@ -433,7 +433,7 @@ class Items
 		NameMap nameToItems;
 
 	private:
-		std::vector<ItemType> items;
+		tfs::vector<ItemType> items;
 		InventoryVector inventory;
 		class ClientIdToServerIdMap
 		{
@@ -463,7 +463,7 @@ class Items
 					vec.clear();
 				}
 			private:
-				std::vector<uint16_t> vec;
+				tfs::vector<uint16_t> vec;
 		} clientIdToServerIdMap;
 };
 #endif

@@ -463,7 +463,7 @@ bool Npc::canWalkTo(const Position& fromPos, Direction dir) const
 
 bool Npc::getRandomStep(Direction& dir) const
 {
-	std::vector<Direction> dirList;
+	tfs::vector<Direction> dirList;
 	const Position& creaturePos = getPosition();
 
 	if (canWalkTo(creaturePos, DIRECTION_NORTH)) {

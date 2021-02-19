@@ -31,14 +31,14 @@ namespace {
 const uint16_t OUTPUTMESSAGE_FREE_LIST_CAPACITY = 2048;
 const std::chrono::milliseconds OUTPUTMESSAGE_AUTOSEND_DELAY {10};
 
-void sendAll(const std::vector<Protocol_ptr>& bufferedProtocols);
+void sendAll(const tfs::vector<Protocol_ptr>& bufferedProtocols);
 
-void scheduleSendAll(const std::vector<Protocol_ptr>& bufferedProtocols)
+void scheduleSendAll(const tfs::vector<Protocol_ptr>& bufferedProtocols)
 {
 	g_scheduler.addEvent(createSchedulerTask(OUTPUTMESSAGE_AUTOSEND_DELAY.count(), [&]() { sendAll(bufferedProtocols); }));
 }
 
-void sendAll(const std::vector<Protocol_ptr>& bufferedProtocols)
+void sendAll(const tfs::vector<Protocol_ptr>& bufferedProtocols)
 {
 	//dispatcher thread
 	for (auto& protocol : bufferedProtocols) {

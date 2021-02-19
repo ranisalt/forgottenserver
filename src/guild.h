@@ -20,6 +20,8 @@
 #ifndef FS_GUILD_H_C00F0A1D732E4BA88FF62ACBE74D76BC
 #define FS_GUILD_H_C00F0A1D732E4BA88FF62ACBE74D76BC
 
+#include "structures.h"
+
 class Player;
 
 struct GuildRank {
@@ -57,7 +59,7 @@ class Guild
 			memberCount = count;
 		}
 
-		const std::vector<GuildRank_ptr>& getRanks() const {
+		const tfs::vector<GuildRank_ptr>& getRanks() const {
 			return ranks;
 		}
 		GuildRank_ptr getRankById(uint32_t rankId);
@@ -74,7 +76,7 @@ class Guild
 
 	private:
 		std::list<Player*> membersOnline;
-		std::vector<GuildRank_ptr> ranks;
+		tfs::vector<GuildRank_ptr> ranks;
 		std::string name;
 		std::string motd;
 		uint32_t id;

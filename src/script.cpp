@@ -48,7 +48,7 @@ bool Scripts::loadScripts(std::string folderName, bool isLib, bool reload)
 	}
 
 	fs::recursive_directory_iterator endit;
-	std::vector<fs::path> v;
+	tfs::vector<fs::path> v;
 	std::string disable = ("#");
 	for(fs::recursive_directory_iterator it(dir); it != endit; ++it) {
 		auto fn = it->path().parent_path().filename();
@@ -66,7 +66,7 @@ bool Scripts::loadScripts(std::string folderName, bool isLib, bool reload)
 			v.push_back(it->path());
 		}
 	}
-	sort(v.begin(), v.end());
+	std::sort(v.begin(), v.end());
 	std::string redir;
 	for (auto it = v.begin(); it != v.end(); ++it) {
 		const std::string scriptFile = it->string();

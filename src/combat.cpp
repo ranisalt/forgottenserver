@@ -888,7 +888,7 @@ void Combat::doAreaCombat(Creature* caster, const Position& position, const Area
 
 	postCombatEffects(caster, position, params);
 
-	std::vector<Creature*> toDamageCreatures;
+	tfs::vector<Creature*> toDamageCreatures;
 	toDamageCreatures.reserve(100);
 
 	for (Tile* tile : tileList) {

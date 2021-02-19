@@ -256,7 +256,7 @@ bool GlobalEvent::configureEvent(const pugi::xml_node& node)
 
 	pugi::xml_attribute attr;
 	if ((attr = node.attribute("time"))) {
-		std::vector<int32_t> params = vectorAtoi(explodeString(attr.as_string(), ":"));
+		tfs::vector<int32_t> params = vectorAtoi(explodeString(attr.as_string(), ":"));
 
 		int32_t hour = params.front();
 		if (hour < 0 || hour > 23) {

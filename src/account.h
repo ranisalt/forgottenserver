@@ -23,7 +23,7 @@
 #include "enums.h"
 
 struct Account {
-	std::vector<std::string> characters;
+	tfs::vector<std::string> characters;
 	std::string name;
 	std::string key;
 	uint32_t id = 0;
