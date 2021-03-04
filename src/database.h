@@ -198,7 +198,7 @@ class DBInsert
 	private:
 		void reset();
 		std::string query;
-		std::string values;
+		std::vector<std::string> values;
 		std::string suffix;
 		size_t length;
 };

@@ -22,6 +22,8 @@
 #include "configmanager.h"
 #include "database.h"
 
+#include <fmt/compile.h>
+#include <fmt/format.h>
 #include <mysql/errmsg.h>
 
 extern ConfigManager g_config;
@@ -251,40 +253,24 @@ bool DBInsert::addRow(const std::string& row)
 {
 	// adds new row to buffer
 	const size_t rowLength = row.length();
-	length += rowLength;
+	length += rowLength + 3;
 	if (length > Database::getInstance().getMaxPacketSize() && !execute()) {
 		return false;
 	}
 
-	if (values.empty()) {
-		values.reserve(rowLength + 2);
-		values.push_back('(');
-		values.append(row);
-		values.push_back(')');
-	} else {
-		values.reserve(values.length() + rowLength + 3);
-		values.push_back(',');
-		values.push_back('(');
-		values.append(row);
-		values.push_back(')');
-	}
+	values.emplace_back(fmt::format(FMT_COMPILE("({:s})"), row));
 	return true;
 }
 
 bool DBInsert::addRow(std::ostringstream& row)
 {
 	bool ret = addRow(row.str());
-	row.str(std::string());
+	row.str({});
 	return ret;
 }
 
-static auto buildQuery(const std::string& query, const std::string& values, const std::string& suffix, size_t length) {
-	std::string ret;
-	ret.reserve(length);
-	auto it = std::copy(query.begin(), query.end(), ret.begin());
-	it = std::copy(values.begin(), values.end(), it);
-	std::copy(suffix.begin(), suffix.end(), it);
-	return ret;
+static auto buildQuery(const std::string& query, const std::string& values, const std::string& suffix) {
+	return fmt::format(FMT_COMPILE("{:s}{:s}{:s}"), query, fmt::join(values, ","), suffix);
 }
 
 bool DBInsert::execute()
@@ -294,7 +280,7 @@ bool DBInsert::execute()
 	}
 
 	// executes buffer
-	bool res = Database::getInstance().executeQuery(buildQuery(query, values, suffix, length));
+	bool res = Database::getInstance().executeQuery(buildQuery(query, values, suffix));
 	values.clear();
 	length = query.length();
 	return res;
@@ -307,7 +293,7 @@ DBResult_ptr DBInsert::store()
 	}
 
 	// executes buffer
-	auto res = Database::getInstance().storeQuery(q);
+	auto res = Database::getInstance().storeQuery(buildQuery(query, values, suffix));
 	values.clear();
 	length = query.length();
 	return res;
