@@ -245,10 +245,7 @@ bool DBResult::next()
 	return row != nullptr;
 }
 
-DBInsert::DBInsert(std::string query) : query(std::move(query))
-{
-	this->length = this->query.length();
-}
+DBInsert::DBInsert(std::string query, std::string suffix): length{query.size() + suffix.size()}, query{std::move(query)}, suffix{std::move(suffix)} {}
 
 bool DBInsert::addRow(const std::string& row)
 {
@@ -281,6 +278,15 @@ bool DBInsert::addRow(std::ostringstream& row)
 	return ret;
 }
 
+static auto buildQuery(const std::string& query, const std::string& values, const std::string& suffix, size_t length) {
+	std::string ret;
+	ret.reserve(length);
+	auto it = std::copy(query.begin(), query.end(), ret.begin());
+	it = std::copy(values.begin(), values.end(), it);
+	std::copy(suffix.begin(), suffix.end(), it);
+	return ret;
+}
+
 bool DBInsert::execute()
 {
 	if (values.empty()) {
@@ -288,7 +294,20 @@ bool DBInsert::execute()
 	}
 
 	// executes buffer
-	bool res = Database::getInstance().executeQuery(query + values);
+	bool res = Database::getInstance().executeQuery(buildQuery(query, values, suffix, length));
+	values.clear();
+	length = query.length();
+	return res;
+}
+
+DBResult_ptr DBInsert::store()
+{
+	if (values.empty()) {
+		return {};
+	}
+
+	// executes buffer
+	auto res = Database::getInstance().storeQuery(q);
 	values.clear();
 	length = query.length();
 	return res;

@@ -23,6 +23,10 @@
 #include "configmanager.h"
 #include "game.h"
 
+#include <chrono>
+#include <fmt/compile.h>
+#include <fmt/format.h>
+
 extern ConfigManager g_config;
 extern Game g_game;
 
@@ -598,12 +602,10 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	return true;
 }
 
-bool IOLoginData::saveItems(const Player* player, const ItemBlockList& itemList, DBInsert& query_insert, PropWriteStream& propWriteStream)
+DBResult_ptr saveItems(const Player* player, const ItemBlockList& itemList, DBInsert& query_insert, PropWriteStream& propWriteStream)
 {
-	std::ostringstream ss;
-
 	using ContainerBlock = std::pair<Container*, int32_t>;
-	std::list<ContainerBlock> queue;
+	std::deque<ContainerBlock> queue;
 
 	int32_t runningId = 100;
 
@@ -619,9 +621,8 @@ bool IOLoginData::saveItems(const Player* player, const ItemBlockList& itemList,
 		size_t attributesSize;
 		const char* attributes = propWriteStream.getStream(attributesSize);
 
-		ss << player->getGUID() << ',' << pid << ',' << runningId << ',' << item->getID() << ',' << item->getSubType() << ',' << db.escapeBlob(attributes, attributesSize);
-		if (!query_insert.addRow(ss)) {
-			return false;
+		if (!query_insert.addRow(fmt::format(FMT_COMPILE("{:d},{:d},{:d},{:d},{:d},{:s}"), player->getGUID(), pid, runningId, item->getID(), item->getSubType(), db.escapeBlob(attributes, attributesSize)))) {
+			return {};
 		}
 
 		if (Container* container = item->getContainer()) {
@@ -649,13 +650,12 @@ bool IOLoginData::saveItems(const Player* player, const ItemBlockList& itemList,
 			size_t attributesSize;
 			const char* attributes = propWriteStream.getStream(attributesSize);
 
-			ss << player->getGUID() << ',' << parentId << ',' << runningId << ',' << item->getID() << ',' << item->getSubType() << ',' << db.escapeBlob(attributes, attributesSize);
-			if (!query_insert.addRow(ss)) {
-				return false;
+			if (!query_insert.addRow(fmt::format(FMT_COMPILE("{:d},{:d},{:d},{:d},{:d},{:s}"), player->getGUID(), parentId, runningId, item->getID(), item->getSubType(), db.escapeBlob(attributes, attributesSize)))) {
+				return {};
 			}
 		}
 	}
-	return query_insert.execute();
+	return query_insert.store();
 }
 
 bool IOLoginData::savePlayer(Player* player)
@@ -806,24 +806,30 @@ bool IOLoginData::savePlayer(Player* player)
 		return false;
 	}
 
-	//item saving
-	query << "DELETE FROM `player_items` WHERE `player_id` = " << player->getGUID();
-	if (!db.executeQuery(query.str())) {
-		return false;
-	}
-
-	DBInsert itemsQuery("INSERT INTO `player_items` (`player_id`, `pid`, `sid`, `itemtype`, `count`, `attributes`) VALUES ");
-
 	ItemBlockList itemList;
-	for (int32_t slotId = CONST_SLOT_FIRST; slotId <= CONST_SLOT_LAST; ++slotId) {
-		Item* item = player->inventory[slotId];
-		if (item) {
-			itemList.emplace_back(slotId, item);
-		}
-	}
 
-	if (!saveItems(player, itemList, itemsQuery, propWriteStream)) {
-		return false;
+	//item saving
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+		DBInsert query("INSERT INTO `player_items` (`player_id`, `pid`, `sid`, `itemtype`, `count`, `attributes`) VALUES ", " ON DUPLICATE KEY UPDATE `itemtype` = VALUES(`itemtype`), `count` = VALUES(`count`), `attributes` = VALUES(`attributes`) RETURNING UNIX_TIMESTAMP(`updated`) AS `updated`");
+
+		for (int32_t slotId = CONST_SLOT_FIRST; slotId <= CONST_SLOT_LAST; ++slotId) {
+			Item* item = player->inventory[slotId];
+			if (item) {
+				itemList.emplace_back(slotId, item);
+			}
+		}
+
+		auto res = saveItems(player, itemList, query, propWriteStream);
+		if (res) {
+			auto updated = res->getNumber<uint32_t>("updated");
+			if (!db.executeQuery(fmt::format(FMT_COMPILE("DELETE FROM `player_items` WHERE `player_id` = {:d} AND `updated` < {:d}"), player->getGUID(), updated))) {
+				return false;
+			}
+		}
+
+		auto end = std::chrono::high_resolution_clock::now();
+		std::cout << ">> Saved items in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms.\n";
 	}
 
 	if (player->lastDepotId != -1) {
@@ -845,9 +851,7 @@ bool IOLoginData::savePlayer(Player* player)
 			}
 		}
 
-		if (!saveItems(player, itemList, depotQuery, propWriteStream)) {
-			return false;
-		}
+		saveItems(player, itemList, depotQuery, propWriteStream);
 	}
 
 	//save inbox items
@@ -864,9 +868,7 @@ bool IOLoginData::savePlayer(Player* player)
 		itemList.emplace_back(0, item);
 	}
 
-	if (!saveItems(player, itemList, inboxQuery, propWriteStream)) {
-		return false;
-	}
+	saveItems(player, itemList, inboxQuery, propWriteStream);
 
 	//save store inbox items
 	query.str(std::string());
@@ -882,9 +884,7 @@ bool IOLoginData::savePlayer(Player* player)
 		itemList.emplace_back(0, item);
 	}
 
-	if (!saveItems(player, itemList, storeInboxQuery, propWriteStream)) {
-		return false;
-	}
+	saveItems(player, itemList, storeInboxQuery, propWriteStream);
 
 	query.str(std::string());
 	query << "DELETE FROM `player_storage` WHERE `player_id` = " << player->getGUID();

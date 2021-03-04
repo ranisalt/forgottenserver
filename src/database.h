@@ -189,14 +189,17 @@ class DBResult
 class DBInsert
 {
 	public:
-		explicit DBInsert(std::string query);
+		explicit DBInsert(std::string query, std::string suffix = {});
 		bool addRow(const std::string& row);
 		bool addRow(std::ostringstream& row);
 		bool execute();
+		DBResult_ptr store();
 
 	private:
+		void reset();
 		std::string query;
 		std::string values;
+		std::string suffix;
 		size_t length;
 };
 
