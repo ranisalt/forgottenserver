@@ -1416,8 +1416,6 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(CONST_SLOT_AMMO)
 
 	registerEnum(CREATURE_EVENT_NONE)
-	registerEnum(CREATURE_EVENT_LOGIN)
-	registerEnum(CREATURE_EVENT_LOGOUT)
 	registerEnum(CREATURE_EVENT_THINK)
 	registerEnum(CREATURE_EVENT_PREPAREDEATH)
 	registerEnum(CREATURE_EVENT_DEATH)
@@ -2950,8 +2948,6 @@ void LuaScriptInterface::registerFunctions()
 	registerClass("CreatureEvent", "", LuaScriptInterface::luaCreateCreatureEvent);
 	registerMethod("CreatureEvent", "type", LuaScriptInterface::luaCreatureEventType);
 	registerMethod("CreatureEvent", "register", LuaScriptInterface::luaCreatureEventRegister);
-	registerMethod("CreatureEvent", "onLogin", LuaScriptInterface::luaCreatureEventOnCallback);
-	registerMethod("CreatureEvent", "onLogout", LuaScriptInterface::luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onThink", LuaScriptInterface::luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onPrepareDeath", LuaScriptInterface::luaCreatureEventOnCallback);
 	registerMethod("CreatureEvent", "onDeath", LuaScriptInterface::luaCreatureEventOnCallback);
@@ -15436,11 +15432,7 @@ int LuaScriptInterface::luaCreatureEventType(lua_State* L)
 	if (creature) {
 		std::string typeName = getString(L, 2);
 		std::string tmpStr = asLowerCaseString(typeName);
-		if (tmpStr == "login") {
-			creature->setEventType(CREATURE_EVENT_LOGIN);
-		} else if (tmpStr == "logout") {
-			creature->setEventType(CREATURE_EVENT_LOGOUT);
-		} else if (tmpStr == "think") {
+		if (tmpStr == "think") {
 			creature->setEventType(CREATURE_EVENT_THINK);
 		} else if (tmpStr == "preparedeath") {
 			creature->setEventType(CREATURE_EVENT_PREPAREDEATH);

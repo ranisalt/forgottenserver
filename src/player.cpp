@@ -842,7 +842,7 @@ void Player::sendPing()
 	}
 
 	if (noPongTime >= 60000 && canLogout()) {
-		if (g_creatureEvents->playerLogout(this)) {
+		if (g_events->eventPlayerOnLogout(this)) {
 			if (client) {
 				client->logout(true, true);
 			} else {
@@ -2148,7 +2148,7 @@ void Player::addList()
 
 void Player::kickPlayer(bool displayEffect)
 {
-	g_creatureEvents->playerLogout(this);
+	g_events->eventPlayerOnLogout(this);
 	if (client) {
 		client->logout(displayEffect, true);
 	} else {
@@ -3478,7 +3478,7 @@ void Player::onIdleStatus()
 void Player::onPlacedCreature()
 {
 	//scripting event - onLogin
-	if (!g_creatureEvents->playerLogin(this)) {
+	if (!g_events->eventPlayerOnLogin(this)) {
 		kickPlayer(true);
 	}
 }

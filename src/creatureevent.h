@@ -29,8 +29,6 @@ using CreatureEvent_ptr = std::unique_ptr<CreatureEvent>;
 
 enum CreatureEventType_t {
 	CREATURE_EVENT_NONE,
-	CREATURE_EVENT_LOGIN,
-	CREATURE_EVENT_LOGOUT,
 	CREATURE_EVENT_THINK,
 	CREATURE_EVENT_PREPAREDEATH,
 	CREATURE_EVENT_DEATH,
@@ -105,8 +103,6 @@ class CreatureEvents final : public BaseEvents
 		CreatureEvents& operator=(const CreatureEvents&) = delete;
 
 		// global events
-		bool playerLogin(Player* player) const;
-		bool playerLogout(Player* player) const;
 		bool playerAdvance(Player* player, skills_t, uint32_t, uint32_t);
 
 		CreatureEvent* getEventByName(const std::string& name, bool forceLoaded = true);

@@ -208,3 +208,159 @@ function Player:onWrapItem(item)
 		end
 	end
 end
+
+local function executeOfflineTraining(player)
+	local lastLogout = player:getLastLogout()
+	local offlineTime = lastLogout ~= 0 and math.min(os.time() - lastLogout, 86400 * 21) or 0
+	local offlineTrainingSkill = player:getOfflineTrainingSkill()
+	if offlineTrainingSkill == -1 then
+		player:addOfflineTrainingTime(offlineTime * 1000)
+		return
+	end
+
+	player:setOfflineTrainingSkill(-1)
+
+	if offlineTime < 600 then
+		player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You must be logged out for more than 10 minutes to start offline training.")
+		return
+	end
+
+	local trainingTime = math.max(0, math.min(offlineTime, math.min(43200, player:getOfflineTrainingTime() / 1000)))
+	player:removeOfflineTrainingTime(trainingTime * 1000)
+
+	local remainder = offlineTime - trainingTime
+	if remainder > 0 then
+		player:addOfflineTrainingTime(remainder * 1000)
+	end
+
+	if trainingTime < 60 then
+		return
+	end
+
+	local text = "During your absence you trained for"
+	local hours = math.floor(trainingTime / 3600)
+	if hours > 1 then
+		text = string.format("%s %d hours", text, hours)
+	elseif hours == 1 then
+		text = string.format("%s 1 hour", text)
+	end
+
+	local minutes = math.floor((trainingTime % 3600) / 60)
+	if minutes ~= 0 then
+		if hours ~= 0 then
+			text = string.format("%s and", text)
+		end
+
+		if minutes > 1 then
+			text = string.format("%s %d minutes", text, minutes)
+		else
+			text = string.format("%s 1 minute", text)
+		end
+	end
+
+	text = string.format("%s.", text)
+	player:sendTextMessage(MESSAGE_EVENT_ADVANCE, text)
+
+	local vocation = player:getVocation()
+	local promotion = vocation:getPromotion()
+	local topVocation = not promotion and vocation or promotion
+
+	local updateSkills = false
+	if table.contains({SKILL_CLUB, SKILL_SWORD, SKILL_AXE, SKILL_DISTANCE}, offlineTrainingSkill) then
+		local modifier = topVocation:getAttackSpeed() / 1000
+		updateSkills = player:addOfflineTrainingTries(offlineTrainingSkill, (trainingTime / modifier) / (offlineTrainingSkill == SKILL_DISTANCE and 4 or 2))
+	elseif offlineTrainingSkill == SKILL_MAGLEVEL then
+		local gainTicks = topVocation:getManaGainTicks() * 2
+		if gainTicks == 0 then
+			gainTicks = 1
+		end
+
+		updateSkills = player:addOfflineTrainingTries(SKILL_MAGLEVEL, trainingTime * (vocation:getManaGainAmount() / gainTicks))
+	end
+
+	if updateSkills then
+		player:addOfflineTrainingTries(SKILL_SHIELD, trainingTime / 4)
+	end
+end
+
+local function executeRegenerateStamina(player)
+	nextUseStaminaTime[player.uid] = 0
+	if not configManager.getBoolean(configKeys.STAMINA_SYSTEM) then
+		return
+	end
+
+	local lastLogout = player:getLastLogout()
+	local offlineTime = lastLogout ~= 0 and math.min(os.time() - lastLogout, 86400 * 21) or 0
+	offlineTime = offlineTime - 600
+
+	if offlineTime < 180 then
+		return
+	end
+
+	local staminaMinutes = player:getStamina()
+	local maxNormalStaminaRegen = 2400 - math.min(2400, staminaMinutes)
+
+	local regainStaminaMinutes = offlineTime / 180
+	if regainStaminaMinutes > maxNormalStaminaRegen then
+		local happyHourStaminaRegen = (offlineTime - (maxNormalStaminaRegen * 180)) / 600
+		staminaMinutes = math.min(2520, math.max(2400, staminaMinutes) + happyHourStaminaRegen)
+	else
+		staminaMinutes = staminaMinutes + regainStaminaMinutes
+	end
+
+	player:setStamina(staminaMinutes)
+end
+
+local firstItems = {2050, 2382}
+
+function Player:onLogin()
+	local loginStr = "Welcome to " .. configManager.getString(configKeys.SERVER_NAME) .. "!"
+	if self:getLastLoginSaved() <= 0 then
+		-- First items
+		for i = 1, #firstItems do
+			self:addItem(firstItems[i], 1)
+		end
+		self:addItem(self:getSex() == 0 and 2651 or 2650, 1)
+		self:addItem(ITEM_BAG, 1):addItem(2674, 1)
+
+		loginStr = loginStr .. " Please choose your outfit."
+		self:sendOutfitWindow()
+	else
+		if loginStr ~= "" then
+			self:sendTextMessage(MESSAGE_STATUS_DEFAULT, loginStr)
+		end
+
+		loginStr = string.format("Your last visit was on %s.", os.date("%a %b %d %X %Y", self:getLastLoginSaved()))
+	end
+	self:sendTextMessage(MESSAGE_STATUS_DEFAULT, loginStr)
+
+	-- Promotion
+	local vocation = self:getVocation()
+	local promotion = vocation:getPromotion()
+	if self:isPremium() then
+		local value = self:getStorageValue(PlayerStorageKeys.promotion)
+		if not promotion and value ~= 1 then
+			self:setStorageValue(PlayerStorageKeys.promotion, 1)
+		elseif value == 1 then
+			self:setVocation(promotion)
+		end
+	elseif not promotion then
+		self:setVocation(vocation:getDemotion())
+	end
+
+	executeOfflineTraining(self)
+	executeRegenerateStamina(self)
+
+	-- Events
+	self:registerEvent("PlayerDeath")
+	self:registerEvent("DropLoot")
+	return true
+end
+
+function Player:onLogout()
+	local playerId = self:getId()
+	if nextUseStaminaTime[playerId] then
+		nextUseStaminaTime[playerId] = nil
+	end
+	return true
+end

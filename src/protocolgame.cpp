@@ -34,10 +34,11 @@
 #include "iomarket.h"
 #include "ban.h"
 #include "scheduler.h"
+#include "events.h"
 
 extern ConfigManager g_config;
 extern Actions actions;
-extern CreatureEvents* g_creatureEvents;
+extern Events* g_events;
 extern Chat* g_chat;
 
 namespace {
@@ -314,7 +315,7 @@ void ProtocolGame::logout(bool displayEffect, bool forced)
 			}
 
 			//scripting event - onLogout
-			if (!g_creatureEvents->playerLogout(player)) {
+			if (!g_events->eventPlayerOnLogout(player)) {
 				//Let the script handle the error message
 				return;
 			}

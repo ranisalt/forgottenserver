@@ -122,6 +122,10 @@ bool Events::load()
 				info.playerOnGainSkillTries = event;
 			} else if (methodName == "onWrapItem") {
 				info.playerOnWrapItem = event;
+			} else if (methodName == "onLogin") {
+				info.playerOnLogin = event;
+			} else if (methodName == "onLogout") {
+				info.playerOnLogout = event;
 			} else {
 				std::cout << "[Warning - Events::load] Unknown player method: " << methodName << std::endl;
 			}
@@ -992,6 +996,48 @@ void Events::eventPlayerOnWrapItem(Player* player, Item* item)
 	LuaScriptInterface::setItemMetatable(L, -1, item);
 
 	scriptInterface.callVoidFunction(2);
+}
+
+bool Events::eventPlayerOnLogin(Player* player)
+{
+	// Player:onLogin()
+	if (info.playerOnLogin == -1) {
+		return true;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnLogin] Call stack overflow" << std::endl;
+		return false;
+	}
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnLogin);
+
+	LuaScriptInterface::pushUserdata(L, player);
+	LuaScriptInterface::setMetatable(L, -1, "Player");
+
+	return scriptInterface.callFunction(1);
+}
+
+bool Events::eventPlayerOnLogout(Player* player)
+{
+	// Player:onLogout()
+	if (info.playerOnLogout == -1) {
+		return true;
+	}
+
+	if (!scriptInterface.reserveScriptEnv()) {
+		std::cout << "[Error - Events::eventPlayerOnLogout] Call stack overflow" << std::endl;
+		return false;
+	}
+
+	lua_State* L = scriptInterface.getLuaState();
+	scriptInterface.pushFunction(info.playerOnLogout);
+
+	LuaScriptInterface::pushUserdata(L, player);
+	LuaScriptInterface::setMetatable(L, -1, "Player");
+
+	return scriptInterface.callFunction(1);
 }
 
 void Events::eventMonsterOnDropLoot(Monster* monster, Container* corpse)
