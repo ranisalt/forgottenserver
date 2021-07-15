@@ -529,49 +529,115 @@ bool Map::canThrowObjectTo(const Position& fromPos, const Position& toPos, bool 
 	return isSightClear(fromPos, toPos, false);
 }
 
+namespace {
+
+template<class Fn>
+constexpr auto checkSlightLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, Fn isTileClear) {
+	if (x0 > x1) {
+		std::tie(x0, y0, x1, y1) = std::tie(x1, y1, x0, y0);
+	}
+
+	auto dx = x1 - x0, dy = y1 = y0, yi = 1;
+	if (dy < 0) {
+		yi = -1;
+		dy = -dy;
+	}
+
+	auto d = 2 * dy - dx;
+	for (auto x = x0, y = y0; x <= x1; ++x) {
+		if (!isTileClear(x, y)) {
+			return false;
+		}
+
+		if (d > 0) {
+			y = y + yi;
+			d = d + 2 * (dy - dx);
+		} else {
+			d = d + 2 * dy;
+		}
+	}
+
+	return true;
+}
+
+template<class Fn>
+constexpr auto checkSteepLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, Fn isTileClear) {
+	if (x0 > x1) {
+		std::tie(x0, y0, x1, y1) = std::tie(x1, y1, x0, y0);
+	}
+
+	auto dx = x1 - x0, dy = y1 = y0, xi = 1;
+	if (dx < 0) {
+		xi = -1;
+		dx = -dx;
+	}
+
+	auto d = 2 * dx - dy;
+	for (auto x = x0, y = y0; y <= y1; ++y) {
+		if (!isTileClear(x, y)) {
+			return false;
+		}
+
+		if (d > 0) {
+			x = x + xi;
+			d = d + 2 * (dx - dy);
+		} else {
+			d = d + 2 * dx;
+		}
+	}
+
+	return true;
+}
+
+template<class Fn>
+constexpr bool isPathClear(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Fn isTileClear)
+{
+
+	if (std::abs(y1 - y0) > std::abs(x1 - x0)) {
+		if (y1 > y0) {
+			return checkSteepLine(y0, x0, y1, x1, isTileClear);
+		}
+		return checkSteepLine(y1, x1, y0, x0, isTileClear);
+	}
+
+	if (x0 > x1) {
+		return checkSlightLine(x1, y1, x0, y0, isTileClear);
+	}
+
+	return checkSlightLine(x0, y0, x1, y1, isTileClear);
+}
+
+}
+
 bool Map::checkSightLine(const Position& fromPos, const Position& toPos) const
 {
 	if (fromPos == toPos) {
 		return true;
 	}
 
-	Position start(fromPos.z > toPos.z ? toPos : fromPos);
-	Position destination(fromPos.z > toPos.z ? fromPos : toPos);
-
-	const int8_t mx = start.x < destination.x ? 1 : start.x == destination.x ? 0 : -1;
-	const int8_t my = start.y < destination.y ? 1 : start.y == destination.y ? 0 : -1;
-
-	int32_t A = Position::getOffsetY(destination, start);
-	int32_t B = Position::getOffsetX(start, destination);
-	int32_t C = -(A * destination.x + B * destination.y);
-
-	while (start.x != destination.x || start.y != destination.y) {
-		int32_t move_hor = std::abs(A * (start.x + mx) + B * (start.y) + C);
-		int32_t move_ver = std::abs(A * (start.x) + B * (start.y + my) + C);
-		int32_t move_cross = std::abs(A * (start.x + mx) + B * (start.y + my) + C);
-
-		if (start.y != destination.y && (start.x == destination.x || move_hor > move_ver || move_hor > move_cross)) {
-			start.y += my;
+	const auto isTileClear = [this](uint16_t x, uint16_t y, uint8_t z, bool blockFloor = false) {
+		const Tile* tile = getTile(x, y, z);
+		if (!tile) {
+			return true;
 		}
 
-		if (start.x != destination.x && (start.y == destination.y || move_ver > move_hor || move_ver > move_cross)) {
-			start.x += mx;
-		}
-
-		const Tile* tile = getTile(start.x, start.y, start.z);
-		if (tile && tile->hasProperty(CONST_PROP_BLOCKPROJECTILE)) {
+		if (blockFloor && tile->getGround()) {
 			return false;
 		}
+
+		return !tile->hasProperty(CONST_PROP_BLOCKPROJECTILE);
+	};
+
+	if (!isPathClear(fromPos.x, fromPos.y, toPos.x, toPos.y, [&](uint16_t x, uint16_t y) { return isTileClear(x, y, fromPos.z); })) {
+		return false;
 	}
 
 	// now we need to perform a jump between floors to see if everything is clear (literally)
-	while (start.z != destination.z) {
-		const Tile* tile = getTile(start.x, start.y, start.z);
+	for (auto z = fromPos.z; z != toPos.z; ++z) {
+		const Tile* tile = getTile(fromPos.x, fromPos.y, z);
 		if (tile && tile->getThingCount() > 0) {
 			return false;
 		}
-
-		start.z++;
 	}
 
 	return true;
@@ -584,7 +650,7 @@ bool Map::isSightClear(const Position& fromPos, const Position& toPos, bool floo
 	}
 
 	// Cast two converging rays and see if either yields a result.
-	return checkSightLine(fromPos, toPos) || checkSightLine(toPos, fromPos);
+	return checkSightLine(fromPos, toPos);
 }
 
 const Tile* Map::canWalkTo(const Creature& creature, const Position& pos) const
