@@ -13,7 +13,7 @@
 extern MoveEvents* g_moveEvents;
 extern Weapons* g_weapons;
 
-const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributesMap = {
+const tfs::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributesMap = {
 	{"type", ITEM_PARSE_TYPE},
 	{"description", ITEM_PARSE_DESCRIPTION},
 	{"runespellname", ITEM_PARSE_RUNESPELLNAME},
@@ -198,7 +198,7 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
 	{"worth", ITEM_PARSE_WORTH},
 };
 
-const std::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {
+const tfs::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {
 	{"key", ITEM_TYPE_KEY},
 	{"magicfield", ITEM_TYPE_MAGICFIELD},
 	{"container", ITEM_TYPE_CONTAINER},
@@ -212,7 +212,7 @@ const std::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {
 	{"podium", ITEM_TYPE_PODIUM}
 };
 
-const std::unordered_map<std::string, tileflags_t> TileStatesMap = {
+const tfs::unordered_map<std::string, tileflags_t> TileStatesMap = {
 	{"down", TILESTATE_FLOORCHANGE_DOWN},
 	{"north", TILESTATE_FLOORCHANGE_NORTH},
 	{"south", TILESTATE_FLOORCHANGE_SOUTH},
@@ -222,7 +222,7 @@ const std::unordered_map<std::string, tileflags_t> TileStatesMap = {
 	{"eastalt", TILESTATE_FLOORCHANGE_EAST_ALT},
 };
 
-const std::unordered_map<std::string, RaceType_t> RaceTypesMap = {
+const tfs::unordered_map<std::string, RaceType_t> RaceTypesMap = {
 	{"venom", RACE_VENOM},
 	{"blood", RACE_BLOOD},
 	{"undead", RACE_UNDEAD},
@@ -231,7 +231,7 @@ const std::unordered_map<std::string, RaceType_t> RaceTypesMap = {
 	{"ink", RACE_INK},
 };
 
-const std::unordered_map<std::string, WeaponType_t> WeaponTypesMap = {
+const tfs::unordered_map<std::string, WeaponType_t> WeaponTypesMap = {
 	{"sword", WEAPON_SWORD},
 	{"club", WEAPON_CLUB},
 	{"axe", WEAPON_AXE},
@@ -241,7 +241,7 @@ const std::unordered_map<std::string, WeaponType_t> WeaponTypesMap = {
 	{"ammunition", WEAPON_AMMO},
 };
 
-const std::unordered_map<std::string, FluidTypes_t> FluidTypesMap = {
+const tfs::unordered_map<std::string, FluidTypes_t> FluidTypesMap = {
 	{"water", FLUID_WATER},
 	{"blood", FLUID_BLOOD},
 	{"beer", FLUID_BEER},

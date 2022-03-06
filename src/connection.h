@@ -4,8 +4,7 @@
 #ifndef FS_CONNECTION_H_FC8E1B4392D24D27A2F129D8B93A6348
 #define FS_CONNECTION_H_FC8E1B4392D24D27A2F129D8B93A6348
 
-#include <unordered_set>
-
+#include "containers.h"
 #include "networkmessage.h"
 
 enum ConnectionState_t {
@@ -53,7 +52,7 @@ class ConnectionManager
 	private:
 		ConnectionManager() = default;
 
-		std::unordered_set<Connection_ptr> connections;
+		tfs::unordered_set<Connection_ptr> connections;
 		std::mutex connectionManagerLock;
 };
 

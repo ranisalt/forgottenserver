@@ -6,16 +6,17 @@
 
 #include "account.h"
 #include "combat.h"
-#include "groups.h"
-#include "map.h"
-#include "position.h"
-#include "item.h"
 #include "container.h"
-#include "player.h"
-#include "raids.h"
+#include "containers.h"
+#include "groups.h"
+#include "item.h"
+#include "map.h"
 #include "npc.h"
-#include "wildcardtree.h"
+#include "player.h"
+#include "position.h"
 #include "quests.h"
+#include "raids.h"
+#include "wildcardtree.h"
 
 class ServiceManager;
 class Creature;
@@ -472,7 +473,7 @@ class Game
 
 		void sendOfflineTrainingDialog(Player* player);
 
-		const std::unordered_map<uint32_t, Player*>& getPlayers() const { return players; }
+		const tfs::unordered_map<uint32_t, Player*>& getPlayers() const { return players; }
 		const std::map<uint32_t, Npc*>& getNpcs() const { return npcs; }
 
 		void addPlayer(Player* player);
@@ -489,7 +490,7 @@ class Game
 		void removeGuild(uint32_t guildId);
 		void decreaseBrowseFieldRef(const Position& pos);
 
-		std::unordered_map<Tile*, Container*> browseFields;
+		tfs::unordered_map<Tile*, Container*> browseFields;
 
 		void internalRemoveItems(std::vector<Item*> itemList, uint32_t amount, bool stackable);
 
@@ -513,7 +514,7 @@ class Game
 
 		std::forward_list<Item*> toDecayItems;
 
-		std::unordered_set<Tile*> getTilesToClean() const {
+		tfs::unordered_set<Tile*> getTilesToClean() const {
 			return tilesToClean;
 		}
 		void addTileToClean(Tile* tile) {
@@ -536,13 +537,13 @@ class Game
 		void checkDecay();
 		void internalDecayItem(Item* item);
 
-		std::unordered_map<uint32_t, Player*> players;
-		std::unordered_map<std::string, Player*> mappedPlayerNames;
-		std::unordered_map<uint32_t, Player*> mappedPlayerGuids;
-		std::unordered_map<uint32_t, Guild*> guilds;
-		std::unordered_map<uint16_t, Item*> uniqueItems;
+		tfs::unordered_map<uint32_t, Player*> players;
+		tfs::unordered_map<std::string, Player*> mappedPlayerNames;
+		tfs::unordered_map<uint32_t, Player*> mappedPlayerGuids;
+		tfs::unordered_map<uint32_t, Guild*> guilds;
+		tfs::unordered_map<uint16_t, Item*> uniqueItems;
 		std::map<uint32_t, uint32_t> stages;
-		std::unordered_map<uint32_t, std::unordered_map<uint32_t, int32_t>> accountStorageMap;
+		tfs::unordered_map<uint32_t, std::unordered_map<uint32_t, int32_t>> accountStorageMap;
 
 		std::list<Item*> decayItems[EVENT_DECAY_BUCKETS];
 		std::list<Creature*> checkCreatureLists[EVENT_CREATURECOUNT];
@@ -562,7 +563,7 @@ class Game
 
 		std::map<uint32_t, BedItem*> bedSleepersMap;
 
-		std::unordered_set<Tile*> tilesToClean;
+		tfs::unordered_set<Tile*> tilesToClean;
 
 		ModalWindow offlineTrainingWindow { std::numeric_limits<uint32_t>::max(), "Choose a Skill", "Please choose a skill:" };
 

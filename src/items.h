@@ -5,6 +5,7 @@
 #define FS_ITEMS_H_4E2221634ABA45FE85BA50F710669B3C
 
 #include "const.h"
+#include "containers.h"
 #include "enums.h"
 #include "itemloader.h"
 #include "position.h"
@@ -442,7 +443,7 @@ class ItemType
 class Items
 {
 	public:
-		using NameMap = std::unordered_map<std::string, uint16_t>;
+		using NameMap = tfs::unordered_map<std::string, uint16_t>;
 		using InventoryVector = std::vector<uint16_t>;
 
 		using CurrencyMap = std::map<uint64_t, uint16_t, std::greater<uint64_t>>;

@@ -61,9 +61,14 @@ else ()
     find_package(Lua REQUIRED)
 endif ()
 
+find_package(TslRobinMap)
+if (tsl_robin_map_FOUND)
+	add_definitions(-DTSL_ROBIN_MAP)
+endif ()
+
 find_package(Boost 1.66.0 REQUIRED COMPONENTS date_time system filesystem iostreams)
 
-include_directories(${Boost_INCLUDE_DIRS} ${Crypto++_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${MYSQL_INCLUDE_DIR} ${PUGIXML_INCLUDE_DIR})
+include_directories(${Boost_INCLUDE_DIRS} ${Crypto++_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${MYSQL_INCLUDE_DIR} ${PUGIXML_INCLUDE_DIR} ${TslRobinMap_INCLUDE_DIR})
 target_link_libraries(tfs PRIVATE
         Boost::date_time
         Boost::system

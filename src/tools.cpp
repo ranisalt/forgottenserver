@@ -3,8 +3,9 @@
 
 #include "otpch.h"
 
-#include "tools.h"
 #include "configmanager.h"
+#include "containers.h"
+#include "tools.h"
 
 extern ConfigManager g_config;
 
@@ -485,12 +486,12 @@ Direction getDirectionTo(const Position& from, const Position& to)
 	return dir;
 }
 
-using MagicEffectNames = std::unordered_map<std::string, MagicEffectClasses>;
-using ShootTypeNames = std::unordered_map<std::string, ShootType_t>;
-using CombatTypeNames = std::unordered_map<CombatType_t, std::string, std::hash<int32_t>>;
-using AmmoTypeNames = std::unordered_map<std::string, Ammo_t>;
-using WeaponActionNames = std::unordered_map<std::string, WeaponAction_t>;
-using SkullNames = std::unordered_map<std::string, Skulls_t>;
+using MagicEffectNames = tfs::unordered_map<std::string, MagicEffectClasses>;
+using ShootTypeNames = tfs::unordered_map<std::string, ShootType_t>;
+using CombatTypeNames = tfs::unordered_map<CombatType_t, std::string>;
+using AmmoTypeNames = tfs::unordered_map<std::string, Ammo_t>;
+using WeaponActionNames = tfs::unordered_map<std::string, WeaponAction_t>;
+using SkullNames = tfs::unordered_map<std::string, Skulls_t>;
 
 MagicEffectNames magicEffectNames = {
 	{"redspark",		CONST_ME_DRAWBLOOD},
@@ -1310,4 +1311,3 @@ SpellGroup_t stringToSpellGroup(const std::string& value)
 
 	return SPELLGROUP_NONE;
 }
-

@@ -324,7 +324,7 @@ class ProtocolGame final : public Protocol
 			g_dispatcher.addTask(createTask(delay, std::bind(std::forward<Callable>(function), &g_game, std::forward<Args>(args)...)));
 		}
 
-		std::unordered_set<uint32_t> knownCreatureSet;
+		tfs::unordered_set<uint32_t> knownCreatureSet;
 		Player* player = nullptr;
 
 		uint32_t eventConnect = 0;

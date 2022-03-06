@@ -4,15 +4,16 @@
 #ifndef FS_ITEM_H_009A319FB13D477D9EEFFBBD9BB83562
 #define FS_ITEM_H_009A319FB13D477D9EEFFBBD9BB83562
 
+#include "containers.h"
 #include "cylinder.h"
-#include "thing.h"
 #include "items.h"
 #include "luascript.h"
+#include "thing.h"
 #include "tools.h"
-#include <typeinfo>
 
 #include <boost/variant.hpp>
 #include <deque>
+#include <typeinfo>
 
 class Creature;
 class Player;
@@ -349,7 +350,7 @@ class ItemAttributes
 		static bool emptyBool;
 		static Reflect emptyReflect;
 
-		typedef std::unordered_map<std::string, CustomAttribute> CustomAttributeMap;
+		using CustomAttributeMap = tfs::unordered_map<std::string, CustomAttribute>;
 
 		struct Attribute
 		{

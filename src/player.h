@@ -1219,8 +1219,8 @@ class Player final : public Creature, public Cylinder
 		void internalAddThing(Thing* thing) override;
 		void internalAddThing(uint32_t index, Thing* thing) override;
 
-		std::unordered_set<uint32_t> attackedSet;
-		std::unordered_set<uint32_t> VIPList;
+		tfs::unordered_set<uint32_t> attackedSet;
+		tfs::unordered_set<uint32_t> VIPList;
 
 		std::map<uint8_t, OpenContainer> openContainers;
 		std::map<uint32_t, DepotLocker_ptr> depotLockerMap;

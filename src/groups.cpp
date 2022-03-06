@@ -5,10 +5,11 @@
 
 #include "groups.h"
 
+#include "containers.h"
 #include "pugicast.h"
 #include "tools.h"
 
-const std::unordered_map<std::string, PlayerFlags> ParsePlayerFlagMap = {
+const tfs::unordered_map<std::string, PlayerFlags> parsePlayerFlagMap = {
 	{"cannotusecombat", PlayerFlag_CannotUseCombat},
 	{"cannotattackplayer", PlayerFlag_CannotAttackPlayer},
 	{"cannotattackmonster", PlayerFlag_CannotAttackMonster},
@@ -74,8 +75,8 @@ bool Groups::load()
 					continue;
 				}
 
-				auto parseFlag = ParsePlayerFlagMap.find(attr.name());
-				if (parseFlag != ParsePlayerFlagMap.end()) {
+				auto parseFlag = parsePlayerFlagMap.find(attr.name());
+				if (parseFlag != parsePlayerFlagMap.end()) {
 					group.flags |= parseFlag->second;
 				}
 			}

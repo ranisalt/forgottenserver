@@ -52,7 +52,7 @@ class AStarNodes
 	private:
 		AStarNode nodes[MAX_NODES];
 		bool openNodes[MAX_NODES];
-		std::unordered_map<uint32_t, AStarNode*> nodeTable;
+		tfs::unordered_map<uint32_t, AStarNode*> nodeTable;
 		size_t curNode;
 		int_fast32_t closedNodes;
 };

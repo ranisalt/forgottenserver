@@ -20,11 +20,13 @@
 #endif
 #endif
 
+#include "containers.h"
 #include "database.h"
 #include "enums.h"
-#include "position.h"
-#include "outfit.h"
 #include "mounts.h"
+#include "outfit.h"
+#include "position.h"
+
 #include <fmt/format.h>
 
 class Thing;
@@ -156,7 +158,7 @@ class ScriptEnvironment
 		static std::multimap<ScriptEnvironment*, Item*> tempItems;
 
 		//local item map
-		std::unordered_map<uint32_t, Item*> localMap;
+		tfs::unordered_map<uint32_t, Item*> localMap;
 		uint32_t lastUID = std::numeric_limits<uint16_t>::max();
 
 		//script file id
@@ -1642,12 +1644,12 @@ class LuaEnvironment : public LuaScriptInterface
 	private:
 		void executeTimerEvent(uint32_t eventIndex);
 
-		std::unordered_map<uint32_t, LuaTimerEventDesc> timerEvents;
-		std::unordered_map<uint32_t, Combat_ptr> combatMap;
-		std::unordered_map<uint32_t, AreaCombat*> areaMap;
+		tfs::unordered_map<uint32_t, LuaTimerEventDesc> timerEvents;
+		tfs::unordered_map<uint32_t, Combat_ptr> combatMap;
+		tfs::unordered_map<uint32_t, AreaCombat*> areaMap;
 
-		std::unordered_map<LuaScriptInterface*, std::vector<uint32_t>> combatIdMap;
-		std::unordered_map<LuaScriptInterface*, std::vector<uint32_t>> areaIdMap;
+		tfs::unordered_map<LuaScriptInterface*, std::vector<uint32_t>> combatIdMap;
+		tfs::unordered_map<LuaScriptInterface*, std::vector<uint32_t>> areaIdMap;
 
 		LuaScriptInterface* testInterface = nullptr;
 
