@@ -7,15 +7,13 @@ on:
       - v*
 
     paths:
-      - cmake/**
       - src/**
-      - CMakeLists.txt
+      - meson.build
 
   pull_request:
     paths:
-      - cmake/**
       - src/**
-      - CMakeLists.txt
+      - meson.build
 
 jobs:
   unix:
@@ -35,24 +33,24 @@ jobs:
             cc: gcc
             triplet: x64-linux
             packages: >
-              boost-asio boost-iostreams boost-system boost-filesystem boost-variant boost-lockfree
-              lua libmariadb pugixml cryptopp fmt
+              boost-asio boost-iostreams boost-system boost-variant boost-lockfree lua libmariadb
+              pugixml cryptopp fmt tool-meson
           - name: ubuntu-clang
             os: ubuntu
             cxx: clang++
             cc: clang
             triplet: x64-linux
             packages: >
-              boost-asio boost-iostreams boost-system boost-filesystem boost-variant boost-lockfree
-              lua libmariadb pugixml cryptopp fmt
+              boost-asio boost-iostreams boost-system boost-variant boost-lockfree lua libmariadb
+              pugixml cryptopp fmt tool-meson
           - name: macos-clang
             os: macos
             cxx: clang++
             cc: clang
             triplet: x64-osx
             packages: >
-              boost-asio boost-iostreams boost-system boost-filesystem boost-variant boost-lockfree
-              lua libmariadb pugixml cryptopp fmt
+              boost-asio boost-iostreams boost-system boost-variant boost-lockfree lua libmariadb
+              pugixml cryptopp fmt tool-meson
         exclude:
           - name: ubuntu-clang
             buildtype: Release
@@ -65,10 +63,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Get latest CMake
-        # Using 'latest' branch, the latest CMake is installed.
-        uses: lukka/get-cmake@latest
 
       - name: Ubuntu - install luajit, remove libmysqlclient-dev
         run: |
@@ -94,13 +88,8 @@ jobs:
           appendedCacheKey: ${{ matrix.name }}${{ matrix.buildtype }}${{ matrix.luajit }}
           vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
 
-      - name: Build with CMake
-        uses: lukka/run-cmake@v3
-        with:
-          useVcpkgToolchainFile: true
-          buildDirectory: ${{ runner.workspace }}/build
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeAppendedArgs: '-G Ninja -DCMAKE_BUILD_TYPE="${{ matrix.buildtype }}" -DUSE_LUAJIT="${{ matrix.luajit }}"'
+      - name: Build with meson
+        run: meson setup -D buildtype=${{ matrix.buildtype }} ${{ runner.workspace }}/build && ninja -C ${{ runner.workspace }}/build
 
       - name: dir
         run: find $RUNNER_WORKSPACE
@@ -138,17 +127,13 @@ jobs:
             cc: cl.exe
             triplet: x64-windows
             packages: >
-              boost-asio boost-iostreams boost-system boost-filesystem boost-variant boost-lockfree
-              lua luajit libmariadb pugixml cryptopp fmt
+              boost-asio boost-iostreams boost-system boost-variant boost-lockfree lua luajit
+              libmariadb pugixml cryptopp fmt tool-meson
 
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Get latest CMake
-        # Using 'latest' branch, the latest CMake is installed.
-        uses: lukka/get-cmake@latest
 
       - name: Windows - remove C:/mysql*
         run: rm -r -fo C:/mysql*
@@ -167,13 +152,8 @@ jobs:
           appendedCacheKey: ${{ matrix.name }}${{ matrix.buildtype }}${{ matrix.luajit }}
           vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
 
-      - name: Build with CMake
-        uses: lukka/run-cmake@v3
-        with:
-          useVcpkgToolchainFile: true
-          buildDirectory: ${{ runner.workspace }}/build
-          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-          cmakeAppendedArgs: '-G Ninja -DCMAKE_BUILD_TYPE="${{ matrix.buildtype }}" -DUSE_LUAJIT="on"'
+      - name: Build with meson
+        run: meson setup -D buildtype=${{ matrix.buildtype }} ${{ runner.workspace }}/build && ninja -C ${{ runner.workspace }}/build
 
       - name: dir
         run: find $RUNNER_WORKSPACE
