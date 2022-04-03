@@ -60,7 +60,7 @@ void Teleport::addThing(int32_t, Thing* thing)
 	// Prevent infinite loop
 	Teleport* destTeleport = destTile->getTeleportItem();
 	if (destTeleport) {
-		std::vector<Position> lastPositions = {getPosition()};
+		auto lastPositions = std::vector{getPosition()};
 
 		while (true) {
 			const Position& nextPos = destTeleport->getDestPos();

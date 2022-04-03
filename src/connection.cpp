@@ -16,7 +16,7 @@ extern ConfigManager g_config;
 Connection_ptr ConnectionManager::createConnection(boost::asio::io_service& io_service,
                                                    ConstServicePort_ptr servicePort)
 {
-	std::lock_guard<std::mutex> lockClass(connectionManagerLock);
+	auto lockClass = std::lock_guard{connectionManagerLock};
 
 	auto connection = std::make_shared<Connection>(io_service, servicePort);
 	connections.insert(connection);
@@ -25,14 +25,14 @@ Connection_ptr ConnectionManager::createConnection(boost::asio::io_service& io_s
 
 void ConnectionManager::releaseConnection(const Connection_ptr& connection)
 {
-	std::lock_guard<std::mutex> lockClass(connectionManagerLock);
+	auto lockClass = std::lock_guard{connectionManagerLock};
 
 	connections.erase(connection);
 }
 
 void ConnectionManager::closeAll()
 {
-	std::lock_guard<std::mutex> lockClass(connectionManagerLock);
+	auto lockClass = std::lock_guard{connectionManagerLock};
 
 	for (const auto& connection : connections) {
 		try {
@@ -52,7 +52,7 @@ void Connection::close(bool force)
 	// any thread
 	ConnectionManager::getInstance().releaseConnection(shared_from_this());
 
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 	connectionState = CONNECTION_STATE_DISCONNECTED;
 
 	if (protocol) {
@@ -97,13 +97,12 @@ void Connection::accept()
 		connectionState = CONNECTION_STATE_REQUEST_CHARLIST;
 	}
 
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 	try {
 		readTimer.expires_from_now(std::chrono::seconds(CONNECTION_READ_TIMEOUT));
-		readTimer.async_wait(
-		    [thisPtr = std::weak_ptr<Connection>(shared_from_this())](const boost::system::error_code& error) {
-			    Connection::handleTimeout(thisPtr, error);
-		    });
+		readTimer.async_wait([thisPtr = weak_from_this()](const boost::system::error_code& error) {
+			Connection::handleTimeout(thisPtr, error);
+		});
 
 		// Read size of the first packet
 		auto bufferLength = !receivedLastChar && receivedName && connectionState == CONNECTION_STATE_GAMEWORLD_AUTH
@@ -122,7 +121,7 @@ void Connection::accept()
 
 void Connection::parseHeader(const boost::system::error_code& error)
 {
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 	readTimer.cancel();
 
 	if (error) {
@@ -179,10 +178,9 @@ void Connection::parseHeader(const boost::system::error_code& error)
 
 	try {
 		readTimer.expires_from_now(std::chrono::seconds(CONNECTION_READ_TIMEOUT));
-		readTimer.async_wait(
-		    [thisPtr = std::weak_ptr<Connection>(shared_from_this())](const boost::system::error_code& error) {
-			    Connection::handleTimeout(thisPtr, error);
-		    });
+		readTimer.async_wait([thisPtr = weak_from_this()](const boost::system::error_code& error) {
+			Connection::handleTimeout(thisPtr, error);
+		});
 
 		// Read packet content
 		msg.setLength(size + NetworkMessage::HEADER_LENGTH);
@@ -199,7 +197,7 @@ void Connection::parseHeader(const boost::system::error_code& error)
 
 void Connection::parsePacket(const boost::system::error_code& error)
 {
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 	readTimer.cancel();
 
 	if (error) {
@@ -239,10 +237,9 @@ void Connection::parsePacket(const boost::system::error_code& error)
 
 	try {
 		readTimer.expires_from_now(std::chrono::seconds(CONNECTION_READ_TIMEOUT));
-		readTimer.async_wait(
-		    [thisPtr = std::weak_ptr<Connection>(shared_from_this())](const boost::system::error_code& error) {
-			    Connection::handleTimeout(thisPtr, error);
-		    });
+		readTimer.async_wait([thisPtr = weak_from_this()](const boost::system::error_code& error) {
+			Connection::handleTimeout(thisPtr, error);
+		});
 
 		// Wait to the next packet
 		boost::asio::async_read(
@@ -258,7 +255,7 @@ void Connection::parsePacket(const boost::system::error_code& error)
 
 void Connection::send(const OutputMessage_ptr& msg)
 {
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 	if (connectionState == CONNECTION_STATE_DISCONNECTED) {
 		return;
 	}
@@ -275,10 +272,9 @@ void Connection::internalSend(const OutputMessage_ptr& msg)
 	protocol->onSendMessage(msg);
 	try {
 		writeTimer.expires_from_now(std::chrono::seconds(CONNECTION_WRITE_TIMEOUT));
-		writeTimer.async_wait(
-		    [thisPtr = std::weak_ptr<Connection>(shared_from_this())](const boost::system::error_code& error) {
-			    Connection::handleTimeout(thisPtr, error);
-		    });
+		writeTimer.async_wait([thisPtr = weak_from_this()](const boost::system::error_code& error) {
+			Connection::handleTimeout(thisPtr, error);
+		});
 
 		boost::asio::async_write(
 		    socket, boost::asio::buffer(msg->getOutputBuffer(), msg->getLength()),
@@ -293,7 +289,7 @@ void Connection::internalSend(const OutputMessage_ptr& msg)
 
 uint32_t Connection::getIP()
 {
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 
 	// IP-address is expressed in network byte order
 	boost::system::error_code error;
@@ -307,7 +303,7 @@ uint32_t Connection::getIP()
 
 void Connection::onWriteOperation(const boost::system::error_code& error)
 {
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+	auto lockClass = std::lock_guard{connectionLock};
 	writeTimer.cancel();
 	messageQueue.pop_front();
 

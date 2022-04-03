@@ -313,7 +313,7 @@ bool Spawn::spawnMonster(uint32_t spawnId, spawnBlock_t sb, bool startup /* = fa
 bool Spawn::spawnMonster(uint32_t spawnId, MonsterType* mType, const Position& pos, Direction dir,
                          bool startup /*= false*/)
 {
-	std::unique_ptr<Monster> monster_ptr(new Monster(mType));
+	auto monster_ptr = std::make_unique<Monster>(mType);
 	if (!g_events->eventMonsterOnSpawn(monster_ptr.get(), pos, startup, false)) {
 		return false;
 	}

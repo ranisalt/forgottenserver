@@ -11,7 +11,7 @@
 
 bool Ban::acceptConnection(uint32_t clientIP)
 {
-	std::lock_guard<std::recursive_mutex> lockClass(lock);
+	auto lockClass = std::lock_guard{lock};
 
 	uint64_t currentTime = OTSYS_TIME();
 

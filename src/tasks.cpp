@@ -18,7 +18,7 @@ void Dispatcher::threadMain()
 {
 	std::vector<Task*> tmpTaskList;
 	// NOTE: second argument defer_lock is to prevent from immediate locking
-	std::unique_lock<std::mutex> taskLockUnique(taskLock, std::defer_lock);
+	auto taskLockUnique = std::unique_lock{taskLock, std::defer_lock};
 
 	while (getState() != THREAD_STATE_TERMINATED) {
 		// check if there are tasks waiting
@@ -70,7 +70,7 @@ void Dispatcher::shutdown()
 		taskSignal.notify_one();
 	});
 
-	std::lock_guard<std::mutex> lockClass(taskLock);
+	auto lockClass = std::lock_guard{taskLock};
 	taskList.push_back(task);
 
 	taskSignal.notify_one();

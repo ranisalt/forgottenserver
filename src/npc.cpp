@@ -32,7 +32,7 @@ void Npcs::reload()
 
 Npc* Npc::createNpc(const std::string& name)
 {
-	std::unique_ptr<Npc> npc(new Npc(name));
+	auto npc = std::make_unique<Npc>(name);
 	if (!npc->load()) {
 		return nullptr;
 	}

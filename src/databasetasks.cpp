@@ -70,7 +70,7 @@ void DatabaseTasks::runTask(const DatabaseTask& task)
 
 void DatabaseTasks::flush()
 {
-	std::unique_lock<std::mutex> guard{taskLock};
+	auto guard = std::unique_lock{taskLock};
 	while (!tasks.empty()) {
 		auto task = std::move(tasks.front());
 		tasks.pop_front();

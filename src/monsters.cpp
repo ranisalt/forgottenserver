@@ -165,7 +165,7 @@ bool Monsters::deserializeSpell(const pugi::xml_node& node, spellBlock_t& sb, co
 			needTarget = attr.as_bool();
 		}
 
-		std::unique_ptr<CombatSpell> combatSpellPtr(new CombatSpell(nullptr, needTarget, needDirection));
+		auto combatSpellPtr = std::make_unique<CombatSpell>(nullptr, needTarget, needDirection);
 		if (!combatSpellPtr->loadScript("data/" + g_spells->getScriptBaseName() + "/scripts/" + scriptName)) {
 			return false;
 		}
@@ -581,7 +581,7 @@ bool Monsters::deserializeSpell(MonsterSpell* spell, spellBlock_t& sb, const std
 	CombatSpell* combatSpell = nullptr;
 
 	if (spell->isScripted) {
-		std::unique_ptr<CombatSpell> combatSpellPtr(new CombatSpell(nullptr, spell->needTarget, spell->needDirection));
+		auto combatSpellPtr = std::make_unique<CombatSpell>(nullptr, spell->needTarget, spell->needDirection);
 		if (!combatSpellPtr->loadScript("data/" + g_spells->getScriptBaseName() + "/scripts/" + spell->scriptName)) {
 			std::cout << "cannot find file" << std::endl;
 			return false;
