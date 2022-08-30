@@ -7,8 +7,6 @@
 
 #include "game.h"
 
-extern Game g_game;
-
 ReturnValue TrashHolder::queryAdd(int32_t, const Thing&, uint32_t, uint32_t, Creature*) const
 {
 	return RETURNVALUE_NOERROR;
@@ -48,10 +46,10 @@ void TrashHolder::addThing(int32_t, Thing* thing)
 		}
 	}
 
-	g_game.internalRemoveItem(item);
+	getGlobalGame().internalRemoveItem(item);
 
 	if (it.magicEffect != CONST_ME_NONE) {
-		g_game.addMagicEffect(getPosition(), it.magicEffect);
+		getGlobalGame().addMagicEffect(getPosition(), it.magicEffect);
 	}
 }
 

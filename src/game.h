@@ -576,7 +576,7 @@ private:
 	uint8_t lightColor = 215;
 	int16_t worldTime = 0;
 
-	GameState_t gameState = GAME_STATE_NORMAL;
+	GameState_t gameState = GAME_STATE_STARTUP;
 	WorldType_t worldType = WORLD_TYPE_PVP;
 
 	ServiceManager* serviceManager = nullptr;
@@ -584,5 +584,7 @@ private:
 	void updatePlayersRecord() const;
 	uint32_t playersRecord = 0;
 };
+
+Game& getGlobalGame();
 
 #endif // FS_GAME_H

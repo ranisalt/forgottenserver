@@ -9,8 +9,6 @@
 #include "inbox.h"
 #include "iologindata.h"
 
-extern Game g_game;
-
 ReturnValue Mailbox::queryAdd(int32_t, const Thing& thing, uint32_t, uint32_t, Creature*) const
 {
 	const Item* item = thing.getItem();
@@ -80,11 +78,11 @@ bool Mailbox::sendItem(Item* item) const
 		return false;
 	}
 
-	Player* player = g_game.getPlayerByName(receiver);
+	Player* player = getGlobalGame().getPlayerByName(receiver);
 	if (player) {
-		if (g_game.internalMoveItem(item->getParent(), player->getInbox(), INDEX_WHEREEVER, item, item->getItemCount(),
-		                            nullptr, FLAG_NOLIMIT) == RETURNVALUE_NOERROR) {
-			g_game.transformItem(item, item->getID() + 1);
+		if (getGlobalGame().internalMoveItem(item->getParent(), player->getInbox(), INDEX_WHEREEVER, item,
+		                                     item->getItemCount(), nullptr, FLAG_NOLIMIT) == RETURNVALUE_NOERROR) {
+			getGlobalGame().transformItem(item, item->getID() + 1);
 			player->onReceiveMail();
 			return true;
 		}
@@ -94,9 +92,9 @@ bool Mailbox::sendItem(Item* item) const
 			return false;
 		}
 
-		if (g_game.internalMoveItem(item->getParent(), tmpPlayer.getInbox(), INDEX_WHEREEVER, item,
-		                            item->getItemCount(), nullptr, FLAG_NOLIMIT) == RETURNVALUE_NOERROR) {
-			g_game.transformItem(item, item->getID() + 1);
+		if (getGlobalGame().internalMoveItem(item->getParent(), tmpPlayer.getInbox(), INDEX_WHEREEVER, item,
+		                                     item->getItemCount(), nullptr, FLAG_NOLIMIT) == RETURNVALUE_NOERROR) {
+			getGlobalGame().transformItem(item, item->getID() + 1);
 			IOLoginData::savePlayer(&tmpPlayer);
 			return true;
 		}

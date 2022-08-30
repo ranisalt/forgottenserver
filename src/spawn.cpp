@@ -16,7 +16,7 @@
 
 extern ConfigManager g_config;
 extern Monsters g_monsters;
-extern Game g_game;
+
 extern Events* g_events;
 
 static constexpr int32_t MINSPAWN_INTERVAL = 10 * 1000;           // 10 seconds to match RME
@@ -204,7 +204,7 @@ void Spawns::startup()
 	}
 
 	for (Npc* npc : npcList) {
-		if (!g_game.placeCreature(npc, npc->getMasterPos(), false, true)) {
+		if (!getGlobalGame().placeCreature(npc, npc->getMasterPos(), false, true)) {
 			std::cout << "[Warning - Spawns::startup] Couldn't spawn npc \"" << npc->getName()
 			          << "\" on position: " << npc->getMasterPos() << '.' << std::endl;
 			delete npc;
@@ -260,7 +260,7 @@ Spawn::~Spawn()
 bool Spawn::findPlayer(const Position& pos)
 {
 	SpectatorVec spectators;
-	g_game.map.getSpectators(spectators, pos, false, true);
+	getGlobalGame().map.getSpectators(spectators, pos, false, true);
 	for (Creature* spectator : spectators) {
 		assert(dynamic_cast<Player*>(spectator) != nullptr);
 
@@ -323,13 +323,13 @@ bool Spawn::spawnMonster(uint32_t spawnId, MonsterType* mType, const Position& p
 
 	if (startup) {
 		// No need to send out events to the surrounding since there is no one out there to listen!
-		if (!g_game.internalPlaceCreature(monster_ptr.get(), pos, true)) {
+		if (!getGlobalGame().internalPlaceCreature(monster_ptr.get(), pos, true)) {
 			std::cout << "[Warning - Spawns::startup] Couldn't spawn monster \"" << monster_ptr->getName()
 			          << "\" on position: " << pos << '.' << std::endl;
 			return false;
 		}
 	} else {
-		if (!g_game.placeCreature(monster_ptr.get(), pos, false, true)) {
+		if (!getGlobalGame().placeCreature(monster_ptr.get(), pos, false, true)) {
 			return false;
 		}
 	}

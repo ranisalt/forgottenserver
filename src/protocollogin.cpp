@@ -13,7 +13,6 @@
 #include "tasks.h"
 
 extern ConfigManager g_config;
-extern Game g_game;
 
 void ProtocolLogin::disconnectClient(const std::string& message, uint16_t version)
 {
@@ -84,7 +83,7 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 	for (uint8_t i = 0; i < size; i++) {
 		const std::string& character = account.characters[i];
 		if (g_config.getBoolean(ConfigManager::ONLINE_OFFLINE_CHARLIST)) {
-			output->addByte(g_game.getPlayerByName(character) ? 1 : 0);
+			output->addByte(getGlobalGame().getPlayerByName(character) ? 1 : 0);
 		} else {
 			output->addByte(0);
 		}
@@ -109,7 +108,7 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 // Character list request
 void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 {
-	if (g_game.getGameState() == GAME_STATE_SHUTDOWN) {
+	if (getGlobalGame().getGameState() == GAME_STATE_SHUTDOWN) {
 		disconnect();
 		return;
 	}
@@ -156,12 +155,12 @@ void ProtocolLogin::onRecvFirstMessage(NetworkMessage& msg)
 		return;
 	}
 
-	if (g_game.getGameState() == GAME_STATE_STARTUP) {
+	if (getGlobalGame().getGameState() == GAME_STATE_STARTUP) {
 		disconnectClient("Gameworld is starting up. Please wait.", version);
 		return;
 	}
 
-	if (g_game.getGameState() == GAME_STATE_MAINTAIN) {
+	if (getGlobalGame().getGameState() == GAME_STATE_MAINTAIN) {
 		disconnectClient("Gameworld is under maintenance.\nPlease re-connect in a while.", version);
 		return;
 	}

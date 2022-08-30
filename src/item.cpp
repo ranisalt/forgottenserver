@@ -10,6 +10,7 @@
 #include "container.h"
 #include "game.h"
 #include "house.h"
+#include "luaenv.h"
 #include "mailbox.h"
 #include "podium.h"
 #include "teleport.h"
@@ -17,7 +18,6 @@
 
 class Spells;
 
-extern Game g_game;
 extern Spells* g_spells;
 extern Vocations g_vocations;
 
@@ -159,7 +159,7 @@ Item* Item::clone() const
 		if (item->getDuration() > 0) {
 			item->incrementReferenceCounter();
 			item->setDecaying(DECAYING_TRUE);
-			g_game.toDecayItems.push_front(item);
+			getGlobalGame().toDecayItems.push_front(item);
 		}
 	}
 	return item;
@@ -225,10 +225,12 @@ void Item::setDefaultSubtype()
 
 void Item::onRemoved()
 {
-	ScriptEnvironment::removeTempItem(this);
+	using namespace tfs;
+
+	lua::ScriptEnvironment::removeTempItem(this);
 
 	if (hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
-		g_game.removeUniqueItem(getUniqueId());
+		getGlobalGame().removeUniqueItem(getUniqueId());
 	}
 }
 
@@ -1045,7 +1047,7 @@ void Item::setUniqueId(uint16_t n)
 		return;
 	}
 
-	if (g_game.addUniqueItem(n, this)) {
+	if (getGlobalGame().addUniqueItem(n, this)) {
 		getAttributes()->setUniqueId(n);
 	}
 }
@@ -1218,7 +1220,7 @@ ItemAttributes::Attribute& ItemAttributes::getAttr(itemAttrTypes type)
 	return attributes.back();
 }
 
-void Item::startDecaying() { g_game.startDecay(this); }
+void Item::startDecaying() { getGlobalGame().startDecay(this); }
 
 bool Item::hasMarketAttributes() const
 {

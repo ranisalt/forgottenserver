@@ -46,7 +46,6 @@ extern Events* g_events;
 extern Monsters g_monsters;
 extern MoveEvents* g_moveEvents;
 extern Weapons* g_weapons;
-extern Scripts* g_scripts;
 
 Game::Game()
 {
@@ -4771,8 +4770,9 @@ void Game::loadAccountStorageValues()
 	DBResult_ptr result;
 	if ((result = db.storeQuery("SELECT `account_id`, `key`, `value` FROM `account_storage`"))) {
 		do {
-			g_game.setAccountStorageValue(result->getNumber<uint32_t>("account_id"), result->getNumber<uint32_t>("key"),
-			                              result->getNumber<int32_t>("value"));
+			getGlobalGame().setAccountStorageValue(result->getNumber<uint32_t>("account_id"),
+			                                       result->getNumber<uint32_t>("key"),
+			                                       result->getNumber<int32_t>("value"));
 		} while (result->next());
 	}
 }
@@ -4790,7 +4790,7 @@ bool Game::saveAccountStorageValues() const
 		return false;
 	}
 
-	for (const auto& accountIt : g_game.accountStorageMap) {
+	for (const auto& accountIt : getGlobalGame().accountStorageMap) {
 		if (accountIt.second.empty()) {
 			continue;
 		}
@@ -6018,7 +6018,7 @@ bool Game::reload(ReloadTypes_t reloadType)
 			g_weapons->clear(true);
 			g_weapons->loadDefaults();
 			g_spells->clear(true);
-			g_scripts->loadScripts("scripts", false, true);
+			getGlobalScripts().loadScripts("scripts", false, true);
 			g_creatureEvents->removeInvalidEvents();
 			/*
 			Npcs::reload();
@@ -6065,10 +6065,16 @@ bool Game::reload(ReloadTypes_t reloadType)
 			g_talkActions->clear(true);
 			g_globalEvents->clear(true);
 			g_spells->clear(true);
-			g_scripts->loadScripts("scripts", false, true);
+			getGlobalScripts().loadScripts("scripts", false, true);
 			g_creatureEvents->removeInvalidEvents();
 			return true;
 		}
 	}
 	return true;
+}
+
+Game& getGlobalGame()
+{
+	static Game game;
+	return game;
 }

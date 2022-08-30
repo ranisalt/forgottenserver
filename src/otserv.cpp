@@ -29,11 +29,9 @@ DatabaseTasks g_databaseTasks;
 Dispatcher g_dispatcher;
 Scheduler g_scheduler;
 
-Game g_game;
 ConfigManager g_config;
 Monsters g_monsters;
 Vocations g_vocations;
-extern Scripts* g_scripts;
 RSA g_RSA;
 
 std::mutex g_loaderLock;
@@ -131,9 +129,6 @@ void printServerVersion()
 
 void mainLoader(int, char*[], ServiceManager* services)
 {
-	// dispatcher thread
-	g_game.setGameState(GAME_STATE_STARTUP);
-
 	srand(static_cast<unsigned int>(OTSYS_TIME()));
 #ifdef _WIN32
 	SetConsoleTitle(STATUS_SERVER_NAME);
@@ -243,7 +238,7 @@ void mainLoader(int, char*[], ServiceManager* services)
 	}
 
 	std::cout << ">> Loading lua scripts" << std::endl;
-	if (!g_scripts->loadScripts("scripts", false, false)) {
+	if (!getGlobalScripts().loadScripts("scripts", false, false)) {
 		startupErrorMessage("Failed to load lua scripts");
 		return;
 	}
@@ -255,7 +250,7 @@ void mainLoader(int, char*[], ServiceManager* services)
 	}
 
 	std::cout << ">> Loading lua monsters" << std::endl;
-	if (!g_scripts->loadScripts("monster", false, false)) {
+	if (!getGlobalScripts().loadScripts("monster", false, false)) {
 		startupErrorMessage("Failed to load lua monsters");
 		return;
 	}
@@ -269,11 +264,11 @@ void mainLoader(int, char*[], ServiceManager* services)
 	std::cout << ">> Checking world type... " << std::flush;
 	std::string worldType = boost::algorithm::to_lower_copy(g_config.getString(ConfigManager::WORLD_TYPE));
 	if (worldType == "pvp") {
-		g_game.setWorldType(WORLD_TYPE_PVP);
+		getGlobalGame().setWorldType(WORLD_TYPE_PVP);
 	} else if (worldType == "no-pvp") {
-		g_game.setWorldType(WORLD_TYPE_NO_PVP);
+		getGlobalGame().setWorldType(WORLD_TYPE_NO_PVP);
 	} else if (worldType == "pvp-enforced") {
-		g_game.setWorldType(WORLD_TYPE_PVP_ENFORCED);
+		getGlobalGame().setWorldType(WORLD_TYPE_PVP_ENFORCED);
 	} else {
 		std::cout << std::endl;
 		startupErrorMessage(
@@ -284,13 +279,13 @@ void mainLoader(int, char*[], ServiceManager* services)
 	std::cout << boost::algorithm::to_upper_copy(worldType) << std::endl;
 
 	std::cout << ">> Loading map" << std::endl;
-	if (!g_game.loadMainMap(g_config.getString(ConfigManager::MAP_NAME))) {
+	if (!getGlobalGame().loadMainMap(g_config.getString(ConfigManager::MAP_NAME))) {
 		startupErrorMessage("Failed to load map");
 		return;
 	}
 
 	std::cout << ">> Initializing gamestate" << std::endl;
-	g_game.setGameState(GAME_STATE_INIT);
+	getGlobalGame().setGameState(GAME_STATE_INIT);
 
 	// Game client protocols
 	services->add<ProtocolGame>(static_cast<uint16_t>(g_config.getNumber(ConfigManager::GAME_PORT)));
@@ -317,7 +312,7 @@ void mainLoader(int, char*[], ServiceManager* services)
 		rentPeriod = RENTPERIOD_NEVER;
 	}
 
-	g_game.map.houses.payHouses(rentPeriod);
+	getGlobalGame().map.houses.payHouses(rentPeriod);
 
 	IOMarket::checkExpiredOffers();
 	IOMarket::getInstance().updateStatistics();
@@ -331,8 +326,8 @@ void mainLoader(int, char*[], ServiceManager* services)
 	}
 #endif
 
-	g_game.start(services);
-	g_game.setGameState(GAME_STATE_NORMAL);
+	getGlobalGame().start(services);
+	getGlobalGame().setGameState(GAME_STATE_NORMAL);
 	g_loaderSignal.notify_all();
 }
 

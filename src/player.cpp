@@ -27,7 +27,7 @@
 #include "weapons.h"
 
 extern ConfigManager g_config;
-extern Game g_game;
+
 extern Chat* g_chat;
 extern Vocations g_vocations;
 extern MoveEvents* g_moveEvents;
@@ -103,7 +103,7 @@ bool Player::setVocation(uint16_t vocId)
 	updateRegeneration();
 	setBaseSpeed(voc->getBaseSpeed());
 	updateBaseSpeed();
-	g_game.changeSpeed(this, 0);
+	getGlobalGame().changeSpeed(this, 0);
 	return true;
 }
 
@@ -576,7 +576,7 @@ void Player::setVarStats(stats_t stat, int32_t modifier)
 			if (getHealth() > getMaxHealth()) {
 				Creature::changeHealth(getMaxHealth() - getHealth());
 			} else {
-				g_game.addCreatureHealth(this);
+				getGlobalGame().addCreatureHealth(this);
 			}
 			break;
 		}
@@ -724,13 +724,13 @@ void Player::addStorageValue(const uint32_t key, const int32_t value, const bool
 
 		if (!isLogin) {
 			auto currentFrameTime = g_dispatcher.getDispatcherCycle();
-			if (lastQuestlogUpdate != currentFrameTime && g_game.quests.isQuestStorage(key, value, oldValue)) {
+			if (lastQuestlogUpdate != currentFrameTime && getGlobalGame().quests.isQuestStorage(key, value, oldValue)) {
 				lastQuestlogUpdate = currentFrameTime;
 				sendTextMessage(MESSAGE_EVENT_ADVANCE, "Your questlog has been updated.");
 			}
 
 			for (const TrackedQuest& trackedQuest : trackedQuests) {
-				if (const Quest* quest = g_game.quests.getQuestByID(trackedQuest.getQuestId())) {
+				if (const Quest* quest = getGlobalGame().quests.getQuestByID(trackedQuest.getQuestId())) {
 					if (quest->isTracking(key, value)) {
 						sendUpdateQuestTracker(trackedQuest);
 					}
@@ -847,7 +847,7 @@ bool Player::isNearDepotBox() const
 	const Position& pos = getPosition();
 	for (int32_t cx = -NOTIFY_DEPOT_BOX_RANGE; cx <= NOTIFY_DEPOT_BOX_RANGE; ++cx) {
 		for (int32_t cy = -NOTIFY_DEPOT_BOX_RANGE; cy <= NOTIFY_DEPOT_BOX_RANGE; ++cy) {
-			Tile* tile = g_game.map.getTile(pos.x + cx, pos.y + cy, pos.z);
+			Tile* tile = getGlobalGame().map.getTile(pos.x + cx, pos.y + cy, pos.z);
 			if (!tile) {
 				continue;
 			}
@@ -949,7 +949,7 @@ void Player::sendPing()
 		if (client) {
 			client->logout(true, true);
 		} else {
-			g_game.removeCreature(this, true);
+			getGlobalGame().removeCreature(this, true);
 		}
 	}
 }
@@ -1138,7 +1138,7 @@ void Player::onUpdateTileItem(const Tile* tile, const Position& pos, const Item*
 
 	if (tradeState != TRADE_TRANSFER) {
 		if (tradeItem && oldItem == tradeItem) {
-			g_game.internalCloseTrade(this);
+			getGlobalGame().internalCloseTrade(this);
 		}
 	}
 }
@@ -1153,7 +1153,7 @@ void Player::onRemoveTileItem(const Tile* tile, const Position& pos, const ItemT
 		if (tradeItem) {
 			const Container* container = item->getContainer();
 			if (container && container->isHoldingItem(tradeItem)) {
-				g_game.internalCloseTrade(this);
+				getGlobalGame().internalCloseTrade(this);
 			}
 		}
 	}
@@ -1181,7 +1181,7 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 
 		updateRegeneration();
 
-		BedItem* bed = g_game.getBedBySleeper(guid);
+		BedItem* bed = getGlobalGame().getBedBySleeper(guid);
 		if (bed) {
 			bed->wakeUp(this);
 		}
@@ -1189,12 +1189,12 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 		// load mount speed bonus
 		uint16_t currentMountId = currentOutfit.lookMount;
 		if (currentMountId != 0) {
-			Mount* currentMount = g_game.mounts.getMountByClientID(currentMountId);
+			Mount* currentMount = getGlobalGame().mounts.getMountByClientID(currentMountId);
 			if (currentMount && hasMount(currentMount)) {
-				g_game.changeSpeed(this, currentMount->speed);
+				getGlobalGame().changeSpeed(this, currentMount->speed);
 			} else {
 				defaultOutfit.lookMount = 0;
-				g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+				getGlobalGame().internalCreatureChangeOutfit(this, defaultOutfit);
 			}
 		}
 
@@ -1224,7 +1224,7 @@ void Player::onCreatureAppear(Creature* creature, bool isLogin)
 			}
 		}
 
-		g_game.checkPlayersRecord();
+		getGlobalGame().checkPlayersRecord();
 		IOLoginData::updateOnlineStatus(guid, true);
 	}
 }
@@ -1257,7 +1257,7 @@ void Player::onChangeZone(ZoneType_t zone)
 
 		if (!group->access && isMounted()) {
 			dismount();
-			g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+			getGlobalGame().internalCreatureChangeOutfit(this, defaultOutfit);
 			wasMounted = true;
 		}
 	} else {
@@ -1267,7 +1267,7 @@ void Player::onChangeZone(ZoneType_t zone)
 		}
 	}
 
-	g_game.updateCreatureWalkthrough(this);
+	getGlobalGame().updateCreatureWalkthrough(this);
 	sendIcons();
 }
 
@@ -1287,7 +1287,7 @@ void Player::onAttackedCreatureChangeZone(ZoneType_t zone)
 		}
 	} else if (zone == ZONE_NORMAL) {
 		// attackedCreature can leave a pvp zone if not pzlocked
-		if (g_game.getWorldType() == WORLD_TYPE_NO_PVP) {
+		if (getGlobalGame().getWorldType() == WORLD_TYPE_NO_PVP) {
 			if (attackedCreature->getPlayer()) {
 				setAttackedCreature(nullptr);
 				onAttackedCreatureDisappear(false);
@@ -1312,7 +1312,7 @@ void Player::onRemoveCreature(Creature* creature, bool isLogout)
 		}
 
 		if (tradePartner) {
-			g_game.internalCloseTrade(this);
+			getGlobalGame().internalCloseTrade(this);
 		}
 
 		closeShopWindow();
@@ -1393,7 +1393,7 @@ void Player::onCreatureMove(Creature* creature, const Tile* newTile, const Posit
 
 	if (hasFollowPath && (creature == followCreature || (creature == this && followCreature))) {
 		isUpdatingPath = false;
-		g_dispatcher.addTask([id = getID()]() { g_game.updateCreatureWalk(id); });
+		g_dispatcher.addTask([id = getID()]() { getGlobalGame().updateCreatureWalk(id); });
 	}
 
 	if (creature != this) {
@@ -1403,11 +1403,11 @@ void Player::onCreatureMove(Creature* creature, const Tile* newTile, const Posit
 	if (tradeState != TRADE_TRANSFER) {
 		// check if we should close trade
 		if (tradeItem && !Position::areInRange<1, 1, 0>(tradeItem->getPosition(), getPosition())) {
-			g_game.internalCloseTrade(this);
+			getGlobalGame().internalCloseTrade(this);
 		}
 
 		if (tradePartner && !Position::areInRange<2, 2, 0>(tradePartner->getPosition(), getPosition())) {
-			g_game.internalCloseTrade(this);
+			getGlobalGame().internalCloseTrade(this);
 		}
 	}
 
@@ -1463,7 +1463,7 @@ void Player::onRemoveContainerItem(const Container* container, const Item* item)
 
 		if (tradeItem) {
 			if (tradeItem->getParent() != container && container->isHoldingItem(tradeItem)) {
-				g_game.internalCloseTrade(this);
+				getGlobalGame().internalCloseTrade(this);
 			}
 		}
 	}
@@ -1517,7 +1517,7 @@ void Player::onRemoveInventoryItem(Item* item)
 		if (tradeItem) {
 			const Container* container = item->getContainer();
 			if (container && container->isHoldingItem(tradeItem)) {
-				g_game.internalCloseTrade(this);
+				getGlobalGame().internalCloseTrade(this);
 			}
 		}
 	}
@@ -1530,12 +1530,12 @@ void Player::checkTradeState(const Item* item)
 	}
 
 	if (tradeItem == item) {
-		g_game.internalCloseTrade(this);
+		getGlobalGame().internalCloseTrade(this);
 	} else {
 		const Container* container = dynamic_cast<const Container*>(item->getParent());
 		while (container) {
 			if (container == tradeItem) {
-				g_game.internalCloseTrade(this);
+				getGlobalGame().internalCloseTrade(this);
 				break;
 			}
 
@@ -1611,7 +1611,7 @@ void Player::onThink(uint32_t interval)
 		}
 	}
 
-	if (g_game.getWorldType() != WORLD_TYPE_PVP_ENFORCED) {
+	if (getGlobalGame().getWorldType() != WORLD_TYPE_PVP_ENFORCED) {
 		checkSkullTicks(interval / 1000);
 	}
 
@@ -1810,7 +1810,7 @@ void Player::addExperience(Creature* source, uint64_t exp, bool sendText /* = fa
 		sendTextMessage(message);
 
 		SpectatorVec spectators;
-		g_game.map.getSpectators(spectators, position, false, true);
+		getGlobalGame().map.getSpectators(spectators, position, false, true);
 		spectators.erase(this);
 		if (!spectators.empty()) {
 			message.type = MESSAGE_EXPERIENCE_OTHERS;
@@ -1846,12 +1846,12 @@ void Player::addExperience(Creature* source, uint64_t exp, bool sendText /* = fa
 		updateBaseSpeed();
 		setBaseSpeed(getBaseSpeed());
 
-		g_game.changeSpeed(this, 0);
-		g_game.addCreatureHealth(this);
+		getGlobalGame().changeSpeed(this, 0);
+		getGlobalGame().addCreatureHealth(this);
 
 		const uint32_t protectionLevel = static_cast<uint32_t>(g_config.getNumber(ConfigManager::PROTECTION_LEVEL));
 		if (prevLevel < protectionLevel && level >= protectionLevel) {
-			g_game.updateCreatureWalkthrough(this);
+			getGlobalGame().updateCreatureWalkthrough(this);
 		}
 
 		if (party) {
@@ -1900,7 +1900,7 @@ void Player::removeExperience(uint64_t exp, bool sendText /* = false*/)
 		sendTextMessage(message);
 
 		SpectatorVec spectators;
-		g_game.map.getSpectators(spectators, position, false, true);
+		getGlobalGame().map.getSpectators(spectators, position, false, true);
 		spectators.erase(this);
 		if (!spectators.empty()) {
 			message.type = MESSAGE_EXPERIENCE_OTHERS;
@@ -1930,12 +1930,12 @@ void Player::removeExperience(uint64_t exp, bool sendText /* = false*/)
 		updateBaseSpeed();
 		setBaseSpeed(getBaseSpeed());
 
-		g_game.changeSpeed(this, 0);
-		g_game.addCreatureHealth(this);
+		getGlobalGame().changeSpeed(this, 0);
+		getGlobalGame().addCreatureHealth(this);
 
 		const uint32_t protectionLevel = static_cast<uint32_t>(g_config.getNumber(ConfigManager::PROTECTION_LEVEL));
 		if (oldLevel >= protectionLevel && level < protectionLevel) {
-			g_game.updateCreatureWalkthrough(this);
+			getGlobalGame().updateCreatureWalkthrough(this);
 		}
 
 		if (party) {
@@ -2076,7 +2076,7 @@ BlockType_t Player::blockHit(Creature* attacker, CombatType_t combatType, int32_
 
 				uint16_t charges = item->getCharges();
 				if (charges != 0) {
-					g_game.transformItem(item, item->getID(), charges - 1);
+					getGlobalGame().transformItem(item, item->getID(), charges - 1);
 				}
 			}
 
@@ -2089,7 +2089,7 @@ BlockType_t Player::blockHit(Creature* attacker, CombatType_t combatType, int32_
 
 					uint16_t charges = item->getCharges();
 					if (charges != 0) {
-						g_game.transformItem(item, item->getID(), charges - 1);
+						getGlobalGame().transformItem(item, item->getID(), charges - 1);
 					}
 				}
 			}
@@ -2100,7 +2100,7 @@ BlockType_t Player::blockHit(Creature* attacker, CombatType_t combatType, int32_
 			reflectDamage.primary.type = combatType;
 			reflectDamage.primary.value = -std::round(damage * (reflect.percent / 100.));
 			reflectDamage.origin = ORIGIN_REFLECT;
-			g_game.combatChangeHealth(this, attacker, reflectDamage);
+			getGlobalGame().combatChangeHealth(this, attacker, reflectDamage);
 		}
 	}
 
@@ -2134,7 +2134,7 @@ void Player::death(Creature* lastHitCreature)
 			for (const auto& it : damageMap) {
 				CountBlock_t cb = it.second;
 				if ((OTSYS_TIME() - cb.ticks) <= inFightTicks) {
-					Player* damageDealer = g_game.getPlayerByID(it.first);
+					Player* damageDealer = getGlobalGame().getPlayerByID(it.first);
 					if (damageDealer) {
 						sumLevels += damageDealer->getLevel();
 					}
@@ -2255,8 +2255,8 @@ void Player::death(Creature* lastHitCreature)
 		}
 
 		health = healthMax;
-		g_game.internalTeleport(this, getTemplePosition(), true);
-		g_game.addCreatureHealth(this);
+		getGlobalGame().internalTeleport(this, getTemplePosition(), true);
+		getGlobalGame().addCreatureHealth(this);
 		onThink(EVENT_CREATURE_THINK_INTERVAL);
 		onIdleStatus();
 		sendStats();
@@ -2335,20 +2335,20 @@ void Player::addInFightTicks(bool pzlock /*= false*/)
 
 void Player::removeList()
 {
-	g_game.removePlayer(this);
+	getGlobalGame().removePlayer(this);
 
-	for (const auto& it : g_game.getPlayers()) {
+	for (const auto& it : getGlobalGame().getPlayers()) {
 		it.second->notifyStatusChange(this, VIPSTATUS_OFFLINE);
 	}
 }
 
 void Player::addList()
 {
-	for (const auto& it : g_game.getPlayers()) {
+	for (const auto& it : getGlobalGame().getPlayers()) {
 		it.second->notifyStatusChange(this, VIPSTATUS_ONLINE);
 	}
 
-	g_game.addPlayer(this);
+	getGlobalGame().addPlayer(this);
 }
 
 void Player::kickPlayer(bool displayEffect)
@@ -2357,7 +2357,7 @@ void Player::kickPlayer(bool displayEffect)
 	if (client) {
 		client->logout(displayEffect, true);
 	} else {
-		g_game.removeCreature(this);
+		getGlobalGame().removeCreature(this);
 	}
 }
 
@@ -3126,7 +3126,7 @@ bool Player::removeItemOfType(uint16_t itemId, uint32_t amount, int32_t subType,
 
 			count += itemCount;
 			if (count >= amount) {
-				g_game.internalRemoveItems(std::move(itemList), amount, Item::items[itemId].stackable);
+				getGlobalGame().internalRemoveItems(std::move(itemList), amount, Item::items[itemId].stackable);
 				return true;
 			}
 		} else if (Container* container = item->getContainer()) {
@@ -3142,7 +3142,7 @@ bool Player::removeItemOfType(uint16_t itemId, uint32_t amount, int32_t subType,
 
 					count += itemCount;
 					if (count >= amount) {
-						g_game.internalRemoveItems(std::move(itemList), amount, Item::items[itemId].stackable);
+						getGlobalGame().internalRemoveItems(std::move(itemList), amount, Item::items[itemId].stackable);
 						return true;
 					}
 				}
@@ -3399,7 +3399,7 @@ bool Player::setAttackedCreature(Creature* creature)
 	}
 
 	if (creature) {
-		g_dispatcher.addTask([id = getID()]() { g_game.checkCreatureAttack(id); });
+		g_dispatcher.addTask([id = getID()]() { getGlobalGame().checkCreatureAttack(id); });
 	}
 	return true;
 }
@@ -3456,7 +3456,7 @@ void Player::doAttacking(uint32_t)
 		}
 
 		SchedulerTask* task = createSchedulerTask(std::max<uint32_t>(SCHEDULER_MINTICKS, delay),
-		                                          [id = getID()]() { g_game.checkCreatureAttack(id); });
+		                                          [id = getID()]() { getGlobalGame().checkCreatureAttack(id); });
 		if (!classicSpeed) {
 			setNextActionTask(task, false);
 		} else {
@@ -3550,7 +3550,7 @@ void Player::updateItemsLight(bool internal /*=false*/)
 		itemsLight = maxLight;
 
 		if (!internal) {
-			g_game.changeLight(this);
+			getGlobalGame().changeLight(this);
 		}
 	}
 }
@@ -3632,12 +3632,12 @@ void Player::onCombatRemoveCondition(Condition* condition)
 	// Creature::onCombatRemoveCondition(condition);
 	if (condition->getId() > 0) {
 		// Means the condition is from an item, id == slot
-		if (g_game.getWorldType() == WORLD_TYPE_PVP_ENFORCED) {
+		if (getGlobalGame().getWorldType() == WORLD_TYPE_PVP_ENFORCED) {
 			Item* item = getInventoryItem(static_cast<slots_t>(condition->getId()));
 			if (item) {
 				// 25% chance to destroy the item
 				if (25 >= uniform_random(1, 100)) {
-					g_game.internalRemoveItem(item);
+					getGlobalGame().internalRemoveItem(item);
 				}
 			}
 		}
@@ -3677,7 +3677,7 @@ void Player::onAttackedCreature(Creature* target, bool addFightTicks /* = true *
 
 	Player* targetPlayer = target->getPlayer();
 	if (targetPlayer && !isPartner(targetPlayer) && !isGuildMate(targetPlayer)) {
-		if (!pzLocked && g_game.getWorldType() == WORLD_TYPE_PVP_ENFORCED) {
+		if (!pzLocked && getGlobalGame().getWorldType() == WORLD_TYPE_PVP_ENFORCED) {
 			pzLocked = true;
 			sendIcons();
 		}
@@ -4034,7 +4034,7 @@ Skulls_t Player::getSkull() const
 
 Skulls_t Player::getSkullClient(const Creature* creature) const
 {
-	if (!creature || g_game.getWorldType() != WORLD_TYPE_PVP) {
+	if (!creature || getGlobalGame().getWorldType() != WORLD_TYPE_PVP) {
 		return SKULL_NONE;
 	}
 
@@ -4087,7 +4087,8 @@ void Player::clearAttacked() { attackedSet.clear(); }
 
 void Player::addUnjustifiedDead(const Player* attacked)
 {
-	if (hasFlag(PlayerFlag_NotGainInFight) || attacked == this || g_game.getWorldType() == WORLD_TYPE_PVP_ENFORCED) {
+	if (hasFlag(PlayerFlag_NotGainInFight) || attacked == this ||
+	    getGlobalGame().getWorldType() == WORLD_TYPE_PVP_ENFORCED) {
 		return;
 	}
 
@@ -4353,7 +4354,7 @@ GuildEmblems_t Player::getGuildEmblem(const Player* player) const
 uint8_t Player::getRandomMount() const
 {
 	std::vector<uint8_t> mountsId;
-	for (const Mount& mount : g_game.mounts.getMounts()) {
+	for (const Mount& mount : getGlobalGame().mounts.getMounts()) {
 		if (hasMount(&mount)) {
 			mountsId.push_back(mount.id);
 		}
@@ -4405,7 +4406,7 @@ bool Player::toggleMount(bool mount)
 			currentMountId = getRandomMount();
 		}
 
-		Mount* currentMount = g_game.mounts.getMountByID(currentMountId);
+		Mount* currentMount = getGlobalGame().mounts.getMountByID(currentMountId);
 		if (!currentMount) {
 			return false;
 		}
@@ -4429,7 +4430,7 @@ bool Player::toggleMount(bool mount)
 		defaultOutfit.lookMount = currentMount->clientId;
 
 		if (currentMount->speed != 0) {
-			g_game.changeSpeed(this, currentMount->speed);
+			getGlobalGame().changeSpeed(this, currentMount->speed);
 		}
 	} else {
 		if (!isMounted()) {
@@ -4439,14 +4440,14 @@ bool Player::toggleMount(bool mount)
 		dismount();
 	}
 
-	g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+	getGlobalGame().internalCreatureChangeOutfit(this, defaultOutfit);
 	lastToggleMount = OTSYS_TIME();
 	return true;
 }
 
 bool Player::tameMount(uint8_t mountId)
 {
-	if (!g_game.mounts.getMountByID(mountId)) {
+	if (!getGlobalGame().mounts.getMountByID(mountId)) {
 		return false;
 	}
 
@@ -4466,7 +4467,7 @@ bool Player::tameMount(uint8_t mountId)
 
 bool Player::untameMount(uint8_t mountId)
 {
-	if (!g_game.mounts.getMountByID(mountId)) {
+	if (!getGlobalGame().mounts.getMountByID(mountId)) {
 		return false;
 	}
 
@@ -4484,7 +4485,7 @@ bool Player::untameMount(uint8_t mountId)
 	if (getCurrentMount() == mountId) {
 		if (isMounted()) {
 			dismount();
-			g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+			getGlobalGame().internalCreatureChangeOutfit(this, defaultOutfit);
 		}
 
 		setCurrentMount(0);
@@ -4515,7 +4516,7 @@ bool Player::hasMount(const Mount* mount) const
 
 bool Player::hasMounts() const
 {
-	for (const Mount& mount : g_game.mounts.getMounts()) {
+	for (const Mount& mount : getGlobalGame().mounts.getMounts()) {
 		if (hasMount(&mount)) {
 			return true;
 		}
@@ -4525,9 +4526,9 @@ bool Player::hasMounts() const
 
 void Player::dismount()
 {
-	Mount* mount = g_game.mounts.getMountByID(getCurrentMount());
+	Mount* mount = getGlobalGame().mounts.getMountByID(getCurrentMount());
 	if (mount && mount->speed > 0) {
-		g_game.changeSpeed(this, -mount->speed);
+		getGlobalGame().changeSpeed(this, -mount->speed);
 	}
 
 	defaultOutfit.lookMount = 0;
@@ -4759,7 +4760,7 @@ void Player::resetQuestTracker(const std::vector<uint16_t>& missionIds)
 	trackedQuests.clear();
 	size_t index = 0;
 
-	const QuestsList& quests = g_game.quests.getQuests();
+	const QuestsList& quests = getGlobalGame().quests.getQuests();
 	for (const uint8_t missionId : missionIds) {
 		for (const Quest& quest : quests) {
 			for (const Mission& mission : quest.getMissions()) {

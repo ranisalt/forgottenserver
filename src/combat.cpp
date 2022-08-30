@@ -8,11 +8,14 @@
 #include "configmanager.h"
 #include "events.h"
 #include "game.h"
+#include "luaenv.h"
+#include "luameta.h"
 #include "matrixarea.h"
 #include "spectators.h"
 #include "weapons.h"
 
-extern Game g_game;
+using namespace tfs;
+
 extern Weapons* g_weapons;
 extern ConfigManager g_config;
 extern Events* g_events;
@@ -29,11 +32,11 @@ std::vector<Tile*> getList(const MatrixArea& area, const Position& targetPos, co
 	for (uint32_t row = 0; row < area.getRows(); ++row, ++tmpPos.y) {
 		for (uint32_t col = 0; col < area.getCols(); ++col, ++tmpPos.x) {
 			if (area(row, col)) {
-				if (g_game.isSightClear(casterPos, tmpPos, true)) {
-					Tile* tile = g_game.map.getTile(tmpPos);
+				if (getGlobalGame().isSightClear(casterPos, tmpPos, true)) {
+					Tile* tile = getGlobalGame().map.getTile(tmpPos);
 					if (!tile) {
 						tile = new StaticTile(tmpPos.x, tmpPos.y, tmpPos.z);
-						g_game.map.setTile(tmpPos, tile);
+						getGlobalGame().map.setTile(tmpPos, tile);
 					}
 					vec.push_back(tile);
 				}
@@ -54,10 +57,10 @@ std::vector<Tile*> getCombatArea(const Position& centerPos, const Position& targ
 		return getList(area->getArea(centerPos, targetPos), targetPos, getDirectionTo(targetPos, centerPos));
 	}
 
-	Tile* tile = g_game.map.getTile(targetPos);
+	Tile* tile = getGlobalGame().map.getTile(targetPos);
 	if (!tile) {
 		tile = new StaticTile(targetPos.x, targetPos.y, targetPos.z);
-		g_game.map.setTile(targetPos, tile);
+		getGlobalGame().map.setTile(targetPos, tile);
 	}
 	return {tile};
 }
@@ -355,7 +358,7 @@ ReturnValue Combat::canDoCombat(Creature* attacker, Creature* target)
 		}
 	}
 
-	if (g_game.getWorldType() == WORLD_TYPE_NO_PVP) {
+	if (getGlobalGame().getWorldType() == WORLD_TYPE_NO_PVP) {
 		if (attacker->getPlayer() || (attacker->isSummon() && attacker->getMaster()->getPlayer())) {
 			if (target->getPlayer()) {
 				if (!isInPvpZone(attacker, target)) {
@@ -569,7 +572,7 @@ void Combat::combatTileEffects(const SpectatorVec& spectators, Creature* caster,
 			}
 
 			if (casterPlayer) {
-				if (g_game.getWorldType() == WORLD_TYPE_NO_PVP || tile->hasFlag(TILESTATE_NOPVPZONE)) {
+				if (getGlobalGame().getWorldType() == WORLD_TYPE_NO_PVP || tile->hasFlag(TILESTATE_NOPVPZONE)) {
 					if (itemId == ITEM_FIREFIELD_PVP_FULL) {
 						itemId = ITEM_FIREFIELD_NOPVP;
 					} else if (itemId == ITEM_POISONFIELD_PVP) {
@@ -593,9 +596,9 @@ void Combat::combatTileEffects(const SpectatorVec& spectators, Creature* caster,
 			item->setOwner(caster->getID());
 		}
 
-		ReturnValue ret = g_game.internalAddItem(tile, item);
+		ReturnValue ret = getGlobalGame().internalAddItem(tile, item);
 		if (ret == RETURNVALUE_NOERROR) {
-			g_game.startDecay(item);
+			getGlobalGame().startDecay(item);
 		} else {
 			delete item;
 		}
@@ -646,7 +649,7 @@ void Combat::addDistanceEffect(Creature* caster, const Position& fromPos, const 
 	}
 
 	if (effect != CONST_ANI_NONE) {
-		g_game.addDistanceEffect(fromPos, toPos, effect);
+		getGlobalGame().addDistanceEffect(fromPos, toPos, effect);
 	}
 }
 
@@ -659,7 +662,7 @@ void Combat::doCombat(Creature* caster, Creature* target) const
 		bool canCombat =
 		    !params.aggressive || (caster != target && Combat::canDoCombat(caster, target) == RETURNVALUE_NOERROR);
 		if ((caster == target || canCombat) && params.impactEffect != CONST_ME_NONE) {
-			g_game.addMagicEffect(target->getPosition(), params.impactEffect);
+			getGlobalGame().addMagicEffect(target->getPosition(), params.impactEffect);
 		}
 
 		if (canCombat) {
@@ -668,7 +671,7 @@ void Combat::doCombat(Creature* caster, Creature* target) const
 	} else {
 		if (!params.aggressive || (caster != target && Combat::canDoCombat(caster, target) == RETURNVALUE_NOERROR)) {
 			SpectatorVec spectators;
-			g_game.map.getSpectators(spectators, target->getPosition(), true, true);
+			getGlobalGame().map.getSpectators(spectators, target->getPosition(), true, true);
 
 			if (params.origin != ORIGIN_MELEE) {
 				for (const auto& condition : params.conditionList) {
@@ -694,7 +697,7 @@ void Combat::doCombat(Creature* caster, Creature* target) const
 
 			/*
 			if (params.impactEffect != CONST_ME_NONE) {
-			        g_game.addMagicEffect(target->getPosition(),
+			        getGlobalGame().addMagicEffect(target->getPosition(),
 			params.impactEffect);
 			}
 			*/
@@ -737,7 +740,7 @@ void Combat::doCombat(Creature* caster, const Position& position) const
 
 		const int32_t rangeX = maxX + Map::maxViewportX;
 		const int32_t rangeY = maxY + Map::maxViewportY;
-		g_game.map.getSpectators(spectators, position, true, true, rangeX, rangeX, rangeY, rangeY);
+		getGlobalGame().map.getSpectators(spectators, position, true, true, rangeX, rangeX, rangeY, rangeY);
 
 		postCombatEffects(caster, position, params);
 
@@ -805,8 +808,8 @@ void Combat::doTargetCombat(Creature* caster, Creature* target, CombatDamage& da
 
 	bool success = false;
 	if (damage.primary.type != COMBAT_MANADRAIN) {
-		if (g_game.combatBlockHit(damage, caster, target, params.blockedByShield, params.blockedByArmor,
-		                          params.itemId != 0, params.ignoreResistances)) {
+		if (getGlobalGame().combatBlockHit(damage, caster, target, params.blockedByShield, params.blockedByArmor,
+		                                   params.itemId != 0, params.ignoreResistances)) {
 			return;
 		}
 
@@ -829,9 +832,9 @@ void Combat::doTargetCombat(Creature* caster, Creature* target, CombatDamage& da
 			}
 		}
 
-		success = g_game.combatChangeHealth(caster, target, damage);
+		success = getGlobalGame().combatChangeHealth(caster, target, damage);
 	} else {
-		success = g_game.combatChangeMana(caster, target, damage);
+		success = getGlobalGame().combatChangeMana(caster, target, damage);
 	}
 
 	if (success) {
@@ -850,7 +853,7 @@ void Combat::doTargetCombat(Creature* caster, Creature* target, CombatDamage& da
 		}
 
 		if (damage.critical) {
-			g_game.addMagicEffect(target->getPosition(), CONST_ME_CRITICAL_DAMAGE);
+			getGlobalGame().addMagicEffect(target->getPosition(), CONST_ME_CRITICAL_DAMAGE);
 		}
 
 		if (!damage.leeched && damage.primary.type != COMBAT_HEALING && casterPlayer &&
@@ -866,7 +869,7 @@ void Combat::doTargetCombat(Creature* caster, Creature* target, CombatDamage& da
 				uint16_t skill = casterPlayer->getSpecialSkill(SPECIALSKILL_LIFELEECHAMOUNT);
 				if (chance > 0 && skill > 0 && normal_random(1, 100) <= chance) {
 					leechCombat.primary.value = std::round(totalDamage * (skill / 100.));
-					g_game.combatChangeHealth(nullptr, casterPlayer, leechCombat);
+					getGlobalGame().combatChangeHealth(nullptr, casterPlayer, leechCombat);
 					casterPlayer->sendMagicEffect(casterPlayer->getPosition(), CONST_ME_MAGIC_RED);
 				}
 			}
@@ -876,7 +879,7 @@ void Combat::doTargetCombat(Creature* caster, Creature* target, CombatDamage& da
 				uint16_t skill = casterPlayer->getSpecialSkill(SPECIALSKILL_MANALEECHAMOUNT);
 				if (chance > 0 && skill > 0 && normal_random(1, 100) <= chance) {
 					leechCombat.primary.value = std::round(totalDamage * (skill / 100.));
-					g_game.combatChangeMana(nullptr, casterPlayer, leechCombat);
+					getGlobalGame().combatChangeMana(nullptr, casterPlayer, leechCombat);
 					casterPlayer->sendMagicEffect(casterPlayer->getPosition(), CONST_ME_MAGIC_BLUE);
 				}
 			}
@@ -936,7 +939,7 @@ void Combat::doAreaCombat(Creature* caster, const Position& position, const Area
 	const int32_t rangeY = maxY + Map::maxViewportY;
 
 	SpectatorVec spectators;
-	g_game.map.getSpectators(spectators, position, true, true, rangeX, rangeX, rangeY, rangeY);
+	getGlobalGame().map.getSpectators(spectators, position, true, true, rangeX, rangeX, rangeY, rangeY);
 
 	postCombatEffects(caster, position, params);
 
@@ -996,18 +999,18 @@ void Combat::doAreaCombat(Creature* caster, const Position& position, const Area
 		if (damageCopy.critical) {
 			damageCopy.primary.value += playerCombatReduced ? criticalPrimary / 2 : criticalPrimary;
 			damageCopy.secondary.value += playerCombatReduced ? criticalSecondary / 2 : criticalSecondary;
-			g_game.addMagicEffect(creature->getPosition(), CONST_ME_CRITICAL_DAMAGE);
+			getGlobalGame().addMagicEffect(creature->getPosition(), CONST_ME_CRITICAL_DAMAGE);
 		}
 
 		bool success = false;
 		if (damageCopy.primary.type != COMBAT_MANADRAIN) {
-			if (g_game.combatBlockHit(damageCopy, caster, creature, params.blockedByShield, params.blockedByArmor,
-			                          params.itemId != 0, params.ignoreResistances)) {
+			if (getGlobalGame().combatBlockHit(damageCopy, caster, creature, params.blockedByShield,
+			                                   params.blockedByArmor, params.itemId != 0, params.ignoreResistances)) {
 				continue;
 			}
-			success = g_game.combatChangeHealth(caster, creature, damageCopy);
+			success = getGlobalGame().combatChangeHealth(caster, creature, damageCopy);
 		} else {
-			success = g_game.combatChangeMana(caster, creature, damageCopy);
+			success = getGlobalGame().combatChangeMana(caster, creature, damageCopy);
 		}
 
 		if (success) {
@@ -1038,7 +1041,7 @@ void Combat::doAreaCombat(Creature* caster, const Position& position, const Area
 						leechCombat.primary.value =
 						    std::ceil(totalDamage * ((skill / 100.) + ((targetsCount - 1) * ((skill / 100.) / 10.))) /
 						              targetsCount);
-						g_game.combatChangeHealth(nullptr, casterPlayer, leechCombat);
+						getGlobalGame().combatChangeHealth(nullptr, casterPlayer, leechCombat);
 						casterPlayer->sendMagicEffect(casterPlayer->getPosition(), CONST_ME_MAGIC_RED);
 					}
 				}
@@ -1050,7 +1053,7 @@ void Combat::doAreaCombat(Creature* caster, const Position& position, const Area
 						leechCombat.primary.value =
 						    std::ceil(totalDamage * ((skill / 100.) + ((targetsCount - 1) * ((skill / 100.) / 10.))) /
 						              targetsCount);
-						g_game.combatChangeMana(nullptr, casterPlayer, leechCombat);
+						getGlobalGame().combatChangeMana(nullptr, casterPlayer, leechCombat);
 						casterPlayer->sendMagicEffect(casterPlayer->getPosition(), CONST_ME_MAGIC_BLUE);
 					}
 				}
@@ -1074,14 +1077,14 @@ void Combat::doAreaCombat(Creature* caster, const Position& position, const Area
 void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage) const
 {
 	// onGetPlayerMinMaxValues(...)
-	if (!scriptInterface->reserveScriptEnv()) {
+	if (!lua::reserveScriptEnv()) {
 		std::cout << "[Error - ValueCallback::getMinMaxValues] Call stack overflow" << std::endl;
 		return;
 	}
 
-	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	lua::ScriptEnvironment* env = lua::getScriptEnv();
 	if (!env->setCallbackId(scriptId, scriptInterface)) {
-		scriptInterface->resetScriptEnv();
+		lua::resetScriptEnv();
 		return;
 	}
 
@@ -1089,8 +1092,8 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage) const
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	lua::pushUserdata<Player>(L, player);
+	lua::setMetatable(L, -1, "Player");
 
 	int parameters = 1;
 	switch (type) {
@@ -1131,25 +1134,24 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage) const
 
 		default: {
 			std::cout << "ValueCallback::getMinMaxValues - unknown callback type" << std::endl;
-			scriptInterface->resetScriptEnv();
+			lua::resetScriptEnv();
 			return;
 		}
 	}
 
 	int size0 = lua_gettop(L);
 	if (lua_pcall(L, parameters, 2, 0) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		lua::reportError(nullptr, lua::popString(L));
 	} else {
-		damage.primary.value =
-		    normal_random(LuaScriptInterface::getNumber<int32_t>(L, -2), LuaScriptInterface::getNumber<int32_t>(L, -1));
+		damage.primary.value = normal_random(lua::getNumber<int32_t>(L, -2), lua::getNumber<int32_t>(L, -1));
 		lua_pop(L, 2);
 	}
 
 	if ((lua_gettop(L) + parameters + 1) != size0) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		lua::reportError(nullptr, "Stack size changed!");
 	}
 
-	scriptInterface->resetScriptEnv();
+	lua::resetScriptEnv();
 }
 
 //**********************************************************//
@@ -1157,14 +1159,14 @@ void ValueCallback::getMinMaxValues(Player* player, CombatDamage& damage) const
 void TileCallback::onTileCombat(Creature* creature, Tile* tile) const
 {
 	// onTileCombat(creature, pos)
-	if (!scriptInterface->reserveScriptEnv()) {
+	if (!lua::reserveScriptEnv()) {
 		std::cout << "[Error - TileCallback::onTileCombat] Call stack overflow" << std::endl;
 		return;
 	}
 
-	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	lua::ScriptEnvironment* env = lua::getScriptEnv();
 	if (!env->setCallbackId(scriptId, scriptInterface)) {
-		scriptInterface->resetScriptEnv();
+		lua::resetScriptEnv();
 		return;
 	}
 
@@ -1172,12 +1174,12 @@ void TileCallback::onTileCombat(Creature* creature, Tile* tile) const
 
 	scriptInterface->pushFunction(scriptId);
 	if (creature) {
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		lua::pushUserdata<Creature>(L, creature);
+		lua::setCreatureMetatable(L, -1, creature);
 	} else {
 		lua_pushnil(L);
 	}
-	LuaScriptInterface::pushPosition(L, tile->getPosition());
+	lua::pushPosition(L, tile->getPosition());
 
 	scriptInterface->callFunction(2);
 }
@@ -1187,14 +1189,14 @@ void TileCallback::onTileCombat(Creature* creature, Tile* tile) const
 void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 {
 	// onTargetCombat(creature, target)
-	if (!scriptInterface->reserveScriptEnv()) {
+	if (!lua::reserveScriptEnv()) {
 		std::cout << "[Error - TargetCallback::onTargetCombat] Call stack overflow" << std::endl;
 		return;
 	}
 
-	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	lua::ScriptEnvironment* env = lua::getScriptEnv();
 	if (!env->setCallbackId(scriptId, scriptInterface)) {
-		scriptInterface->resetScriptEnv();
+		lua::resetScriptEnv();
 		return;
 	}
 
@@ -1203,15 +1205,15 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 	scriptInterface->pushFunction(scriptId);
 
 	if (creature) {
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		lua::pushUserdata<Creature>(L, creature);
+		lua::setCreatureMetatable(L, -1, creature);
 	} else {
 		lua_pushnil(L);
 	}
 
 	if (target) {
-		LuaScriptInterface::pushUserdata<Creature>(L, target);
-		LuaScriptInterface::setCreatureMetatable(L, -1, target);
+		lua::pushUserdata<Creature>(L, target);
+		lua::setCreatureMetatable(L, -1, target);
 	} else {
 		lua_pushnil(L);
 	}
@@ -1219,14 +1221,14 @@ void TargetCallback::onTargetCombat(Creature* creature, Creature* target) const
 	int size0 = lua_gettop(L);
 
 	if (lua_pcall(L, 2, 0 /*nReturnValues*/, 0) != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		lua::reportError(nullptr, lua::popString(L));
 	}
 
 	if ((lua_gettop(L) + 2 /*nParams*/ + 1) != size0) {
-		LuaScriptInterface::reportError(nullptr, "Stack size changed!");
+		lua::reportError(nullptr, "Stack size changed!");
 	}
 
-	scriptInterface->resetScriptEnv();
+	lua::resetScriptEnv();
 }
 
 const MatrixArea& AreaCombat::getArea(const Position& centerPos, const Position& targetPos) const
@@ -1389,7 +1391,7 @@ void MagicField::onStepInField(Creature* creature)
 	// remove magic walls/wild growth
 	if (id == ITEM_MAGICWALL_SAFE || id == ITEM_WILDGROWTH_SAFE || isBlocking()) {
 		if (!creature->isInGhostMode()) {
-			g_game.internalRemoveItem(this, 1);
+			getGlobalGame().internalRemoveItem(this, 1);
 		}
 
 		return;
@@ -1397,8 +1399,18 @@ void MagicField::onStepInField(Creature* creature)
 
 	// remove magic walls/wild growth (only nopvp tiles/world)
 	if (id == ITEM_MAGICWALL_NOPVP || id == ITEM_WILDGROWTH_NOPVP) {
-		if (g_game.getWorldType() == WORLD_TYPE_NO_PVP || getTile()->hasFlag(TILESTATE_NOPVPZONE)) {
-			g_game.internalRemoveItem(this, 1);
+		if (getGlobalGame().getWorldType() == WORLD_TYPE_NO_PVP || getTile()->hasFlag(TILESTATE_NOPVPZONE)) {
+			getGlobalGame().internalRemoveItem(this, 1);
+		}
+		return;
+	}
+
+	// no-pvp fields must not damage players
+	if (!isLoadedFromMap() && creature->getPlayer() &&
+	    (id == ITEM_FIREFIELD_NOPVP || id == ITEM_FIREFIELD_NOPVP_MEDIUM || id == ITEM_POISONFIELD_NOPVP ||
+	     id == ITEM_ENERGYFIELD_NOPVP)) {
+		if (!creature->isInGhostMode()) {
+			getGlobalGame().addMagicEffect(creature->getPosition(), CONST_ME_POFF);
 		}
 		return;
 	}
@@ -1420,8 +1432,8 @@ void MagicField::onStepInField(Creature* creature)
 		if (ownerId) {
 			bool harmfulField = true;
 
-			if (g_game.getWorldType() == WORLD_TYPE_NO_PVP || getTile()->hasFlag(TILESTATE_NOPVPZONE)) {
-				Creature* owner = g_game.getCreatureByID(ownerId);
+			if (getGlobalGame().getWorldType() == WORLD_TYPE_NO_PVP || getTile()->hasFlag(TILESTATE_NOPVPZONE)) {
+				Creature* owner = getGlobalGame().getCreatureByID(ownerId);
 				if (owner) {
 					if (owner->getPlayer() || (owner->isSummon() && owner->getMaster()->getPlayer())) {
 						harmfulField = false;
@@ -1431,7 +1443,7 @@ void MagicField::onStepInField(Creature* creature)
 
 			Player* targetPlayer = creature->getPlayer();
 			if (!harmfulField && targetPlayer) {
-				Player* attackerPlayer = g_game.getPlayerByID(ownerId);
+				Player* attackerPlayer = getGlobalGame().getPlayerByID(ownerId);
 				if (attackerPlayer) {
 					if (Combat::isProtected(attackerPlayer, targetPlayer)) {
 						harmfulField = false;

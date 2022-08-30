@@ -1,3 +1,5 @@
+add_subdirectory(luamodules)
+
 set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/otpch.cpp
 	${CMAKE_CURRENT_LIST_DIR}/actions.cpp
@@ -33,6 +35,10 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/iomarket.cpp
 	${CMAKE_CURRENT_LIST_DIR}/item.cpp
 	${CMAKE_CURRENT_LIST_DIR}/items.cpp
+	${CMAKE_CURRENT_LIST_DIR}/luaapi.cpp
+	${CMAKE_CURRENT_LIST_DIR}/luaenv.cpp
+	${CMAKE_CURRENT_LIST_DIR}/luaerror.cpp
+	${CMAKE_CURRENT_LIST_DIR}/luameta.cpp
 	${CMAKE_CURRENT_LIST_DIR}/luascript.cpp
 	${CMAKE_CURRENT_LIST_DIR}/mailbox.cpp
 	${CMAKE_CURRENT_LIST_DIR}/map.cpp
@@ -76,7 +82,7 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/weapons.cpp
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.cpp
 	${CMAKE_CURRENT_LIST_DIR}/xtea.cpp
-	)
+	${tfs_luamodules_SRC})
 
 set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/otpch.h
@@ -119,6 +125,10 @@ set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/itemloader.h
 	${CMAKE_CURRENT_LIST_DIR}/items.h
 	${CMAKE_CURRENT_LIST_DIR}/lockfree.h
+	${CMAKE_CURRENT_LIST_DIR}/luaapi.h
+	${CMAKE_CURRENT_LIST_DIR}/luaenv.h
+	${CMAKE_CURRENT_LIST_DIR}/luaerror.h
+	${CMAKE_CURRENT_LIST_DIR}/luameta.h
 	${CMAKE_CURRENT_LIST_DIR}/luascript.h
 	${CMAKE_CURRENT_LIST_DIR}/luavariant.h
 	${CMAKE_CURRENT_LIST_DIR}/mailbox.h
@@ -167,7 +177,7 @@ set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/weapons.h
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.h
 	${CMAKE_CURRENT_LIST_DIR}/xtea.h
-	)
+	${tfs_luamodules_HDR})
 
 set(tfs_MAIN ${CMAKE_CURRENT_LIST_DIR}/otserv.cpp PARENT_SCOPE)
 

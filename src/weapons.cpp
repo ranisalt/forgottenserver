@@ -8,10 +8,11 @@
 #include "combat.h"
 #include "configmanager.h"
 #include "game.h"
+#include "luaenv.h"
+#include "luameta.h"
 #include "luavariant.h"
 #include "pugicast.h"
 
-extern Game g_game;
 extern Vocations g_vocations;
 extern ConfigManager g_config;
 extern Weapons* g_weapons;
@@ -415,7 +416,7 @@ void Weapon::internalUseWeapon(Player* player, Item* item, Tile* tile) const
 		executeUseWeapon(player, var);
 	} else {
 		Combat::postCombatEffects(player, tile->getPosition(), params);
-		g_game.addMagicEffect(tile->getPosition(), CONST_ME_POFF);
+		getGlobalGame().addMagicEffect(tile->getPosition(), CONST_ME_POFF);
 	}
 
 	onUsedWeapon(player, item, tile);
@@ -464,13 +465,14 @@ void Weapon::onUsedWeapon(Player* player, Item* item, Tile* destTile) const
 		case WEAPONACTION_REMOVECHARGE: {
 			uint16_t charges = item->getCharges();
 			if (charges != 0 && g_config.getBoolean(ConfigManager::REMOVE_WEAPON_CHARGES)) {
-				g_game.transformItem(item, item->getID(), charges - 1);
+				getGlobalGame().transformItem(item, item->getID(), charges - 1);
 			}
 			break;
 		}
 
 		case WEAPONACTION_MOVE:
-			g_game.internalMoveItem(item->getParent(), destTile, INDEX_WHEREEVER, item, 1, nullptr, FLAG_NOLIMIT);
+			getGlobalGame().internalMoveItem(item->getParent(), destTile, INDEX_WHEREEVER, item, 1, nullptr,
+			                                 FLAG_NOLIMIT);
 			break;
 
 		default:
@@ -507,20 +509,22 @@ int32_t Weapon::getHealthCost(const Player* player) const
 bool Weapon::executeUseWeapon(Player* player, const LuaVariant& var) const
 {
 	// onUseWeapon(player, var)
-	if (!scriptInterface->reserveScriptEnv()) {
+	using namespace tfs;
+
+	if (!lua::reserveScriptEnv()) {
 		std::cout << "[Error - Weapon::executeUseWeapon] Call stack overflow" << std::endl;
 		return false;
 	}
 
-	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	lua::ScriptEnvironment* env = lua::getScriptEnv();
 	env->setScriptId(scriptId, scriptInterface);
 
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
-	scriptInterface->pushVariant(L, var);
+	lua::pushUserdata<Player>(L, player);
+	lua::setMetatable(L, -1, "Player");
+	lua::pushVariant(L, var);
 
 	return scriptInterface->callFunction(2);
 }
@@ -529,9 +533,9 @@ void Weapon::decrementItemCount(Item* item)
 {
 	uint16_t count = item->getItemCount();
 	if (count > 1) {
-		g_game.transformItem(item, item->getID(), count - 1);
+		getGlobalGame().transformItem(item, item->getID(), count - 1);
 	} else {
-		g_game.internalRemoveItem(item);
+		getGlobalGame().internalRemoveItem(item);
 	}
 }
 
@@ -796,7 +800,7 @@ bool WeaponDistance::useWeapon(Player* player, Item* item, Creature* target) con
 
 			for (const auto& dir : destList) {
 				// Blocking tiles or tiles without ground ain't valid targets for spears
-				Tile* tmpTile = g_game.map.getTile(destPos.x + dir.first, destPos.y + dir.second, destPos.z);
+				Tile* tmpTile = getGlobalGame().map.getTile(destPos.x + dir.first, destPos.y + dir.second, destPos.z);
 				if (tmpTile && !tmpTile->hasFlag(TILESTATE_IMMOVABLEBLOCKSOLID) && tmpTile->getGround()) {
 					destTile = tmpTile;
 					break;

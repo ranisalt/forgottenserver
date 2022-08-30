@@ -7,8 +7,6 @@
 
 #include "game.h"
 
-extern Game g_game;
-
 Attr_ReadValue Podium::readAttr(AttrTypes_t attr, PropStream& propStream)
 {
 	switch (attr) {
@@ -39,7 +37,7 @@ Attr_ReadValue Podium::readAttr(AttrTypes_t attr, PropStream& propStream)
 			propStream.read<uint8_t>(newOutfit.lookMountFeet);
 			setOutfit(newOutfit);
 
-			g_game.updatePodium(this);
+			getGlobalGame().updatePodium(this);
 			return ATTR_READ_CONTINUE;
 		}
 

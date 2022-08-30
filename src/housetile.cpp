@@ -9,7 +9,6 @@
 #include "game.h"
 #include "house.h"
 
-extern Game g_game;
 extern ConfigManager g_config;
 
 HouseTile::HouseTile(int32_t x, int32_t y, int32_t z, House* house) : DynamicTile(x, y, z), house(house) {}
@@ -90,13 +89,13 @@ Tile* HouseTile::queryDestination(int32_t& index, const Thing& thing, Item** des
 		if (const Player* player = creature->getPlayer()) {
 			if (!house->isInvited(player)) {
 				const Position& entryPos = house->getEntryPosition();
-				Tile* destTile = g_game.map.getTile(entryPos);
+				Tile* destTile = getGlobalGame().map.getTile(entryPos);
 				if (!destTile) {
 					std::cout << "Error: [HouseTile::queryDestination] House entry not correct"
 					          << " - Name: " << house->getName() << " - House id: " << house->getId()
 					          << " - Tile not found: " << entryPos << std::endl;
 
-					destTile = g_game.map.getTile(player->getTemplePosition());
+					destTile = getGlobalGame().map.getTile(player->getTemplePosition());
 					if (!destTile) {
 						destTile = &(Tile::nullptr_tile);
 					}

@@ -10,10 +10,11 @@
 #include "container.h"
 #include "game.h"
 #include "housetile.h"
+#include "luaenv.h"
+#include "luameta.h"
 #include "pugicast.h"
 #include "spells.h"
 
-extern Game g_game;
 extern Spells* g_spells;
 extern Actions* g_actions;
 extern ConfigManager g_config;
@@ -267,7 +268,7 @@ ReturnValue Actions::canUseFar(const Creature* creature, const Position& toPos, 
 		return RETURNVALUE_TOOFARAWAY;
 	}
 
-	if (checkLineOfSight && !g_game.canThrowObjectTo(creaturePos, toPos, checkLineOfSight, checkFloor)) {
+	if (checkLineOfSight && !getGlobalGame().canThrowObjectTo(creaturePos, toPos, checkLineOfSight, checkFloor)) {
 		return RETURNVALUE_CANNOTTHROW;
 	}
 
@@ -336,7 +337,7 @@ ReturnValue Actions::internalUseItem(Player* player, const Position& pos, uint8_
 
 		if (bed->trySleep(player)) {
 			player->setBedItem(bed);
-			g_game.sendOfflineTrainingDialog(player);
+			getGlobalGame().sendOfflineTrainingDialog(player);
 		}
 
 		return RETURNVALUE_NOERROR;
@@ -427,7 +428,7 @@ bool Actions::useItem(Player* player, const Position& pos, uint8_t index, Item* 
 
 	ReturnValue ret = internalUseItem(player, pos, index, item, isHotkey);
 	if (ret == RETURNVALUE_YOUCANNOTUSETHISBED) {
-		g_game.internalCreatureSay(player, TALKTYPE_MONSTER_SAY, getReturnMessage(ret), false);
+		getGlobalGame().internalCreatureSay(player, TALKTYPE_MONSTER_SAY, getReturnMessage(ret), false);
 		return false;
 	}
 
@@ -551,34 +552,36 @@ Thing* Action::getTarget(Player* player, Creature* targetCreature, const Positio
 	if (targetCreature) {
 		return targetCreature;
 	}
-	return g_game.internalGetThing(player, toPosition, toStackPos, 0, STACKPOS_USETARGET);
+	return getGlobalGame().internalGetThing(player, toPosition, toStackPos, 0, STACKPOS_USETARGET);
 }
 
 bool Action::executeUse(Player* player, Item* item, const Position& fromPosition, Thing* target,
                         const Position& toPosition, bool isHotkey)
 {
 	// onUse(player, item, fromPosition, target, toPosition, isHotkey)
-	if (!scriptInterface->reserveScriptEnv()) {
+	using namespace tfs;
+
+	if (!lua::reserveScriptEnv()) {
 		std::cout << "[Error - Action::executeUse] Call stack overflow" << std::endl;
 		return false;
 	}
 
-	ScriptEnvironment* env = scriptInterface->getScriptEnv();
+	lua::ScriptEnvironment* env = lua::getScriptEnv();
 	env->setScriptId(scriptId, scriptInterface);
 
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	lua::pushUserdata<Player>(L, player);
+	lua::setMetatable(L, -1, "Player");
 
-	LuaScriptInterface::pushThing(L, item);
-	LuaScriptInterface::pushPosition(L, fromPosition);
+	lua::pushThing(L, item);
+	lua::pushPosition(L, fromPosition);
 
-	LuaScriptInterface::pushThing(L, target);
-	LuaScriptInterface::pushPosition(L, toPosition);
+	lua::pushThing(L, target);
+	lua::pushPosition(L, toPosition);
 
-	LuaScriptInterface::pushBoolean(L, isHotkey);
+	lua::pushBoolean(L, isHotkey);
 	return scriptInterface->callFunction(6);
 }

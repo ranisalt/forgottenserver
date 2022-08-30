@@ -19,4 +19,6 @@ private:
 	LuaScriptInterface scriptInterface;
 };
 
+Scripts& getGlobalScripts();
+
 #endif // FS_SCRIPT_H

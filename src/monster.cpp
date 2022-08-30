@@ -9,10 +9,13 @@
 #include "configmanager.h"
 #include "events.h"
 #include "game.h"
+#include "luaenv.h"
+#include "luameta.h"
 #include "spectators.h"
 #include "spells.h"
 
-extern Game g_game;
+using namespace tfs;
+
 extern Monsters g_monsters;
 extern Events* g_events;
 extern ConfigManager g_config;
@@ -56,9 +59,9 @@ Monster::~Monster()
 	clearFriendList();
 }
 
-void Monster::addList() { g_game.addMonster(this); }
+void Monster::addList() { getGlobalGame().addMonster(this); }
 
-void Monster::removeList() { g_game.removeMonster(this); }
+void Monster::removeList() { getGlobalGame().removeMonster(this); }
 
 const std::string& Monster::getName() const
 {
@@ -79,7 +82,7 @@ void Monster::setName(const std::string& name)
 	// NOTE: Due to how client caches known creatures, it is not feasible to send creature update to everyone that has
 	// ever met it
 	SpectatorVec spectators;
-	g_game.map.getSpectators(spectators, position, true, true);
+	getGlobalGame().map.getSpectators(spectators, position, true, true);
 	for (Creature* spectator : spectators) {
 		assert(dynamic_cast<Player*>(spectator) != nullptr);
 		static_cast<Player*>(spectator)->sendUpdateTileCreature(this);
@@ -122,22 +125,22 @@ void Monster::onCreatureAppear(Creature* creature, bool isLogin)
 	if (mType->info.creatureAppearEvent != -1) {
 		// onCreatureAppear(self, creature)
 		LuaScriptInterface* scriptInterface = mType->info.scriptInterface;
-		if (!scriptInterface->reserveScriptEnv()) {
+		if (!lua::reserveScriptEnv()) {
 			std::cout << "[Error - Monster::onCreatureAppear] Call stack overflow" << std::endl;
 			return;
 		}
 
-		ScriptEnvironment* env = scriptInterface->getScriptEnv();
+		lua::ScriptEnvironment* env = lua::getScriptEnv();
 		env->setScriptId(mType->info.creatureAppearEvent, scriptInterface);
 
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureAppearEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		lua::pushUserdata<Monster>(L, this);
+		lua::setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		lua::pushUserdata<Creature>(L, creature);
+		lua::setCreatureMetatable(L, -1, creature);
 
 		if (scriptInterface->callFunction(2)) {
 			return;
@@ -164,22 +167,22 @@ void Monster::onRemoveCreature(Creature* creature, bool isLogout)
 	if (mType->info.creatureDisappearEvent != -1) {
 		// onCreatureDisappear(self, creature)
 		LuaScriptInterface* scriptInterface = mType->info.scriptInterface;
-		if (!scriptInterface->reserveScriptEnv()) {
+		if (!lua::reserveScriptEnv()) {
 			std::cout << "[Error - Monster::onCreatureDisappear] Call stack overflow" << std::endl;
 			return;
 		}
 
-		ScriptEnvironment* env = scriptInterface->getScriptEnv();
+		lua::ScriptEnvironment* env = lua::getScriptEnv();
 		env->setScriptId(mType->info.creatureDisappearEvent, scriptInterface);
 
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureDisappearEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		lua::pushUserdata<Monster>(L, this);
+		lua::setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		lua::pushUserdata<Creature>(L, creature);
+		lua::setCreatureMetatable(L, -1, creature);
 
 		if (scriptInterface->callFunction(2)) {
 			return;
@@ -205,25 +208,25 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 	if (mType->info.creatureMoveEvent != -1) {
 		// onCreatureMove(self, creature, oldPosition, newPosition)
 		LuaScriptInterface* scriptInterface = mType->info.scriptInterface;
-		if (!scriptInterface->reserveScriptEnv()) {
+		if (!lua::reserveScriptEnv()) {
 			std::cout << "[Error - Monster::onCreatureMove] Call stack overflow" << std::endl;
 			return;
 		}
 
-		ScriptEnvironment* env = scriptInterface->getScriptEnv();
+		lua::ScriptEnvironment* env = lua::getScriptEnv();
 		env->setScriptId(mType->info.creatureMoveEvent, scriptInterface);
 
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureMoveEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		lua::pushUserdata<Monster>(L, this);
+		lua::setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		lua::pushUserdata<Creature>(L, creature);
+		lua::setCreatureMetatable(L, -1, creature);
 
-		LuaScriptInterface::pushPosition(L, oldPos);
-		LuaScriptInterface::pushPosition(L, newPos);
+		lua::pushPosition(L, oldPos);
+		lua::pushPosition(L, newPos);
 
 		if (scriptInterface->callFunction(4)) {
 			return;
@@ -264,7 +267,7 @@ void Monster::onCreatureMove(Creature* creature, const Tile* newTile, const Posi
 					Direction dir = getDirectionTo(position, followPosition);
 					const Position& checkPosition = getNextPosition(dir, position);
 
-					Tile* tile = g_game.map.getTile(checkPosition);
+					Tile* tile = getGlobalGame().map.getTile(checkPosition);
 					if (tile) {
 						Creature* topCreature = tile->getTopCreature();
 						if (topCreature && followCreature != topCreature && isOpponent(topCreature)) {
@@ -287,25 +290,25 @@ void Monster::onCreatureSay(Creature* creature, SpeakClasses type, const std::st
 	if (mType->info.creatureSayEvent != -1) {
 		// onCreatureSay(self, creature, type, message)
 		LuaScriptInterface* scriptInterface = mType->info.scriptInterface;
-		if (!scriptInterface->reserveScriptEnv()) {
+		if (!lua::reserveScriptEnv()) {
 			std::cout << "[Error - Monster::onCreatureSay] Call stack overflow" << std::endl;
 			return;
 		}
 
-		ScriptEnvironment* env = scriptInterface->getScriptEnv();
+		lua::ScriptEnvironment* env = lua::getScriptEnv();
 		env->setScriptId(mType->info.creatureSayEvent, scriptInterface);
 
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.creatureSayEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		lua::pushUserdata<Monster>(L, this);
+		lua::setMetatable(L, -1, "Monster");
 
-		LuaScriptInterface::pushUserdata<Creature>(L, creature);
-		LuaScriptInterface::setCreatureMetatable(L, -1, creature);
+		lua::pushUserdata<Creature>(L, creature);
+		lua::setCreatureMetatable(L, -1, creature);
 
 		lua_pushnumber(L, type);
-		LuaScriptInterface::pushString(L, text);
+		lua::pushString(L, text);
 
 		scriptInterface->callVoidFunction(4);
 	}
@@ -376,7 +379,7 @@ void Monster::updateTargetList()
 	}
 
 	SpectatorVec spectators;
-	g_game.map.getSpectators(spectators, position, true);
+	getGlobalGame().map.getSpectators(spectators, position, true);
 	spectators.erase(this);
 	for (Creature* spectator : spectators) {
 		onCreatureFound(spectator);
@@ -657,7 +660,7 @@ bool Monster::selectTarget(Creature* creature)
 
 	if (isHostile() || isSummon()) {
 		if (setAttackedCreature(creature) && !isSummon()) {
-			g_dispatcher.addTask([id = getID()]() { g_game.checkCreatureAttack(id); });
+			g_dispatcher.addTask([id = getID()]() { getGlobalGame().checkCreatureAttack(id); });
 		}
 	}
 	return setFollowCreature(creature);
@@ -672,7 +675,7 @@ void Monster::setIdle(bool idle)
 	isIdle = idle;
 
 	if (!isIdle) {
-		g_game.addCreatureCheck(this);
+		getGlobalGame().addCreatureCheck(this);
 	} else {
 		onIdleStatus();
 		clearTargetList();
@@ -719,19 +722,19 @@ void Monster::onThink(uint32_t interval)
 	if (mType->info.thinkEvent != -1) {
 		// onThink(self, interval)
 		LuaScriptInterface* scriptInterface = mType->info.scriptInterface;
-		if (!scriptInterface->reserveScriptEnv()) {
+		if (!lua::reserveScriptEnv()) {
 			std::cout << "[Error - Monster::onThink] Call stack overflow" << std::endl;
 			return;
 		}
 
-		ScriptEnvironment* env = scriptInterface->getScriptEnv();
+		lua::ScriptEnvironment* env = lua::getScriptEnv();
 		env->setScriptId(mType->info.thinkEvent, scriptInterface);
 
 		lua_State* L = scriptInterface->getLuaState();
 		scriptInterface->pushFunction(mType->info.thinkEvent);
 
-		LuaScriptInterface::pushUserdata<Monster>(L, this);
-		LuaScriptInterface::setMetatable(L, -1, "Monster");
+		lua::pushUserdata<Monster>(L, this);
+		lua::setMetatable(L, -1, "Monster");
 
 		lua_pushnumber(L, interval);
 
@@ -748,11 +751,11 @@ void Monster::onThink(uint32_t interval)
 				spawn = nullptr;
 			}
 		} else {
-			g_game.addMagicEffect(this->getPosition(), CONST_ME_POFF);
+			getGlobalGame().addMagicEffect(this->getPosition(), CONST_ME_POFF);
 			if (g_config.getBoolean(ConfigManager::REMOVE_ON_DESPAWN)) {
-				g_game.removeCreature(this, false);
+				getGlobalGame().removeCreature(this, false);
 			} else {
-				g_game.internalTeleport(this, masterPos);
+				getGlobalGame().internalTeleport(this, masterPos);
 				setIdle(true);
 			}
 		}
@@ -855,7 +858,7 @@ bool Monster::canUseAttack(const Position& pos, const Creature* target) const
 		    std::max<uint32_t>(Position::getDistanceX(pos, targetPos), Position::getDistanceY(pos, targetPos));
 		for (const spellBlock_t& spellBlock : mType->info.attackSpells) {
 			if (spellBlock.range != 0 && distance <= spellBlock.range) {
-				return g_game.isSightClear(pos, targetPos, true);
+				return getGlobalGame().isSightClear(pos, targetPos, true);
 			}
 		}
 		return false;
@@ -997,11 +1000,11 @@ void Monster::onThinkDefense(uint32_t interval)
 
 			Monster* summon = Monster::createMonster(summonBlock.name);
 			if (summon) {
-				if (g_game.placeCreature(summon, getPosition(), false, summonBlock.force)) {
+				if (getGlobalGame().placeCreature(summon, getPosition(), false, summonBlock.force)) {
 					summon->setDropLoot(false);
 					summon->setSkillLoss(false);
 					summon->setMaster(this);
-					g_game.addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
+					getGlobalGame().addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
 				} else {
 					delete summon;
 				}
@@ -1030,9 +1033,9 @@ void Monster::onThinkYell(uint32_t interval)
 			const voiceBlock_t& vb = mType->info.voiceVector[index];
 
 			if (vb.yellText) {
-				g_game.internalCreatureSay(this, TALKTYPE_MONSTER_YELL, vb.text, false);
+				getGlobalGame().internalCreatureSay(this, TALKTYPE_MONSTER_YELL, vb.text, false);
 			} else {
-				g_game.internalCreatureSay(this, TALKTYPE_MONSTER_SAY, vb.text, false);
+				getGlobalGame().internalCreatureSay(this, TALKTYPE_MONSTER_SAY, vb.text, false);
 			}
 		}
 	}
@@ -1082,10 +1085,10 @@ bool Monster::pushItem(Item* item)
 
 	for (const auto& it : relList) {
 		Position tryPos(centerPos.x + it.first, centerPos.y + it.second, centerPos.z);
-		Tile* tile = g_game.map.getTile(tryPos);
-		if (tile && g_game.canThrowObjectTo(centerPos, tryPos, true, true)) {
-			if (g_game.internalMoveItem(item->getParent(), tile, INDEX_WHEREEVER, item, item->getItemCount(),
-			                            nullptr) == RETURNVALUE_NOERROR) {
+		Tile* tile = getGlobalGame().map.getTile(tryPos);
+		if (tile && getGlobalGame().canThrowObjectTo(centerPos, tryPos, true, true)) {
+			if (getGlobalGame().internalMoveItem(item->getParent(), tile, INDEX_WHEREEVER, item, item->getItemCount(),
+			                                     nullptr) == RETURNVALUE_NOERROR) {
 				return true;
 			}
 		}
@@ -1108,14 +1111,14 @@ void Monster::pushItems(Tile* tile)
 			    (item->hasProperty(CONST_PROP_BLOCKPATH) || item->hasProperty(CONST_PROP_BLOCKSOLID))) {
 				if (moveCount < 20 && Monster::pushItem(item)) {
 					++moveCount;
-				} else if (g_game.internalRemoveItem(item) == RETURNVALUE_NOERROR) {
+				} else if (getGlobalGame().internalRemoveItem(item) == RETURNVALUE_NOERROR) {
 					++removeCount;
 				}
 			}
 		}
 
 		if (removeCount > 0) {
-			g_game.addMagicEffect(tile->getPosition(), CONST_ME_POFF);
+			getGlobalGame().addMagicEffect(tile->getPosition(), CONST_ME_POFF);
 		}
 	}
 }
@@ -1127,9 +1130,9 @@ bool Monster::pushCreature(Creature* creature)
 
 	for (Direction dir : dirList) {
 		const Position& tryPos = Spells::getCasterPosition(creature, dir);
-		Tile* toTile = g_game.map.getTile(tryPos);
+		Tile* toTile = getGlobalGame().map.getTile(tryPos);
 		if (toTile && !toTile->hasFlag(TILESTATE_BLOCKPATH)) {
-			if (g_game.internalMoveCreature(creature, dir) == RETURNVALUE_NOERROR) {
+			if (getGlobalGame().internalMoveCreature(creature, dir) == RETURNVALUE_NOERROR) {
 				return true;
 			}
 		}
@@ -1160,7 +1163,7 @@ void Monster::pushCreatures(Tile* tile)
 		}
 
 		if (removeCount > 0) {
-			g_game.addMagicEffect(tile->getPosition(), CONST_ME_BLOCKHIT);
+			getGlobalGame().addMagicEffect(tile->getPosition(), CONST_ME_BLOCKHIT);
 		}
 	}
 }
@@ -1203,7 +1206,7 @@ bool Monster::getNextStep(Direction& direction, uint32_t& flags)
 
 	if (result && (canPushItems() || canPushCreatures())) {
 		const Position& pos = Spells::getCasterPosition(this, direction);
-		Tile* tile = g_game.map.getTile(pos);
+		Tile* tile = getGlobalGame().map.getTile(pos);
 		if (tile) {
 			if (canPushItems()) {
 				Monster::pushItems(tile);
@@ -1332,7 +1335,8 @@ bool Monster::getDistanceStep(const Position& targetPos, Direction& direction, b
 
 	int32_t distance = std::max<int32_t>(dx, dy);
 
-	if (!flee && (distance > mType->info.targetDistance || !g_game.isSightClear(creaturePos, targetPos, true))) {
+	if (!flee &&
+	    (distance > mType->info.targetDistance || !getGlobalGame().isSightClear(creaturePos, targetPos, true))) {
 		return false; // let the A* calculate it
 	} else if (!flee && distance == mType->info.targetDistance) {
 		return true; // we don't really care here, since it's what we wanted to reach (a dance-step will take of dancing
@@ -1830,7 +1834,7 @@ bool Monster::canWalkTo(Position pos, Direction direction) const
 			return false;
 		}
 
-		Tile* tile = g_game.map.getTile(pos);
+		Tile* tile = getGlobalGame().map.getTile(pos);
 		if (tile && !tile->getTopVisibleCreature(this) &&
 		    tile->queryAdd(0, *this, 1, FLAG_PATHFINDING) == RETURNVALUE_NOERROR) {
 			return true;
@@ -1949,7 +1953,7 @@ void Monster::updateLookDirection()
 		}
 	}
 
-	g_game.internalCreatureTurn(this, newDir);
+	getGlobalGame().internalCreatureTurn(this, newDir);
 }
 
 void Monster::dropLoot(Container* corpse, Creature*)

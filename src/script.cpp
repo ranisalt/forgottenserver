@@ -7,7 +7,8 @@
 
 #include "configmanager.h"
 
-extern LuaEnvironment g_luaEnvironment;
+#include <filesystem>
+
 extern ConfigManager g_config;
 
 Scripts::Scripts() : scriptInterface("Scripts Interface") { scriptInterface.initState(); }
@@ -73,4 +74,9 @@ bool Scripts::loadScripts(std::string folderName, bool isLib, bool reload)
 	}
 
 	return true;
+}
+
+Scripts& getGlobalScripts() {
+	static Scripts scripts;
+	return scripts;
 }

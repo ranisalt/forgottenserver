@@ -9,7 +9,6 @@
 #include "events.h"
 #include "game.h"
 
-extern Game g_game;
 extern ConfigManager g_config;
 extern Events* g_events;
 
@@ -26,7 +25,7 @@ void Party::disband()
 
 	currentLeader->setParty(nullptr);
 	currentLeader->sendClosePrivate(CHANNEL_PARTY);
-	g_game.updatePlayerShield(currentLeader);
+	getGlobalGame().updatePlayerShield(currentLeader);
 	currentLeader->sendCreatureSkull(currentLeader);
 	currentLeader->sendTextMessage(MESSAGE_INFO_DESCR, "Your party has been disbanded.");
 
@@ -43,7 +42,7 @@ void Party::disband()
 	}
 
 	for (Player* member : memberList) {
-		g_game.updatePlayerShield(member);
+		getGlobalGame().updatePlayerShield(member);
 
 		for (Player* otherMember : memberList) {
 			otherMember->sendCreatureSkull(member);
@@ -92,7 +91,7 @@ bool Party::leaveParty(Player* player, bool forceRemove /* = false */)
 
 	player->setParty(nullptr);
 	player->sendClosePrivate(CHANNEL_PARTY);
-	g_game.updatePlayerShield(player);
+	getGlobalGame().updatePlayerShield(player);
 
 	for (Player* member : memberList) {
 		member->sendCreatureSkull(player);
@@ -188,7 +187,7 @@ bool Party::joinParty(Player& player)
 	player.clearPartyInvitations();
 
 	// update player icon on the screen
-	g_game.updatePlayerShield(&player);
+	getGlobalGame().updatePlayerShield(&player);
 
 	// update player-member party icons
 	for (Player* member : memberList) {
@@ -264,7 +263,7 @@ bool Party::invitePlayer(Player& player)
 		    MESSAGE_INFO_DESCR,
 		    fmt::format("{:s} has been invited. Open the party channel to communicate with your members.",
 		                player.getName()));
-		g_game.updatePlayerShield(leader);
+		getGlobalGame().updatePlayerShield(leader);
 		leader->sendCreatureSkull(leader);
 	} else {
 		leader->sendTextMessage(MESSAGE_INFO_DESCR, fmt::format("{:s} has been invited.", player.getName()));
@@ -467,7 +466,7 @@ void Party::clearPlayerPoints(Player* player)
 
 bool Party::canOpenCorpse(uint32_t ownerId) const
 {
-	if (Player* player = g_game.getPlayerByID(ownerId)) {
+	if (Player* player = getGlobalGame().getPlayerByID(ownerId)) {
 		return leader->getID() == ownerId || player->getParty() == this;
 	}
 	return false;

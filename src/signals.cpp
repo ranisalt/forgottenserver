@@ -36,12 +36,11 @@ extern TalkActions* g_talkActions;
 extern MoveEvents* g_moveEvents;
 extern Spells* g_spells;
 extern Weapons* g_weapons;
-extern Game g_game;
+
 extern CreatureEvents* g_creatureEvents;
 extern GlobalEvents* g_globalEvents;
 extern Events* g_events;
 extern Chat* g_chat;
-extern LuaEnvironment g_luaEnvironment;
 
 namespace {
 
@@ -50,7 +49,7 @@ void sigusr1Handler()
 {
 	// Dispatcher thread
 	std::cout << "SIGUSR1 received, saving the game state..." << std::endl;
-	g_game.saveGameState();
+	getGlobalGame().saveGameState();
 }
 
 void sighupHandler()
@@ -73,8 +72,8 @@ void sighupHandler()
 	Npcs::reload();
 	std::cout << "Reloaded npcs." << std::endl;
 
-	g_game.raids.reload();
-	g_game.raids.startup();
+	getGlobalGame().raids.reload();
+	getGlobalGame().raids.startup();
 	std::cout << "Reloaded raids." << std::endl;
 
 	g_monsters.reload();
@@ -93,10 +92,10 @@ void sighupHandler()
 	g_weapons->loadDefaults();
 	std::cout << "Reloaded weapons." << std::endl;
 
-	g_game.quests.reload();
+	getGlobalGame().quests.reload();
 	std::cout << "Reloaded quests." << std::endl;
 
-	g_game.mounts.reload();
+	getGlobalGame().mounts.reload();
 	std::cout << "Reloaded mounts." << std::endl;
 
 	g_globalEvents->reload();
@@ -108,17 +107,17 @@ void sighupHandler()
 	g_chat->load();
 	std::cout << "Reloaded chatchannels." << std::endl;
 
-	g_luaEnvironment.loadFile("data/global.lua");
+	getGlobalLuaEnvironment().loadFile("data/global.lua");
 	std::cout << "Reloaded global.lua." << std::endl;
 
-	lua_gc(g_luaEnvironment.getLuaState(), LUA_GCCOLLECT, 0);
+	lua_gc(getGlobalLuaEnvironment().getLuaState(), LUA_GCCOLLECT, 0);
 }
 #else
 void sigbreakHandler()
 {
 	// Dispatcher thread
 	std::cout << "SIGBREAK received, shutting game server down..." << std::endl;
-	g_game.setGameState(GAME_STATE_SHUTDOWN);
+	getGlobalGame().setGameState(GAME_STATE_SHUTDOWN);
 }
 #endif
 
@@ -126,14 +125,14 @@ void sigtermHandler()
 {
 	// Dispatcher thread
 	std::cout << "SIGTERM received, shutting game server down..." << std::endl;
-	g_game.setGameState(GAME_STATE_SHUTDOWN);
+	getGlobalGame().setGameState(GAME_STATE_SHUTDOWN);
 }
 
 void sigintHandler()
 {
 	// Dispatcher thread
 	std::cout << "SIGINT received, shutting game server down..." << std::endl;
-	g_game.setGameState(GAME_STATE_SHUTDOWN);
+	getGlobalGame().setGameState(GAME_STATE_SHUTDOWN);
 }
 
 // On Windows this function does not need to be signal-safe,
