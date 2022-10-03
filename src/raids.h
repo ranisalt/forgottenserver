@@ -26,12 +26,6 @@ struct MonsterSpawn
 	uint32_t maxAmount;
 };
 
-// How many times it will try to find a tile to add the monster to before giving
-// up
-static constexpr int32_t MAXIMUM_TRIES_PER_MONSTER = 10;
-static constexpr int32_t CHECK_RAIDS_INTERVAL = 60;
-static constexpr int32_t RAID_MINTICKS = 1000;
-
 class Raid;
 class RaidEvent;
 

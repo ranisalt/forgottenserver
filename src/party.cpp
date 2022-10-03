@@ -13,7 +13,13 @@ extern Game g_game;
 extern ConfigManager g_config;
 extern Events* g_events;
 
-Party::Party(Player* leader) : leader(leader) { leader->setParty(this); }
+static constexpr int32_t EXPERIENCE_SHARE_RANGE = 30;
+static constexpr int32_t EXPERIENCE_SHARE_FLOORS = 1;
+
+Party::Party(Player* leader) : leader(leader)
+{
+	leader->setParty(this);
+}
 
 void Party::disband()
 {

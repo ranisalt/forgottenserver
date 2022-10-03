@@ -15,6 +15,9 @@
 
 extern Game g_game;
 
+static constexpr int32_t MAP_NORMALWALKCOST = 10;
+static constexpr int32_t MAP_DIAGONALWALKCOST = 25;
+
 bool Map::loadMap(const std::string& identifier, bool loadHouses)
 {
 	IOMap loader;

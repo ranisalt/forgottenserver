@@ -48,6 +48,19 @@ extern MoveEvents* g_moveEvents;
 extern Weapons* g_weapons;
 extern Scripts* g_scripts;
 
+static constexpr int32_t PLAYER_NAME_LENGTH = 25;
+
+static constexpr int32_t MOVE_CREATURE_INTERVAL = 1000;
+static constexpr int32_t RANGE_MOVE_CREATURE_INTERVAL = 1500;
+static constexpr int32_t RANGE_MOVE_ITEM_INTERVAL = 400;
+static constexpr int32_t RANGE_USE_ITEM_INTERVAL = 400;
+static constexpr int32_t RANGE_USE_ITEM_EX_INTERVAL = 400;
+static constexpr int32_t RANGE_USE_WITH_CREATURE_INTERVAL = 400;
+static constexpr int32_t RANGE_ROTATE_ITEM_INTERVAL = 400;
+static constexpr int32_t RANGE_BROWSE_FIELD_INTERVAL = 400;
+static constexpr int32_t RANGE_WRAP_ITEM_INTERVAL = 400;
+static constexpr int32_t RANGE_REQUEST_TRADE_INTERVAL = 400;
+
 Game::Game()
 {
 	offlineTrainingWindow.defaultEnterButton = 1;

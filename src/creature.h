@@ -51,11 +51,20 @@ struct FindPathParams
 	int32_t maxTargetDist = -1;
 };
 
-static constexpr int32_t EVENT_CREATURECOUNT = 10;
-static constexpr int32_t EVENT_CREATURE_THINK_INTERVAL = 1000;
-static constexpr int32_t EVENT_CHECK_CREATURE_INTERVAL = (EVENT_CREATURE_THINK_INTERVAL / EVENT_CREATURECOUNT);
-static constexpr uint32_t CREATURE_ID_MIN = 0x10000000;
-static constexpr uint32_t CREATURE_ID_MAX = std::numeric_limits<uint32_t>::max();
+class Map;
+class Thing;
+class Container;
+class Player;
+class Monster;
+class Npc;
+class Item;
+class Tile;
+
+constexpr int32_t EVENT_CREATURECOUNT = 10;
+constexpr int32_t EVENT_CREATURE_THINK_INTERVAL = 1000;
+constexpr int32_t EVENT_CHECK_CREATURE_INTERVAL = (EVENT_CREATURE_THINK_INTERVAL / EVENT_CREATURECOUNT);
+constexpr uint32_t CREATURE_ID_MIN = 0x10000000;
+constexpr uint32_t CREATURE_ID_MAX = std::numeric_limits<uint32_t>::max();
 
 class FrozenPathingConditionCall
 {

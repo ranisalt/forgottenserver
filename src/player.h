@@ -79,7 +79,7 @@ struct OutfitEntry
 	uint8_t addons;
 };
 
-static constexpr int16_t MINIMUM_SKILL_LEVEL = 10;
+constexpr int16_t MINIMUM_SKILL_LEVEL = 10;
 
 struct Skill
 {
@@ -90,10 +90,8 @@ struct Skill
 
 using MuteCountMap = std::map<uint32_t, uint32_t>;
 
-static constexpr int32_t PLAYER_MAX_SPEED = 1500;
-static constexpr int32_t PLAYER_MIN_SPEED = 10;
-
-static constexpr int32_t NOTIFY_DEPOT_BOX_RANGE = 1;
+constexpr int32_t PLAYER_MAX_SPEED = 1500;
+constexpr int32_t PLAYER_MIN_SPEED = 10;
 
 class Player final : public Creature, public Cylinder
 {

@@ -4,16 +4,16 @@
 #ifndef FS_DEFINITIONS_H
 #define FS_DEFINITIONS_H
 
-static constexpr auto STATUS_SERVER_NAME = "The Forgotten Server";
-static constexpr auto STATUS_SERVER_VERSION = "1.5";
-static constexpr auto STATUS_SERVER_DEVELOPERS = "The Forgotten Server Team";
+constexpr auto STATUS_SERVER_NAME = "The Forgotten Server";
+constexpr auto STATUS_SERVER_VERSION = "1.5";
+constexpr auto STATUS_SERVER_DEVELOPERS = "The Forgotten Server Team";
 
-static constexpr auto CLIENT_VERSION_MIN = 1280;
-static constexpr auto CLIENT_VERSION_MAX = 1288;
-static constexpr auto CLIENT_VERSION_STR = "12.87";
+constexpr auto CLIENT_VERSION_MIN = 1280;
+constexpr auto CLIENT_VERSION_MAX = 1286;
+constexpr auto CLIENT_VERSION_STR = "12.86";
 
-static constexpr auto AUTHENTICATOR_DIGITS = 6U;
-static constexpr auto AUTHENTICATOR_PERIOD = 30U;
+constexpr auto AUTHENTICATOR_DIGITS = 6U;
+constexpr auto AUTHENTICATOR_PERIOD = 30U;
 
 #ifndef __FUNCTION__
 #define __FUNCTION__ __func__

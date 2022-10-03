@@ -4,9 +4,9 @@
 #ifndef FS_CONST_H
 #define FS_CONST_H
 
-static constexpr int32_t NETWORKMESSAGE_MAXSIZE = 24590;
-static constexpr int32_t MIN_MARKET_FEE = 20;
-static constexpr int32_t MAX_MARKET_FEE = 100000;
+constexpr int32_t NETWORKMESSAGE_MAXSIZE = 24590;
+constexpr int32_t MIN_MARKET_FEE = 20;
+constexpr int32_t MAX_MARKET_FEE = 100000;
 
 enum MagicEffectsType_t : uint8_t
 {
@@ -680,21 +680,21 @@ enum ReloadTypes_t : uint8_t
 	RELOAD_TYPE_WEAPONS,
 };
 
-static constexpr int32_t CHANNEL_GUILD = 0x00;
-static constexpr int32_t CHANNEL_PARTY = 0x01;
-static constexpr int32_t CHANNEL_PRIVATE = 0xFFFF;
+constexpr int32_t CHANNEL_GUILD = 0x00;
+constexpr int32_t CHANNEL_PARTY = 0x01;
+constexpr int32_t CHANNEL_PRIVATE = 0xFFFF;
 
 // Reserved player storage key ranges;
 //[10000000 - 20000000];
-static constexpr int32_t PSTRG_RESERVED_RANGE_START = 10000000;
-static constexpr int32_t PSTRG_RESERVED_RANGE_SIZE = 10000000;
+constexpr int32_t PSTRG_RESERVED_RANGE_START = 10000000;
+constexpr int32_t PSTRG_RESERVED_RANGE_SIZE = 10000000;
 //[1000 - 1500];
-static constexpr int32_t PSTRG_OUTFITS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 1000);
-static constexpr int32_t PSTRG_OUTFITS_RANGE_SIZE = 500;
+constexpr int32_t PSTRG_OUTFITS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 1000);
+constexpr int32_t PSTRG_OUTFITS_RANGE_SIZE = 500;
 //[2001 - 2011];
-static constexpr int32_t PSTRG_MOUNTS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 2001);
-static constexpr int32_t PSTRG_MOUNTS_RANGE_SIZE = 10;
-static constexpr int32_t PSTRG_MOUNTS_CURRENTMOUNT = (PSTRG_MOUNTS_RANGE_START + 10);
+constexpr int32_t PSTRG_MOUNTS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 2001);
+constexpr int32_t PSTRG_MOUNTS_RANGE_SIZE = 10;
+constexpr int32_t PSTRG_MOUNTS_CURRENTMOUNT = (PSTRG_MOUNTS_RANGE_START + 10);
 
 #define IS_IN_KEYRANGE(key, range) \
 	(key >= PSTRG_##range##_START && ((key - PSTRG_##range##_START) <= PSTRG_##range##_SIZE))

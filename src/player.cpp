@@ -35,6 +35,8 @@ extern Weapons* g_weapons;
 extern CreatureEvents* g_creatureEvents;
 extern Events* g_events;
 
+static constexpr int32_t NOTIFY_DEPOT_BOX_RANGE = 1;
+
 MuteCountMap Player::muteCountMap;
 
 uint32_t Player::playerAutoID = 0x10000000;

@@ -13,6 +13,9 @@
 
 extern ConfigManager g_config;
 
+static constexpr int32_t CONNECTION_WRITE_TIMEOUT = 30;
+static constexpr int32_t CONNECTION_READ_TIMEOUT = 30;
+
 Connection_ptr ConnectionManager::createConnection(boost::asio::io_service& io_service,
                                                    ConstServicePort_ptr servicePort)
 {

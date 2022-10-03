@@ -14,7 +14,15 @@
 extern Game g_game;
 extern ConfigManager g_config;
 
-Raids::Raids() { scriptInterface.initState(); }
+//How many times it will try to find a tile to add the monster to before giving up
+static constexpr int32_t MAXIMUM_TRIES_PER_MONSTER = 10;
+static constexpr int32_t CHECK_RAIDS_INTERVAL = 60;
+static constexpr int32_t RAID_MINTICKS = 1000;
+
+Raids::Raids()
+{
+	scriptInterface.initState();
+}
 
 Raids::~Raids()
 {
