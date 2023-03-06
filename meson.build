@@ -1,7 +1,7 @@
 project('tfs', 'cpp', license: ['gpl-2.0'], default_options: ['cpp_std=c++17'])
 
-fmt = dependency('fmt', version: '>=7.1.0')
-pugixml = dependency('pugixml')
+fmt = dependency('fmt', version: '>=7.1.0', default_options: ['default_library=static'])
+pugixml = dependency('pugixml', default_options: ['default_library=static'])
 
 boost = dependency('boost',
 	modules: ['date_time', 'iostreams', 'system'],
@@ -17,7 +17,7 @@ endif
 
 lua = dependency('luajit', required: false)
 if not lua.found()
-	lua = dependency('lua')
+	lua = dependency('lua-5.4', default_options: ['default_library=static'])
 endif
 
 mysql = dependency('mysql', required: false)
