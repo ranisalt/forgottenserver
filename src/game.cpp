@@ -34,6 +34,9 @@
 #include "talkaction.h"
 #include "weapons.h"
 
+#include <fmt/chrono.h>
+#include <fmt/os.h>
+
 extern ConfigManager g_config;
 extern Actions* g_actions;
 extern Chat* g_chat;
@@ -5252,13 +5255,9 @@ void Game::playerDebugAssert(uint32_t playerId, const std::string& assertLine, c
 	}
 
 	// TODO: move debug assertions to database
-	FILE* file = fopen("client_assertions.txt", "a");
-	if (file) {
-		fprintf(file, "----- %s - %s (%s) -----\n", formatDate(time(nullptr)).c_str(), player->getName().c_str(),
-		        player->getIP().to_string().c_str());
-		fprintf(file, "%s\n%s\n%s\n%s\n", assertLine.c_str(), date.c_str(), description.c_str(), comment.c_str());
-		fclose(file);
-	}
+	auto out = fmt::output_file("client_assertions.txt", fmt::file::APPEND);
+	out.print("----- {:%d/%m/%Y %H:%M:%S} - {} ({}) -----\n{}\n{}\n{}\n{}\n", fmt::localtime(time(nullptr)),
+	          player->getName(), player->getIP().to_string(), assertLine, date, description, comment);
 }
 
 void Game::playerLeaveMarket(uint32_t playerId)
