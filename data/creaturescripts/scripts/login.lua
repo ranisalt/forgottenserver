@@ -40,5 +40,6 @@ function onLogin(player)
 	player:registerEvent("BestiaryKills")
 	player:registerEvent("Idle Timeout")
 	player:registerEvent("Skull Decay")
+	player:registerEvent("PingPong")
 	return true
 end
