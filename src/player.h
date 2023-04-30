@@ -860,13 +860,6 @@ public:
 			client->sendMagicEffect(pos, type);
 		}
 	}
-	void sendPing();
-	void sendPingBack() const
-	{
-		if (client) {
-			client->sendPingBack();
-		}
-	}
 	void sendStats();
 
 	void sendExperienceTracker(int64_t rawExp, int64_t finalExp) const
