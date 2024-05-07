@@ -199,109 +199,26 @@ public:
 	const std::string& getInterfaceName() const { return interfaceName; }
 	const std::string& getLastLuaError() const { return lastLuaError; }
 
-	lua_State* getLuaState() const { return luaState; }
+	lua_State* getLuaState() const { return L; }
 
 	bool pushFunction(int32_t functionId);
 
-	static int luaErrorHandler(lua_State* L);
 	bool callFunction(int params);
 	void callVoidFunction(int params);
 
 	// push/pop common structures
 	static void pushThing(lua_State* L, Thing* thing);
 	static void pushVariant(lua_State* L, const LuaVariant& var);
-	static void pushString(lua_State* L, std::string_view value);
 	static void pushCallback(lua_State* L, int32_t callback);
 	static void pushCylinder(lua_State* L, Cylinder* cylinder);
 
-	static std::string popString(lua_State* L);
 	static int32_t popCallback(lua_State* L);
 
-	// Userdata
-	template <class T>
-	static void pushUserdata(lua_State* L, T* value)
-	{
-		T** userdata = static_cast<T**>(lua_newuserdata(L, sizeof(T*)));
-		*userdata = value;
-	}
-
-	// Shared Ptr
-	template <class T>
-	static void pushSharedPtr(lua_State* L, T value)
-	{
-		new (lua_newuserdata(L, sizeof(T))) T(std::move(value));
-	}
-
 	// Metatables
-	static void setMetatable(lua_State* L, int32_t index, const std::string& name);
 	static void setWeakMetatable(lua_State* L, int32_t index, const std::string& name);
 
 	static void setItemMetatable(lua_State* L, int32_t index, const Item* item);
 	static void setCreatureMetatable(lua_State* L, int32_t index, const Creature* creature);
-
-	// Get
-	template <typename T>
-	static typename std::enable_if<std::is_enum<T>::value, T>::type getNumber(lua_State* L, int32_t arg)
-	{
-		return static_cast<T>(static_cast<int64_t>(lua_tonumber(L, arg)));
-	}
-
-	template <typename T>
-	static typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, T>::type getNumber(
-	    lua_State* L, int32_t arg)
-	{
-		double num = lua_tonumber(L, arg);
-		if (num < static_cast<double>(std::numeric_limits<T>::lowest()) ||
-		    num > static_cast<double>(std::numeric_limits<T>::max())) {
-			reportErrorFunc(L,
-			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
-		}
-
-		return static_cast<T>(num);
-	}
-
-	template <typename T>
-	static typename std::enable_if<
-	    (std::is_integral<T>::value && std::is_signed<T>::value) || std::is_floating_point<T>::value, T>::type
-	getNumber(lua_State* L, int32_t arg)
-	{
-		double num = lua_tonumber(L, arg);
-		if (num < static_cast<double>(std::numeric_limits<T>::lowest()) ||
-		    num > static_cast<double>(std::numeric_limits<T>::max())) {
-			reportErrorFunc(L,
-			                fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
-		}
-
-		return static_cast<T>(num);
-	}
-
-	template <typename T>
-	static T getNumber(lua_State* L, int32_t arg, T defaultValue)
-	{
-		if (lua_isnumber(L, arg) == 0) {
-			return defaultValue;
-		}
-		return getNumber<T>(L, arg);
-	}
-	template <class T>
-	static T* getUserdata(lua_State* L, int32_t arg)
-	{
-		T** userdata = getRawUserdata<T>(L, arg);
-		if (!userdata) {
-			return nullptr;
-		}
-		return *userdata;
-	}
-	template <class T>
-	static T** getRawUserdata(lua_State* L, int32_t arg)
-	{
-		return static_cast<T**>(lua_touserdata(L, arg));
-	}
-	template <class T>
-	static std::shared_ptr<T>& getSharedPtr(lua_State* L, int32_t arg)
-	{
-		return *static_cast<std::shared_ptr<T>*>(lua_touserdata(L, arg));
-	}
 
 	static bool getBoolean(lua_State* L, int32_t arg) { return lua_toboolean(L, arg) != 0; }
 	static bool getBoolean(lua_State* L, int32_t arg, bool defaultValue)
@@ -312,7 +229,6 @@ public:
 		return lua_toboolean(L, arg) != 0;
 	}
 
-	static std::string getString(lua_State* L, int32_t arg);
 	static Position getPosition(lua_State* L, int32_t arg, int32_t& stackpos);
 	static Position getPosition(lua_State* L, int32_t arg);
 	static Outfit_t getOutfit(lua_State* L, int32_t arg);
@@ -324,20 +240,6 @@ public:
 	static Thing* getThing(lua_State* L, int32_t arg);
 	static Creature* getCreature(lua_State* L, int32_t arg);
 	static Player* getPlayer(lua_State* L, int32_t arg);
-
-	template <typename T>
-	static T getField(lua_State* L, int32_t arg, const std::string& key)
-	{
-		lua_getfield(L, arg, key.c_str());
-		return getNumber<T>(L, -1);
-	}
-
-	template <typename T, typename... Args>
-	static T getField(lua_State* L, int32_t arg, const std::string& key, T&& defaultValue)
-	{
-		lua_getfield(L, arg, key.c_str());
-		return getNumber<T>(L, -1, std::forward<T>(defaultValue));
-	}
 
 	static std::string getFieldString(lua_State* L, int32_t arg, const std::string& key);
 
@@ -352,8 +254,6 @@ public:
 	static bool isUserdata(lua_State* L, int32_t arg) { return lua_isuserdata(L, arg) != 0; }
 
 	// Push
-	static void pushBoolean(lua_State* L, bool value);
-	static void pushCombatDamage(lua_State* L, const CombatDamage& damage);
 	static void pushInstantSpell(lua_State* L, const InstantSpell& spell);
 	static void pushSpell(lua_State* L, const Spell& spell);
 	static void pushPosition(lua_State* L, const Position& position, int32_t stackpos = 0);
@@ -364,21 +264,6 @@ public:
 	static void pushReflect(lua_State* L, const Reflect& reflect);
 	static void pushBestiaryInfo(lua_State* L, const BestiaryInfo& info);
 
-	//
-	static void setField(lua_State* L, const char* index, lua_Number value)
-	{
-		lua_pushnumber(L, value);
-		lua_setfield(L, -2, index);
-	}
-
-	static void setField(lua_State* L, const char* index, const std::string& value)
-	{
-		pushString(L, value);
-		lua_setfield(L, -2, index);
-	}
-
-	static std::string escapeString(std::string string);
-
 #ifndef LUAJIT_VERSION
 	static const luaL_Reg luaBitReg[7];
 #endif
@@ -386,18 +271,14 @@ public:
 	static const luaL_Reg luaDatabaseTable[9];
 	static const luaL_Reg luaResultTable[6];
 
-	static int protectedCall(lua_State* L, int nargs, int nresults);
-
 protected:
 	virtual bool closeState();
 
 	void registerFunctions();
 
-	void registerMethod(const std::string& globalName, const std::string& methodName, lua_CFunction func);
-
 	static std::string getErrorDesc(ErrorCode_t code);
 
-	lua_State* luaState = nullptr;
+	lua_State* L = nullptr;
 
 	int32_t eventTableRef = -1;
 	int32_t runningEventId = EVENT_ID_USER;
@@ -406,16 +287,6 @@ protected:
 	std::map<int32_t, std::string> cacheFiles;
 
 private:
-	void registerClass(const std::string& className, const std::string& baseClass, lua_CFunction newFunction = nullptr);
-	void registerTable(const std::string& tableName);
-	void registerMetaMethod(const std::string& className, const std::string& methodName, lua_CFunction func);
-	void registerGlobalMethod(const std::string& functionName, lua_CFunction func);
-	void registerVariable(const std::string& tableName, const std::string& name, lua_Number value);
-	void registerGlobalVariable(const std::string& name, lua_Number value);
-	void registerGlobalBoolean(const std::string& name, bool value);
-
-	static std::string getStackTrace(lua_State* L, const std::string& error_desc);
-
 	static bool getArea(lua_State* L, std::vector<uint32_t>& vec, uint32_t& rows);
 
 	// lua functions
@@ -1668,5 +1539,126 @@ private:
 	friend class LuaScriptInterface;
 	friend class CombatSpell;
 };
+
+namespace tfs::lua {
+
+// Get
+template <typename T>
+typename std::enable_if_t<std::is_enum_v<T>, T> getNumber(lua_State* L, int32_t arg)
+{
+	return static_cast<T>(static_cast<int64_t>(lua_tonumber(L, arg)));
+}
+
+template <typename T>
+typename std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, T> getNumber(lua_State* L, int32_t arg)
+{
+	double num = lua_tonumber(L, arg);
+	if (num < static_cast<double>(std::numeric_limits<T>::lowest()) ||
+	    num > static_cast<double>(std::numeric_limits<T>::max())) {
+		reportErrorFunc(L, fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
+	}
+
+	return static_cast<T>(num);
+}
+
+template <typename T>
+typename std::enable_if_t<(std::is_integral_v<T> && std::is_signed_v<T>) || std::is_floating_point_v<T>, T> getNumber(
+    lua_State* L, int32_t arg)
+{
+	double num = lua_tonumber(L, arg);
+	if (num < static_cast<double>(std::numeric_limits<T>::lowest()) ||
+	    num > static_cast<double>(std::numeric_limits<T>::max())) {
+		reportErrorFunc(L, fmt::format("Argument {} has out-of-range value for {}: {}", arg, typeid(T).name(), num));
+	}
+
+	return static_cast<T>(num);
+}
+
+template <typename T>
+T getNumber(lua_State* L, int32_t arg, T defaultValue)
+{
+	if (lua_isnumber(L, arg) == 0) {
+		return defaultValue;
+	}
+	return getNumber<T>(L, arg);
+}
+
+template <typename T>
+T getField(lua_State* L, int32_t arg, const std::string& key)
+{
+	lua_getfield(L, arg, key.c_str());
+	return getNumber<T>(L, -1);
+}
+
+template <typename T, typename... Args>
+T getField(lua_State* L, int32_t arg, const std::string& key, T&& defaultValue)
+{
+	lua_getfield(L, arg, key.c_str());
+	return getNumber<T>(L, -1, std::forward<T>(defaultValue));
+}
+
+template <class T>
+T** getRawUserdata(lua_State* L, int32_t arg)
+{
+	return static_cast<T**>(lua_touserdata(L, arg));
+}
+
+template <class T>
+T* getUserdata(lua_State* L, int32_t arg)
+{
+	T** userdata = getRawUserdata<T>(L, arg);
+	if (!userdata) {
+		return nullptr;
+	}
+	return *userdata;
+}
+
+// Shared Ptr
+template <class T>
+std::shared_ptr<T>& getSharedPtr(lua_State* L, int32_t arg)
+{
+	return *static_cast<std::shared_ptr<T>*>(lua_touserdata(L, arg));
+}
+
+template <class T>
+void pushSharedPtr(lua_State* L, T value)
+{
+	new (lua_newuserdata(L, sizeof(T))) T(std::move(value));
+}
+
+// Userdata
+template <class T>
+void pushUserdata(lua_State* L, T* value)
+{
+	T** userdata = static_cast<T**>(lua_newuserdata(L, sizeof(T*)));
+	*userdata = value;
+}
+
+void setMetatable(lua_State* L, int32_t index, std::string_view name);
+void setField(lua_State* L, const char* index, lua_Number value);
+void setField(lua_State* L, const char* index, std::string_view value);
+
+void pushBoolean(lua_State* L, bool value);
+void pushCombatDamage(lua_State* L, const CombatDamage& damage);
+
+std::string getString(lua_State* L, int32_t arg);
+void pushString(lua_State* L, std::string_view value);
+std::string popString(lua_State* L);
+
+void registerClass(lua_State* L, std::string_view className, std::string_view baseClass,
+                   lua_CFunction newFunction = nullptr);
+void registerTable(lua_State* L, std::string_view tableName);
+void registerMethod(lua_State* L, std::string_view globalName, std::string_view methodName, lua_CFunction func);
+void registerMetaMethod(lua_State* L, std::string_view className, std::string_view methodName, lua_CFunction func);
+void registerGlobalMethod(lua_State* L, std::string_view functionName, lua_CFunction func);
+void registerVariable(lua_State* L, std::string_view tableName, std::string_view name, lua_Number value);
+void registerGlobalVariable(lua_State* L, std::string_view name, lua_Number value);
+void registerGlobalBoolean(lua_State* L, std::string_view name, bool value);
+
+std::string getStackTrace(lua_State* L, std::string_view error_desc);
+int luaErrorHandler(lua_State* L);
+int protectedCall(lua_State* L, int nargs, int nresults);
+
+} // namespace tfs::lua
 
 #endif // FS_LUASCRIPT_H

@@ -569,8 +569,8 @@ bool Action::executeUse(Player* player, Item* item, const Position& fromPosition
 
 	scriptInterface->pushFunction(scriptId);
 
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	tfs::lua::pushUserdata(L, player);
+	tfs::lua::setMetatable(L, -1, "Player");
 
 	LuaScriptInterface::pushThing(L, item);
 	LuaScriptInterface::pushPosition(L, fromPosition);
@@ -578,6 +578,6 @@ bool Action::executeUse(Player* player, Item* item, const Position& fromPosition
 	LuaScriptInterface::pushThing(L, target);
 	LuaScriptInterface::pushPosition(L, toPosition);
 
-	LuaScriptInterface::pushBoolean(L, isHotkey);
+	tfs::lua::pushBoolean(L, isHotkey);
 	return scriptInterface->callFunction(6);
 }

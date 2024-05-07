@@ -983,7 +983,7 @@ bool MoveEvent::executeStep(Creature* creature, Item* item, const Position& pos)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Creature>(L, creature);
+	tfs::lua::pushUserdata(L, creature);
 	LuaScriptInterface::setCreatureMetatable(L, -1, creature);
 	LuaScriptInterface::pushThing(L, item);
 	LuaScriptInterface::pushPosition(L, pos);
@@ -1019,11 +1019,11 @@ bool MoveEvent::executeEquip(Player* player, Item* item, slots_t slot, bool isCh
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(scriptId);
-	LuaScriptInterface::pushUserdata<Player>(L, player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	tfs::lua::pushUserdata(L, player);
+	tfs::lua::setMetatable(L, -1, "Player");
 	LuaScriptInterface::pushThing(L, item);
 	lua_pushnumber(L, slot);
-	LuaScriptInterface::pushBoolean(L, isCheck);
+	tfs::lua::pushBoolean(L, isCheck);
 
 	return scriptInterface->callFunction(4);
 }

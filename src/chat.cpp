@@ -152,8 +152,8 @@ bool ChatChannel::executeCanJoinEvent(const Player& player)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(canJoinEvent);
-	LuaScriptInterface::pushUserdata(L, &player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	tfs::lua::pushUserdata(L, &player);
+	tfs::lua::setMetatable(L, -1, "Player");
 
 	return scriptInterface->callFunction(1);
 }
@@ -177,8 +177,8 @@ bool ChatChannel::executeOnJoinEvent(const Player& player)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(onJoinEvent);
-	LuaScriptInterface::pushUserdata(L, &player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	tfs::lua::pushUserdata(L, &player);
+	tfs::lua::setMetatable(L, -1, "Player");
 
 	return scriptInterface->callFunction(1);
 }
@@ -202,8 +202,8 @@ bool ChatChannel::executeOnLeaveEvent(const Player& player)
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(onLeaveEvent);
-	LuaScriptInterface::pushUserdata(L, &player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	tfs::lua::pushUserdata(L, &player);
+	tfs::lua::setMetatable(L, -1, "Player");
 
 	return scriptInterface->callFunction(1);
 }
@@ -227,23 +227,23 @@ bool ChatChannel::executeOnSpeakEvent(const Player& player, SpeakClasses& type, 
 	lua_State* L = scriptInterface->getLuaState();
 
 	scriptInterface->pushFunction(onSpeakEvent);
-	LuaScriptInterface::pushUserdata(L, &player);
-	LuaScriptInterface::setMetatable(L, -1, "Player");
+	tfs::lua::pushUserdata(L, &player);
+	tfs::lua::setMetatable(L, -1, "Player");
 
 	lua_pushnumber(L, type);
-	LuaScriptInterface::pushString(L, message);
+	tfs::lua::pushString(L, message);
 
 	bool result = false;
 	int size0 = lua_gettop(L);
-	int ret = scriptInterface->protectedCall(L, 3, 1);
+	int ret = tfs::lua::protectedCall(L, 3, 1);
 	if (ret != 0) {
-		LuaScriptInterface::reportError(nullptr, LuaScriptInterface::popString(L));
+		LuaScriptInterface::reportError(nullptr, tfs::lua::popString(L));
 	} else if (lua_gettop(L) > 0) {
 		if (lua_isboolean(L, -1)) {
 			result = LuaScriptInterface::getBoolean(L, -1);
 		} else if (lua_isnumber(L, -1)) {
 			result = true;
-			type = LuaScriptInterface::getNumber<SpeakClasses>(L, -1);
+			type = tfs::lua::getNumber<SpeakClasses>(L, -1);
 		}
 		lua_pop(L, 1);
 	}
