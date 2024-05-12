@@ -3878,7 +3878,8 @@ void Game::checkCreatures(size_t index)
 			++it;
 		} else {
 			creature->inCheckCreaturesVector = false;
-			it = checkCreatureList.erase(it);
+			std::iter_swap(it, --end);
+			checkCreatureList.pop_back();
 			ReleaseCreature(creature);
 		}
 	}
