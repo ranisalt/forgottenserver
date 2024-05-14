@@ -9,9 +9,6 @@
 
 namespace tfs::http {
 
-using Request = boost::beast::http::request<boost::beast::http::string_body>;
-using Response = boost::beast::http::response<boost::beast::http::string_body>;
-
 class Session final : public std::enable_shared_from_this<Session>
 {
 public:

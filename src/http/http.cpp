@@ -12,8 +12,6 @@
 #include <lua.hpp>
 #endif
 
-namespace tfs::http {
-
 namespace {
 
 boost::asio::io_context ioc;
@@ -22,7 +20,7 @@ std::vector<std::thread> workers = {};
 
 } // namespace
 
-void start(std::string_view address, unsigned short port /*= 8080*/, int threads /*= 1*/)
+void tfs::http::start(std::string_view address, unsigned short port /*= 8080*/, int threads /*= 1*/)
 {
 	fmt::print(">> Starting HTTP server on {:s}:{:d} with {:d} threads.\n", address, port, threads);
 
@@ -35,7 +33,7 @@ void start(std::string_view address, unsigned short port /*= 8080*/, int threads
 	}
 }
 
-void stop()
+void tfs::http::stop()
 {
 	fmt::print(">> Stopping HTTP server...\n");
 
@@ -46,5 +44,3 @@ void stop()
 
 	fmt::print(">> Stopped HTTP server.\n");
 }
-
-} // namespace tfs::http
