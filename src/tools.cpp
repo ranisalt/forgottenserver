@@ -89,7 +89,7 @@ std::string transformToSHA1(std::string_view input)
 	return digest;
 }
 
-std::string generateToken(const std::string& key, uint32_t ticks)
+std::string generateToken(std::string_view key, uint32_t ticks)
 {
 	// generate message from ticks
 	std::string message(8, 0);
@@ -99,7 +99,7 @@ std::string generateToken(const std::string& key, uint32_t ticks)
 
 	// hmac key pad generation
 	std::string iKeyPad(64, 0x36), oKeyPad(64, 0x5C);
-	for (uint8_t i = 0; i < key.length(); ++i) {
+	for (uint8_t i = 0; i < key.size(); ++i) {
 		iKeyPad[i] ^= key[i];
 		oKeyPad[i] ^= key[i];
 	}
@@ -109,28 +109,38 @@ std::string generateToken(const std::string& key, uint32_t ticks)
 	// hmac concat inner pad with message
 	iKeyPad.append(message);
 
+	auto toHex = [](std::string_view sv) {
+		std::string str;
+		str.reserve(sv.size() * 2);
+		for (uint8_t i = 0; i < sv.size(); ++i) {
+			str.push_back("0123456789ABCDEF"[static_cast<uint8_t>(sv[i]) / 16]);
+			str.push_back("0123456789ABCDEF"[static_cast<uint8_t>(sv[i]) % 16]);
+		}
+		return str;
+	};
+
 	// hmac first pass
-	message.assign(transformToSHA1(iKeyPad));
+	message = toHex(transformToSHA1(iKeyPad));
 
 	// hmac concat outer pad with message, conversion from hex to int needed
-	for (uint8_t i = 0; i < message.length(); i += 2) {
-		oKeyPad.push_back(static_cast<char>(std::strtoul(message.substr(i, 2).c_str(), nullptr, 16)));
+	for (uint8_t i = 0; i < message.size(); i += 2) {
+		oKeyPad.push_back(static_cast<char>(std::strtoul(message.substr(i, 2).data(), nullptr, 16)));
 	}
 
 	// hmac second pass
-	message.assign(transformToSHA1(oKeyPad));
+	message = toHex(transformToSHA1(oKeyPad));
 
 	// calculate hmac offset
-	uint32_t offset = static_cast<uint32_t>(std::strtoul(message.substr(39, 1).c_str(), nullptr, 16) & 0xF);
+	uint32_t offset = static_cast<uint32_t>(std::strtoul(message.substr(39, 1).data(), nullptr, 16) & 0xF);
 
 	// get truncated hash
 	uint32_t truncHash =
-	    static_cast<uint32_t>(std::strtoul(message.substr(2 * offset, 8).c_str(), nullptr, 16)) & 0x7FFFFFFF;
-	message.assign(std::to_string(truncHash));
+	    static_cast<uint32_t>(std::strtoul(message.substr(2 * offset, 8).data(), nullptr, 16)) & 0x7FFFFFFF;
+	message = std::to_string(truncHash);
 
 	// return only last AUTHENTICATOR_DIGITS (default 6) digits, also asserts exactly 6 digits
-	uint32_t hashLen = message.length();
-	message.assign(message.substr(hashLen - std::min(hashLen, AUTHENTICATOR_DIGITS)));
+	uint32_t hashLen = message.size();
+	message = message.substr(hashLen - std::min(hashLen, AUTHENTICATOR_DIGITS));
 	message.insert(0, AUTHENTICATOR_DIGITS - std::min(hashLen, AUTHENTICATOR_DIGITS), '0');
 	return message;
 }
