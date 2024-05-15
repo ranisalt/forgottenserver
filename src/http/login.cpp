@@ -146,15 +146,15 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	    {
 	        {"session",
 	         {
-	             {"sessionkey", sessionKey},
+	             {"sessionkey", encodeBase64(sessionKey)},
 	             {"lastlogintime", lastLogin},
 	             {"ispremium", premiumEndsAt >= now},
 	             {"premiumuntil", premiumEndsAt},
 	             // not implemented
 	             {"status", "active"},
-	             {"returnernotification", true},
+	             {"returnernotification", false},
 	             {"showrewardnews", true},
-	             {"isreturner", false},
+	             {"isreturner", true},
 	             {"recoverysetupcomplete", true},
 	             {"fpstracking", false},
 	             {"optiontracking", false},
