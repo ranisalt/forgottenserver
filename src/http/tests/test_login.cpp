@@ -286,13 +286,13 @@ BOOST_FIXTURE_TEST_CASE(test_login_success_with_token, LoginFixture)
 	BOOST_TEST(insert.execute());
 
 	using namespace std::chrono;
-	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch());
+	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
 
 	auto&& [status, body] = tfs::http::handle_login({
 	    {"type", "login"},
 	    {"email", "foo@example.com"},
 	    {"password", "bar"},
-	    {"token", generateToken("", now.count() / AUTHENTICATOR_PERIOD)},
+	    {"token", generateToken("", now / AUTHENTICATOR_PERIOD)},
 	});
 
 	BOOST_TEST(status == boost::beast::http::status::ok);

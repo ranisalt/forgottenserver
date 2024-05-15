@@ -64,7 +64,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	}
 
 	using namespace std::chrono;
-	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch());
+	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
 
 	auto secret = result->getString("secret");
 	if (!secret.empty()) {
@@ -73,7 +73,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 			return make_error_response({.code = 6, .message = "Two-factor token required for authentication."});
 		}
 
-		uint64_t ticks = now.count() / AUTHENTICATOR_PERIOD;
+		uint64_t ticks = now / AUTHENTICATOR_PERIOD;
 		if (token->get_string() != generateToken(secret, ticks) &&
 		    token->get_string() != generateToken(secret, ticks - 1) &&
 		    token->get_string() != generateToken(secret, ticks + 1)) {
@@ -117,6 +117,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 		} while (result->next());
 	}
 
+	static auto pvpType = getPvpType();
 	boost::json::array worlds{
 	    {
 	        {"id", 0},
@@ -128,7 +129,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	        {"previewstate", 0},
 	        {"location", getString(ConfigManager::LOCATION)},
 	        {"anticheatprotection", true},
-	        {"pvptype", getPvpType()},
+	        {"pvptype", pvpType},
 	    },
 	};
 
@@ -139,7 +140,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	         {
 	             {"sessionkey", "TODO"},
 	             {"lastlogintime", lastLogin},
-	             {"ispremium", premiumEndsAt >= now.count()},
+	             {"ispremium", premiumEndsAt >= now},
 	             {"premiumuntil", premiumEndsAt},
 	             {"status", "active"},
 	             {"returnernotification", true},

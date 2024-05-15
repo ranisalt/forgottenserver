@@ -3,6 +3,7 @@
 #include "error.h"
 #include "login.h"
 
+#include <boost/json/monotonic_resource.hpp>
 #include <boost/json/parse.hpp>
 #include <boost/json/serialize.hpp>
 
@@ -19,13 +20,15 @@ std::pair<boost::beast::http::status, boost::json::value> router(std::string_vie
 	return {boost::beast::http::status::not_found, {}};
 }
 
+thread_local boost::json::monotonic_resource mr;
+
 } // namespace
 
 boost::beast::http::message_generator tfs::http::handle_request(const Request& req)
 {
 	auto&& [status, responseBody] = [&req]() {
 		boost::json::error_code ec;
-		auto requestBody = boost::json::parse(req.body(), ec);
+		auto requestBody = boost::json::parse(req.body(), ec, &mr);
 		if (ec || !requestBody.is_object()) {
 			return make_error_response({.code = 2, .message = "Invalid request body."});
 		}
