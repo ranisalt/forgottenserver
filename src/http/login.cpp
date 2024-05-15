@@ -4,28 +4,29 @@
 
 #include "../configmanager.h"
 #include "../database.h"
+#include "../game.h"
 #include "../tools.h"
 #include "../vocation.h"
 #include "error.h"
 
 #include <fmt/format.h>
 
+extern Game g_game;
 extern Vocations g_vocations;
 
 namespace {
 
-auto& db = Database::getInstance();
+thread_local auto& db = Database::getInstance();
 
 int getPvpType()
 {
-	auto worldType = boost::algorithm::to_lower_copy(getString(ConfigManager::WORLD_TYPE));
-
-	if (worldType == "pvp") {
-		return 0;
-	} else if (worldType == "no-pvp") {
-		return 1;
-	} else if (worldType == "pvp-enforced") {
-		return 2;
+	switch (g_game.getWorldType()) {
+		case WORLD_TYPE_PVP:
+			return 0;
+		case WORLD_TYPE_NO_PVP:
+			return 1;
+		case WORLD_TYPE_PVP_ENFORCED:
+			return 2;
 	}
 
 	tfs::unreachable();
@@ -117,7 +118,6 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 		} while (result->next());
 	}
 
-	static auto pvpType = getPvpType();
 	boost::json::array worlds{
 	    {
 	        {"id", 0},
@@ -129,7 +129,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	        {"previewstate", 0},
 	        {"location", getString(ConfigManager::LOCATION)},
 	        {"anticheatprotection", true},
-	        {"pvptype", pvpType},
+	        {"pvptype", getPvpType()},
 	    },
 	};
 
