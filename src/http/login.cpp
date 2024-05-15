@@ -65,8 +65,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 		    {.code = 3, .message = "Tibia account email address or Tibia password is not correct."});
 	}
 
-	using namespace std::chrono;
-	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+	auto now = duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	auto secret = result->getString("secret");
 	if (!secret.empty()) {

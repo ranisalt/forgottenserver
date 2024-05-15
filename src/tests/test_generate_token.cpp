@@ -58,8 +58,6 @@ struct TotpFixture
 
 BOOST_AUTO_TEST_CASE(test_totp)
 {
-	using namespace std::string_view_literals;
-
 	// test vectors from https://www.rfc-editor.org/rfc/rfc6238#appendix-B
 	auto testVectors = std::vector<TotpFixture>{
 	    {.time = 59, .expected = "94287082"},         {.time = 1111111109, .expected = "07081804"},

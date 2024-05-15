@@ -135,6 +135,7 @@ struct LoginFixture
 	DBTransaction transaction;
 
 	std::string_view ip = "74.125.224.72";
+	std::chrono::seconds now = duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
 };
 
 using status = boost::beast::http::status;
@@ -181,8 +182,7 @@ BOOST_FIXTURE_TEST_CASE(test_login_missing_token, LoginFixture)
 	BOOST_TEST(db.executeQuery(
 	    "INSERT INTO `accounts` (`name`, `email`, `password`, `secret`) VALUES ('', 'foo@example.com', SHA1('bar'), UNHEX(''))"));
 
-	using namespace std::chrono;
-	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch());
+	auto now = duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
 
 	auto&& [status, body] = tfs::http::handle_login(
 	    {
@@ -213,12 +213,11 @@ BOOST_FIXTURE_TEST_CASE(test_login_success_no_players, LoginFixture)
 
 BOOST_FIXTURE_TEST_CASE(test_login_success, LoginFixture)
 {
-	using namespace std::chrono;
-	auto premiumEndsAt = duration_cast<seconds>((system_clock::now() + days(30)).time_since_epoch()).count();
+	auto premiumEndsAt = now + std::chrono::days(30);
 
 	auto result = db.storeQuery(fmt::format(
 	    "INSERT INTO `accounts` (`name`, `email`, `password`, `premium_ends_at`) VALUES ('', 'foo@example.com', SHA1('bar'), {:d}) RETURNING `id`",
-	    premiumEndsAt));
+	    premiumEndsAt.count()));
 	auto id = result->getNumber<uint64_t>("id");
 
 	DBInsert insert(
@@ -235,7 +234,7 @@ BOOST_FIXTURE_TEST_CASE(test_login_success, LoginFixture)
 	auto& session = body.at("session");
 	BOOST_TEST(session.at("lastlogintime").as_uint64() == 1715719401);
 	BOOST_TEST(session.at("ispremium").as_bool() == true);
-	BOOST_TEST(session.at("premiumuntil").as_int64() == premiumEndsAt);
+	BOOST_TEST(session.at("premiumuntil").as_int64() == premiumEndsAt.count());
 
 	result = db.storeQuery(
 	    fmt::format("SELECT `token`, INET6_NTOA(`ip`) AS `ip` FROM `sessions` WHERE `account_id` = {:d}", id));
@@ -279,15 +278,12 @@ BOOST_FIXTURE_TEST_CASE(test_login_success_with_token, LoginFixture)
 	insert.addRow(std::format("{}, \"{}\", {}, {}, {}", id, "Dejairzin", 2597, 6, 1715719401));
 	BOOST_TEST(insert.execute());
 
-	using namespace std::chrono;
-	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
-
 	auto&& [status, body] = tfs::http::handle_login(
 	    {
 	        {"type", "login"},
 	        {"email", "foo@example.com"},
 	        {"password", "bar"},
-	        {"token", generateToken("", now / AUTHENTICATOR_PERIOD)},
+	        {"token", generateToken("", now.count() / AUTHENTICATOR_PERIOD)},
 	    },
 	    ip);
 
