@@ -141,12 +141,7 @@ using status = boost::beast::http::status;
 
 BOOST_FIXTURE_TEST_CASE(test_login_missing_email, LoginFixture)
 {
-	auto&& [status, body] = tfs::http::handle_login(
-	    {
-	        {"type", "login"},
-	        {"password", "bar"},
-	    },
-	    ip);
+	auto&& [status, body] = tfs::http::handle_login({{"type", "login"}, {"password", "bar"}}, ip);
 
 	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
@@ -154,13 +149,8 @@ BOOST_FIXTURE_TEST_CASE(test_login_missing_email, LoginFixture)
 
 BOOST_FIXTURE_TEST_CASE(test_login_account_does_not_exist, LoginFixture)
 {
-	auto&& [status, body] = tfs::http::handle_login(
-	    {
-	        {"type", "login"},
-	        {"email", "foo@example.com"},
-	        {"password", "bar"},
-	    },
-	    ip);
+	auto&& [status, body] =
+	    tfs::http::handle_login({{"type", "login"}, {"email", "foo@example.com"}, {"password", "bar"}}, ip);
 
 	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
@@ -168,12 +158,7 @@ BOOST_FIXTURE_TEST_CASE(test_login_account_does_not_exist, LoginFixture)
 
 BOOST_FIXTURE_TEST_CASE(test_login_missing_password, LoginFixture)
 {
-	auto&& [status, body] = tfs::http::handle_login(
-	    {
-	        {"type", "login"},
-	        {"email", "foo@example.com"},
-	    },
-	    ip);
+	auto&& [status, body] = tfs::http::handle_login({{"type", "login"}, {"email", "foo@example.com"}}, ip);
 
 	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
@@ -184,13 +169,8 @@ BOOST_FIXTURE_TEST_CASE(test_login_invalid_password, LoginFixture)
 	BOOST_TEST(db.executeQuery(
 	    "INSERT INTO `accounts` (`name`, `email`, `password`) VALUES ('', 'foo@example.com', SHA1('bar'))"));
 
-	auto&& [status, body] = tfs::http::handle_login(
-	    {
-	        {"type", "login"},
-	        {"email", "foo@example.com"},
-	        {"password", "baz"},
-	    },
-	    ip);
+	auto&& [status, body] =
+	    tfs::http::handle_login({{"type", "login"}, {"email", "foo@example.com"}, {"password", "baz"}}, ip);
 
 	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
@@ -223,13 +203,8 @@ BOOST_FIXTURE_TEST_CASE(test_login_success_no_players, LoginFixture)
 	BOOST_TEST(db.executeQuery(
 	    "INSERT INTO `accounts` (`name`, `email`, `password`) VALUES ('', 'foo@example.com', SHA1('bar'))"));
 
-	auto&& [status, body] = tfs::http::handle_login(
-	    {
-	        {"type", "login"},
-	        {"email", "foo@example.com"},
-	        {"password", "bar"},
-	    },
-	    ip);
+	auto&& [status, body] =
+	    tfs::http::handle_login({{"type", "login"}, {"email", "foo@example.com"}, {"password", "bar"}}, ip);
 
 	BOOST_TEST(status == status::ok);
 	auto& characters = body.at("playdata").at("characters").as_array();
@@ -252,13 +227,8 @@ BOOST_FIXTURE_TEST_CASE(test_login_success, LoginFixture)
 	                          "Dejairzin", 2597, 6, 1715719401, 1, 1094, 78, 132, 114, 0, 1));
 	BOOST_TEST(insert.execute());
 
-	auto&& [status, body] = tfs::http::handle_login(
-	    {
-	        {"type", "login"},
-	        {"email", "foo@example.com"},
-	        {"password", "bar"},
-	    },
-	    ip);
+	auto&& [status, body] =
+	    tfs::http::handle_login({{"type", "login"}, {"email", "foo@example.com"}, {"password", "bar"}}, ip);
 
 	BOOST_TEST(status == status::ok);
 
