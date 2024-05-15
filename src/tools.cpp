@@ -207,6 +207,17 @@ bool boolean_random(double probability /* = 0.5*/)
 	return booleanRand(getRandomGenerator(), std::bernoulli_distribution::param_type(probability));
 }
 
+std::string randomBytes(size_t length)
+{
+	static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned short> rbe;
+
+	std::vector<unsigned char> bytes;
+	bytes.reserve(length);
+
+	std::generate_n(std::back_inserter(bytes), length, []() { return static_cast<unsigned char>(rbe()); });
+	return {reinterpret_cast<const char*>(bytes.data()), bytes.size()};
+}
+
 std::string formatDate(time_t time) { return fmt::format("{:%d/%m/%Y %H:%M:%S}", fmt::localtime(time)); }
 
 std::string formatDateShort(time_t time) { return fmt::format("{:%d %b %Y}", fmt::localtime(time)); }

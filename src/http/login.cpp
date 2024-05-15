@@ -34,7 +34,8 @@ int getPvpType()
 
 } // namespace
 
-std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_login(const boost::json::object& body)
+std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_login(const boost::json::object& body,
+                                                                                  std::string_view ip)
 {
 	assert(body.at("type").as_string() == "login");
 
@@ -85,6 +86,13 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	auto accountId = result->getNumber<uint64_t>("id");
 	auto premiumEndsAt = result->getNumber<int64_t>("premium_ends_at");
 
+	std::string sessionKey = randomBytes(16);
+	if (!db.executeQuery(
+	        fmt::format("INSERT INTO `sessions` (`token`, `account_id`, `ip`) VALUES ({:s}, {:d}, INET6_ATON({:s}))",
+	                    db.escapeString(sessionKey), accountId, db.escapeString(ip)))) {
+		return make_error_response();
+	}
+
 	result = db.storeQuery(fmt::format(
 	    "SELECT `id`, `name`, `level`, `vocation`, `lastlogin`, `sex`, `looktype`, `lookhead`, `lookbody`, `looklegs`, `lookfeet`, `lookaddons` FROM `players` WHERE `account_id` = {:d}",
 	    accountId));
@@ -94,24 +102,25 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	if (result) {
 		do {
 			auto vocation = g_vocations.getVocation(result->getNumber<uint32_t>("vocation"));
+			assert(vocation);
 
 			characters.push_back({
-			    {"worldid", 0},
+			    {"worldid", 0}, // not implemented
 			    {"name", result->getString("name")},
 			    {"level", result->getNumber<uint32_t>("level")},
 			    {"vocation", vocation->getVocName()},
 			    {"lastlogin", result->getNumber<uint64_t>("lastlogin")},
-			    {"ismale", true},
-			    {"ishidden", false},
-			    {"ismaincharacter", false},
-			    {"tutorial", false},
+			    {"ismale", result->getNumber<uint16_t>("sex") == PLAYERSEX_MALE},
+			    {"ishidden", false},        // not implemented
+			    {"ismaincharacter", false}, // not implemented
+			    {"tutorial", false},        // not implemented
 			    {"outfitid", result->getNumber<uint32_t>("looktype")},
 			    {"headcolor", result->getNumber<uint32_t>("lookhead")},
 			    {"torsocolor", result->getNumber<uint32_t>("lookbody")},
 			    {"legscolor", result->getNumber<uint32_t>("looklegs")},
 			    {"detailcolor", result->getNumber<uint32_t>("lookfeet")},
 			    {"addonsflags", result->getNumber<uint32_t>("lookaddons")},
-			    {"dailyrewardstate", 0},
+			    {"dailyrewardstate", 0}, // not implemented
 			});
 
 			lastLogin = std::max(lastLogin, result->getNumber<uint32_t>("lastlogin"));
@@ -120,15 +129,15 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 
 	boost::json::array worlds{
 	    {
-	        {"id", 0},
+	        {"id", 0}, // not implemented
 	        {"name", getString(ConfigManager::SERVER_NAME)},
 	        {"externaladdressprotected", getString(ConfigManager::IP)},
 	        {"externalportprotected", getNumber(ConfigManager::GAME_PORT)},
 	        {"externaladdressunprotected", getString(ConfigManager::IP)},
 	        {"externalportunprotected", getNumber(ConfigManager::GAME_PORT)},
-	        {"previewstate", 0},
+	        {"previewstate", 0}, // not implemented
 	        {"location", getString(ConfigManager::LOCATION)},
-	        {"anticheatprotection", true},
+	        {"anticheatprotection", true}, // not implemented
 	        {"pvptype", getPvpType()},
 	    },
 	};
@@ -138,10 +147,11 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	    {
 	        {"session",
 	         {
-	             {"sessionkey", "TODO"},
+	             {"sessionkey", sessionKey},
 	             {"lastlogintime", lastLogin},
 	             {"ispremium", premiumEndsAt >= now},
 	             {"premiumuntil", premiumEndsAt},
+	             // not implemented
 	             {"status", "active"},
 	             {"returnernotification", true},
 	             {"showrewardnews", true},

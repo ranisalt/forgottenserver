@@ -133,39 +133,49 @@ struct LoginFixture
 
 	Database& db = Database::getInstance();
 	DBTransaction transaction;
+
+	std::string_view ip = "74.125.224.72";
 };
 
-BOOST_AUTO_TEST_CASE(test_login_missing_email)
-{
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"password", "bar"},
-	});
+using status = boost::beast::http::status;
 
-	BOOST_TEST(status == boost::beast::http::status::bad_request);
+BOOST_FIXTURE_TEST_CASE(test_login_missing_email, LoginFixture)
+{
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"password", "bar"},
+	    },
+	    ip);
+
+	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
 }
 
 BOOST_FIXTURE_TEST_CASE(test_login_account_does_not_exist, LoginFixture)
 {
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	    {"password", "bar"},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	        {"password", "bar"},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::bad_request);
+	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
 }
 
-BOOST_AUTO_TEST_CASE(test_login_missing_password)
+BOOST_FIXTURE_TEST_CASE(test_login_missing_password, LoginFixture)
 {
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::bad_request);
+	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
 }
 
@@ -174,13 +184,15 @@ BOOST_FIXTURE_TEST_CASE(test_login_invalid_password, LoginFixture)
 	BOOST_TEST(db.executeQuery(
 	    "INSERT INTO `accounts` (`name`, `email`, `password`) VALUES ('', 'foo@example.com', SHA1('bar'))"));
 
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	    {"password", "baz"},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	        {"password", "baz"},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::bad_request);
+	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 3);
 }
 
@@ -192,15 +204,17 @@ BOOST_FIXTURE_TEST_CASE(test_login_missing_token, LoginFixture)
 	using namespace std::chrono;
 	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch());
 
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	    {"password", "bar"},
-	    // token too old, guaranteed to be wrong
-	    {"token", generateToken("", (now.count() / AUTHENTICATOR_PERIOD) - 2)},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	        {"password", "bar"},
+	        // token too old, guaranteed to be wrong
+	        {"token", generateToken("", (now.count() / AUTHENTICATOR_PERIOD) - 2)},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::bad_request);
+	BOOST_TEST(status == status::bad_request);
 	BOOST_TEST(body.at("errorCode").as_int64() == 6);
 }
 
@@ -209,13 +223,15 @@ BOOST_FIXTURE_TEST_CASE(test_login_success_no_players, LoginFixture)
 	BOOST_TEST(db.executeQuery(
 	    "INSERT INTO `accounts` (`name`, `email`, `password`) VALUES ('', 'foo@example.com', SHA1('bar'))"));
 
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	    {"password", "bar"},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	        {"password", "bar"},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::ok);
+	BOOST_TEST(status == status::ok);
 	auto& characters = body.at("playdata").at("characters").as_array();
 	BOOST_TEST(characters.size() == 0);
 }
@@ -236,18 +252,26 @@ BOOST_FIXTURE_TEST_CASE(test_login_success, LoginFixture)
 	                          "Dejairzin", 2597, 6, 1715719401, 1, 1094, 78, 132, 114, 0, 1));
 	BOOST_TEST(insert.execute());
 
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	    {"password", "bar"},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	        {"password", "bar"},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::ok);
+	BOOST_TEST(status == status::ok);
 
 	auto& session = body.at("session");
 	BOOST_TEST(session.at("lastlogintime").as_uint64() == 1715719401);
 	BOOST_TEST(session.at("ispremium").as_bool() == true);
 	BOOST_TEST(session.at("premiumuntil").as_int64() == premiumEndsAt);
+
+	result = db.storeQuery(
+	    fmt::format("SELECT `token`, INET6_NTOA(`ip`) AS `ip` FROM `sessions` WHERE `account_id` = {:d}", id));
+	BOOST_TEST(result, "Session not found in database.");
+	BOOST_TEST(result->getString("token") == session.at("sessionkey").as_string());
+	BOOST_TEST(result->getString("ip") == ip);
 
 	auto& worlds = body.at("playdata").at("worlds").as_array();
 	BOOST_TEST(worlds.size() == 1);
@@ -288,12 +312,14 @@ BOOST_FIXTURE_TEST_CASE(test_login_success_with_token, LoginFixture)
 	using namespace std::chrono;
 	auto now = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
 
-	auto&& [status, body] = tfs::http::handle_login({
-	    {"type", "login"},
-	    {"email", "foo@example.com"},
-	    {"password", "bar"},
-	    {"token", generateToken("", now / AUTHENTICATOR_PERIOD)},
-	});
+	auto&& [status, body] = tfs::http::handle_login(
+	    {
+	        {"type", "login"},
+	        {"email", "foo@example.com"},
+	        {"password", "bar"},
+	        {"token", generateToken("", now / AUTHENTICATOR_PERIOD)},
+	    },
+	    ip);
 
-	BOOST_TEST(status == boost::beast::http::status::ok);
+	BOOST_TEST(status == status::ok);
 }

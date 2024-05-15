@@ -9,12 +9,13 @@
 
 namespace {
 
-std::pair<boost::beast::http::status, boost::json::value> router(std::string_view type, const boost::json::object& body)
+std::pair<boost::beast::http::status, boost::json::value> router(std::string_view type, const boost::json::object& body,
+                                                                 std::string_view ip)
 {
 	using namespace tfs::http;
 
 	if (type == "login") {
-		return handle_login(body);
+		return handle_login(body, ip);
 	}
 
 	return {boost::beast::http::status::not_found, {}};
@@ -24,9 +25,9 @@ thread_local boost::json::monotonic_resource mr;
 
 } // namespace
 
-boost::beast::http::message_generator tfs::http::handle_request(const Request& req)
+boost::beast::http::message_generator tfs::http::handle_request(const Request& req, std::string_view ip)
 {
-	auto&& [status, responseBody] = [&req]() {
+	auto&& [status, responseBody] = [&req, ip]() {
 		boost::json::error_code ec;
 		auto requestBody = boost::json::parse(req.body(), ec, &mr);
 		if (ec || !requestBody.is_object()) {
@@ -39,7 +40,7 @@ boost::beast::http::message_generator tfs::http::handle_request(const Request& r
 			return make_error_response({.code = 2, .message = "Invalid request type."});
 		}
 
-		return router(typeField->get_string(), requestBodyObj);
+		return router(typeField->get_string(), requestBodyObj, ip);
 	}();
 
 	boost::beast::http::response<boost::beast::http::string_body> res{status, req.version()};

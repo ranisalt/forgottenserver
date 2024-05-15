@@ -71,7 +71,8 @@ void Session::on_read(boost::beast::error_code ec, size_t /*bytes_transferred*/)
 		return;
 	};
 
-	write(handle_request(std::move(req)));
+	auto ip = stream.socket().remote_endpoint().address().to_string();
+	write(handle_request(std::move(req), ip));
 }
 
 void Session::on_write(boost::beast::error_code ec, size_t /*bytes_transferred*/, bool keep_alive)

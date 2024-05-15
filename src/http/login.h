@@ -5,6 +5,7 @@
 
 namespace tfs::http {
 
-std::pair<boost::beast::http::status, boost::json::value> handle_login(const boost::json::object& body);
+std::pair<boost::beast::http::status, boost::json::value> handle_login(const boost::json::object& body,
+                                                                       std::string_view ip);
 
 }
