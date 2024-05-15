@@ -88,23 +88,23 @@ include_directories(${Boost_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR} ${LUA_INCLUDE_D
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(src)
-add_executable(tfs ${tfs_MAIN})
-target_link_libraries(tfs tfslib)
-
 if (BUILD_TESTING)
     message(STATUS "Building unit tests")
     enable_testing()
-    add_subdirectory(src/tests)
 endif()
+
+add_subdirectory(src)
+add_executable(tfs ${tfs_MAIN})
+target_link_libraries(tfs tfslib)
 
 ### INTERPROCEDURAL_OPTIMIZATION ###
 cmake_policy(SET CMP0069 NEW)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT result OUTPUT error)
 if (result)
-    message(STATUS "IPO / LTO enabled")
+    set(ENABLE_IPO ON)
     set_target_properties(tfs PROPERTIES INTERPROCEDURAL_OPTIMIZATION True)
+    message(STATUS "IPO / LTO enabled")
 else ()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif ()
@@ -127,8 +127,5 @@ endif()
 
 # Option to disable unity builds
 option(ENABLE_UNITY_BUILD "Enable unity build" ON)
-if(ENABLE_UNITY_BUILD)
-    set_target_properties(tfslib PROPERTIES UNITY_BUILD ON)
-endif()
 
 target_precompile_headers(tfs PUBLIC src/otpch.h)

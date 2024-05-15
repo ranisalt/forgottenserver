@@ -138,7 +138,7 @@ void mainLoader(ServiceManager* services)
 
 	// load vocations
 	std::cout << ">> Loading vocations" << std::endl;
-	if (!g_vocations.loadFromXml()) {
+	if (std::ifstream is{"data/XML/vocations.xml"}; !g_vocations.loadFromXml(is, "data/XML/vocations.xml")) {
 		startupErrorMessage("Unable to load vocations!");
 		return;
 	}
