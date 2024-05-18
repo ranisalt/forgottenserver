@@ -18,7 +18,7 @@ std::pair<boost::beast::http::status, boost::json::value> router(std::string_vie
 		return handle_login(body, ip);
 	}
 
-	return {boost::beast::http::status::not_found, {}};
+	return make_error_response();
 }
 
 thread_local boost::json::monotonic_resource mr;
