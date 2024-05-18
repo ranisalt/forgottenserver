@@ -9,7 +9,7 @@ namespace detail {
 
 struct ErrorResponseParams
 {
-	int code;
+	int code = 2;
 	std::string_view message =
 	    "Internal error. Please try again later or contact customer support if the problem persists.";
 	boost::beast::http::status status = boost::beast::http::status::bad_request;

@@ -7,5 +7,5 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::make_error_
 	body["errorCode"] = params.code;
 	body["errorMessage"] = params.message;
 
-	return std::make_pair(boost::beast::http::status::bad_request, body);
+	return std::make_pair(boost::beast::http::status::ok, body);
 }
