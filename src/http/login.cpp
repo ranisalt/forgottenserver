@@ -136,7 +136,7 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 	        {"externalportunprotected", getNumber(ConfigManager::GAME_PORT)},
 	        {"previewstate", 0}, // not implemented
 	        {"location", getString(ConfigManager::LOCATION)},
-	        {"anticheatprotection", true}, // not implemented
+	        {"anticheatprotection", false}, // not implemented
 	        {"pvptype", getPvpType()},
 	    },
 	};
