@@ -93,6 +93,9 @@ if (BUILD_TESTING)
     enable_testing()
 endif()
 
+# Option to disable unity builds
+option(ENABLE_UNITY_BUILD "Enable unity build" ON)
+
 add_subdirectory(src)
 add_executable(tfs ${tfs_MAIN})
 target_link_libraries(tfs tfslib)
@@ -124,8 +127,5 @@ if(NOT SKIP_GIT)
 	endif()
 endif()
 ### END  Git Version ###
-
-# Option to disable unity builds
-option(ENABLE_UNITY_BUILD "Enable unity build" ON)
 
 target_precompile_headers(tfs PUBLIC src/otpch.h)
