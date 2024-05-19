@@ -1,4 +1,5 @@
 set(http_SRC
+	${CMAKE_CURRENT_LIST_DIR}/cacheinfo.cpp
 	${CMAKE_CURRENT_LIST_DIR}/error.cpp
 	${CMAKE_CURRENT_LIST_DIR}/fail.cpp
 	${CMAKE_CURRENT_LIST_DIR}/http.cpp
@@ -9,6 +10,7 @@ set(http_SRC
 	)
 
 set(http_HDR
+	${CMAKE_CURRENT_LIST_DIR}/cacheinfo.h
 	${CMAKE_CURRENT_LIST_DIR}/error.h
 	${CMAKE_CURRENT_LIST_DIR}/fail.h
 	${CMAKE_CURRENT_LIST_DIR}/http.h

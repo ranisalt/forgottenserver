@@ -16,8 +16,6 @@ extern Vocations g_vocations;
 
 namespace {
 
-thread_local auto& db = Database::getInstance();
-
 int getPvpType()
 {
 	switch (g_game.getWorldType()) {
@@ -45,16 +43,17 @@ std::pair<boost::beast::http::status, boost::json::value> tfs::http::handle_logi
 		    {.code = 3, .message = "Tibia account email address or Tibia password is not correct."});
 	}
 
-	auto result = db.storeQuery(fmt::format(
-	    "SELECT `id`, UNHEX(`password`) AS `password`, `secret`, `premium_ends_at` FROM `accounts` WHERE `email` = {:s}",
-	    db.escapeString(emailField->get_string())));
-	if (!result) {
+	auto passwordField = body.if_contains("password");
+	if (!passwordField || !passwordField->is_string()) {
 		return make_error_response(
 		    {.code = 3, .message = "Tibia account email address or Tibia password is not correct."});
 	}
 
-	auto passwordField = body.if_contains("password");
-	if (!passwordField || !passwordField->is_string()) {
+	thread_local auto& db = Database::getInstance();
+	auto result = db.storeQuery(fmt::format(
+	    "SELECT `id`, UNHEX(`password`) AS `password`, `secret`, `premium_ends_at` FROM `accounts` WHERE `email` = {:s}",
+	    db.escapeString(emailField->get_string())));
+	if (!result) {
 		return make_error_response(
 		    {.code = 3, .message = "Tibia account email address or Tibia password is not correct."});
 	}

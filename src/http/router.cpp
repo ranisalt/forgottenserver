@@ -1,5 +1,6 @@
 #include "router.h"
 
+#include "cacheinfo.h"
 #include "error.h"
 #include "login.h"
 
@@ -14,6 +15,9 @@ std::pair<boost::beast::http::status, boost::json::value> router(std::string_vie
 {
 	using namespace tfs::http;
 
+	if (type == "cacheinfo") {
+		return handle_cacheinfo(body, ip);
+	}
 	if (type == "login") {
 		return handle_login(body, ip);
 	}
