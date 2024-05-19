@@ -266,7 +266,9 @@ CREATE TABLE IF NOT EXISTS `market_offers` (
 
 CREATE TABLE IF NOT EXISTS `players_online` (
   `player_id` int NOT NULL,
-  PRIMARY KEY (`player_id`)
+  `session_id` int NOT NULL,
+  PRIMARY KEY (`player_id`),
+  FOREIGN KEY (`session_id`) REFERENCES `sessions` (`id`) ON DELETE CASCADE
 ) ENGINE=MEMORY DEFAULT CHARACTER SET=utf8;
 
 CREATE TABLE IF NOT EXISTS `player_deaths` (
