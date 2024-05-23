@@ -295,19 +295,19 @@ bool IOMapSerialize::saveHouseInfo()
 
 	for (const auto& it : g_game.map.houses.getHouses()) {
 		House* house = it.second;
-		DBResult_ptr result = db.storeQuery(fmt::format("SELECT `id` FROM `houses` WHERE `id` = {:d}", house->getId()));
+		DBResult_ptr result = db.storeQuery("SELECT `id` FROM `houses` WHERE `id` = {:d}", house->getId());
 		if (result) {
-			db.executeQuery(fmt::format(
+			db.executeQuery(
 			    "UPDATE `houses` SET `owner` = {:d}, `paid` = {:d}, `warnings` = {:d}, `name` = {:s}, `town_id` = {:d}, `rent` = {:d}, `size` = {:d}, `beds` = {:d} WHERE `id` = {:d}",
 			    house->getOwner(), house->getPaidUntil(), house->getPayRentWarnings(),
 			    db.escapeString(house->getName()), house->getTownId(), house->getRent(), house->getTiles().size(),
-			    house->getBedCount(), house->getId()));
+			    house->getBedCount(), house->getId());
 		} else {
-			db.executeQuery(fmt::format(
+			db.executeQuery(
 			    "INSERT INTO `houses` (`id`, `owner`, `paid`, `warnings`, `name`, `town_id`, `rent`, `size`, `beds`) VALUES ({:d}, {:d}, {:d}, {:d}, {:s}, {:d}, {:d}, {:d}, {:d})",
 			    house->getId(), house->getOwner(), house->getPaidUntil(), house->getPayRentWarnings(),
 			    db.escapeString(house->getName()), house->getTownId(), house->getRent(), house->getTiles().size(),
-			    house->getBedCount()));
+			    house->getBedCount());
 		}
 	}
 
@@ -367,7 +367,7 @@ bool IOMapSerialize::saveHouse(House* house)
 	uint32_t houseId = house->getId();
 
 	// clear old tile data
-	if (!db.executeQuery(fmt::format("DELETE FROM `tile_store` WHERE `house_id` = {:d}", houseId))) {
+	if (!db.executeQuery("DELETE FROM `tile_store` WHERE `house_id` = {:d}", houseId)) {
 		return false;
 	}
 

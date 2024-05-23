@@ -4908,8 +4908,7 @@ void Game::checkPlayersRecord()
 void Game::updatePlayersRecord() const
 {
 	Database& db = Database::getInstance();
-	db.executeQuery(
-	    fmt::format("UPDATE `server_config` SET `value` = '{:d}' WHERE `config` = 'players_record'", playersRecord));
+	db.executeQuery("UPDATE `server_config` SET `value` = '{:d}' WHERE `config` = 'players_record'", playersRecord);
 }
 
 void Game::loadPlayersRecord()

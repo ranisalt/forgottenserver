@@ -48,9 +48,9 @@ const std::optional<BanInfo> IOBan::getAccountBanInfo(uint32_t accountId)
 {
 	Database& db = Database::getInstance();
 
-	DBResult_ptr result = db.storeQuery(fmt::format(
+	DBResult_ptr result = db.storeQuery(
 	    "SELECT `reason`, `expires_at`, `banned_at`, `banned_by`, (SELECT `name` FROM `players` WHERE `id` = `banned_by`) AS `name` FROM `account_bans` WHERE `account_id` = {:d}",
-	    accountId));
+	    accountId);
 	if (!result) {
 		return std::nullopt;
 	}
@@ -86,9 +86,9 @@ const std::optional<BanInfo> IOBan::getIpBanInfo(const Connection::Address& clie
 
 	Database& db = Database::getInstance();
 
-	DBResult_ptr result = db.storeQuery(fmt::format(
+	DBResult_ptr result = db.storeQuery(
 	    "SELECT `reason`, `expires_at`, (SELECT `name` FROM `players` WHERE `id` = `banned_by`) AS `name` FROM `ip_bans` WHERE `ip` = INET6_ATON('{:s}')",
-	    clientIP.to_string()));
+	    clientIP.to_string());
 	if (!result) {
 		return std::nullopt;
 	}
@@ -115,6 +115,6 @@ const std::optional<BanInfo> IOBan::getIpBanInfo(const Connection::Address& clie
 bool IOBan::isPlayerNamelocked(uint32_t playerId)
 {
 	return Database::getInstance()
-	    .storeQuery(fmt::format("SELECT 1 FROM `player_namelocks` WHERE `player_id` = {:d}", playerId))
+	    .storeQuery("SELECT 1 FROM `player_namelocks` WHERE `player_id` = {:d}", playerId)
 	    .get();
 }

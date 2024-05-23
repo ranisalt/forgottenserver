@@ -46,7 +46,13 @@ public:
 	 * @param query command
 	 * @return true on success, false on error
 	 */
-	bool executeQuery(const std::string& query);
+	bool executeQuery(std::string_view query);
+
+	template <typename... Args>
+	bool executeQuery(std::format_string<Args...> query, Args&&... args)
+	{
+		return executeQuery(std::format(query, std::forward<Args>(args)...));
+	}
 
 	/**
 	 * Queries database.
@@ -55,7 +61,13 @@ public:
 	 *
 	 * @return results object (nullptr on error)
 	 */
-	DBResult_ptr storeQuery(const std::string& query);
+	DBResult_ptr storeQuery(std::string_view query);
+
+	template <typename... Args>
+	DBResult_ptr storeQuery(std::format_string<Args...> query, Args&&... args)
+	{
+		return storeQuery(std::format(query, std::forward<Args>(args)...));
+	}
 
 	/**
 	 * Escapes string for query.
