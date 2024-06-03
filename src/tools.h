@@ -77,6 +77,24 @@ const std::vector<Direction>& getShuffleDirections();
 
 namespace tfs {
 
+class time_guard
+{
+	using clock = std::chrono::high_resolution_clock;
+
+public:
+	time_guard(std::string_view name, clock::duration max_duration, std::string_view extra_info = "") :
+	    function_name{name}, extra_info{extra_info}, max_duration{max_duration}, start{clock::now()}
+	{}
+
+	~time_guard();
+
+private:
+	std::string function_name;
+	std::string extra_info;
+	clock::duration max_duration;
+	clock::time_point start;
+};
+
 #if __has_cpp_attribute(__cpp_lib_to_underlying)
 
 template <class T>

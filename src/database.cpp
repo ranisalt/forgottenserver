@@ -6,6 +6,7 @@
 #include "database.h"
 
 #include "configmanager.h"
+#include "tools.h"
 
 #include <mysql/errmsg.h>
 
@@ -52,6 +53,10 @@ static bool isLostConnectionError(const unsigned error)
 
 static bool executeQuery(MYSQL*& handle, std::string_view query, const bool retryIfLostConnection)
 {
+#ifndef NDEBUG
+	tfs::time_guard tr{__FUNCTION__, std::chrono::milliseconds{50}, fmt::format("Query: {}", query)};
+#endif
+
 	while (mysql_real_query(handle, query.data(), query.length()) != 0) {
 		std::cout << "[Error - mysql_real_query] Query: " << query.substr(0, 256) << std::endl
 		          << "Message: " << mysql_error(handle) << std::endl;

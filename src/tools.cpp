@@ -1134,3 +1134,14 @@ const std::vector<Direction>& getShuffleDirections()
 	std::shuffle(dirList.begin(), dirList.end(), getRandomGenerator());
 	return dirList;
 }
+
+tfs::time_guard::~time_guard()
+{
+	if (auto elapsed = clock::now() - start; elapsed > max_duration) {
+		fmt::print("Warning: {:s} took too long ({} > {})\n", function_name, elapsed, max_duration);
+
+		if (!extra_info.empty()) {
+			fmt::print("{}\n", extra_info);
+		}
+	}
+}
