@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
@@ -133,3 +133,12 @@ endif()
 ### END  Git Version ###
 
 target_precompile_headers(tfs PUBLIC src/otpch.h)
+
+### Packaging ###
+install(TARGETS tfs RUNTIME)
+install(FILES config.lua.dist key.pem schema.sql DESTINATION . COMPONENT data)
+install(DIRECTORY data DESTINATION . COMPONENT data)
+set(CPACK_PACKAGE_NAME "tfs")
+set(CPACK_PACKAGE_VERSION "1.6")
+set(CPACK_GENERATOR "TGZ")
+include(CPack)
