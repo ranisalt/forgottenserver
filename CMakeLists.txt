@@ -80,7 +80,7 @@ else ()
         set(MYSQL_CLIENT_LIBS "unofficial::libmariadb")
     else ()
         find_package(MySQL REQUIRED)
-1    endif ()
+    endif ()
 endif ()
 
 find_package(Threads REQUIRED)
