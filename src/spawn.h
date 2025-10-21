@@ -31,7 +31,7 @@ public:
 
 	bool addBlock(spawnBlock_t sb);
 	bool addMonster(const std::string& name, const Position& pos, Direction dir, uint32_t interval);
-	void removeMonster(Monster* monster);
+	void removeMonster(std::shared_ptr<Monster> monster);
 
 	uint32_t getInterval() const { return interval; }
 	void startup();
@@ -44,7 +44,7 @@ public:
 
 private:
 	// map of the spawned creatures
-	using SpawnedMap = std::multimap<uint32_t, Monster*>;
+	using SpawnedMap = std::multimap<uint32_t, std::shared_ptr<Monster>>;
 	SpawnedMap spawnedMap;
 
 	// map of creatures in the spawn
@@ -74,7 +74,7 @@ public:
 	bool isStarted() const { return started; }
 
 private:
-	std::forward_list<Npc*> npcList;
+	std::forward_list<std::shared_ptr<Npc>> npcList;
 	std::forward_list<Spawn> spawnList;
 	std::string filename;
 	bool loaded = false;
