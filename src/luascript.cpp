@@ -6552,7 +6552,7 @@ int LuaScriptInterface::luaItemCreate(lua_State* L)
 int LuaScriptInterface::luaItemIsItem(lua_State* L)
 {
 	// item:isItem()
-	tfs::lua::pushBoolean(L, tfs::lua::getUserdata<const Item>(L, 1) != nullptr);
+	tfs::lua::pushBoolean(L, tfs::lua::getSharedPtr<const Item>(L, 1) != nullptr);
 	return 1;
 }
 
@@ -7743,7 +7743,7 @@ int LuaScriptInterface::luaPodiumSetFlag(lua_State* L)
 int LuaScriptInterface::luaPodiumGetDirection(lua_State* L)
 {
 	// podium:getDirection()
-	const Podium* podium = tfs::lua::getUserdata<const Podium>(L, 1);
+	auto podium = tfs::lua::getSharedPtr<const Podium>(L, 1);
 	if (podium) {
 		lua_pushnumber(L, podium->getDirection());
 	} else {
@@ -7843,7 +7843,7 @@ int LuaScriptInterface::luaCreatureUnregisterEvent(lua_State* L)
 int LuaScriptInterface::luaCreatureIsRemoved(lua_State* L)
 {
 	// creature:isRemoved()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushBoolean(L, creature->isRemoved());
 	} else {
@@ -7855,14 +7855,14 @@ int LuaScriptInterface::luaCreatureIsRemoved(lua_State* L)
 int LuaScriptInterface::luaCreatureIsCreature(lua_State* L)
 {
 	// creature:isCreature()
-	tfs::lua::pushBoolean(L, tfs::lua::getUserdata<const Creature>(L, 1) != nullptr);
+	tfs::lua::pushBoolean(L, tfs::lua::getSharedPtr<const Creature>(L, 1) != nullptr);
 	return 1;
 }
 
 int LuaScriptInterface::luaCreatureIsInGhostMode(lua_State* L)
 {
 	// creature:isInGhostMode()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushBoolean(L, creature->isInGhostMode());
 	} else {
@@ -7874,7 +7874,7 @@ int LuaScriptInterface::luaCreatureIsInGhostMode(lua_State* L)
 int LuaScriptInterface::luaCreatureIsHealthHidden(lua_State* L)
 {
 	// creature:isHealthHidden()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushBoolean(L, creature->isHealthHidden());
 	} else {
@@ -7886,7 +7886,7 @@ int LuaScriptInterface::luaCreatureIsHealthHidden(lua_State* L)
 int LuaScriptInterface::luaCreatureIsMovementBlocked(lua_State* L)
 {
 	// creature:isMovementBlocked()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushBoolean(L, creature->isMovementBlocked());
 	} else {
@@ -7898,7 +7898,7 @@ int LuaScriptInterface::luaCreatureIsMovementBlocked(lua_State* L)
 int LuaScriptInterface::luaCreatureCanSee(lua_State* L)
 {
 	// creature:canSee(position)
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		const Position& position = tfs::lua::getPosition(L, 2);
 		tfs::lua::pushBoolean(L, creature->canSee(position));
@@ -7911,7 +7911,7 @@ int LuaScriptInterface::luaCreatureCanSee(lua_State* L)
 int LuaScriptInterface::luaCreatureCanSeeCreature(lua_State* L)
 {
 	// creature:canSeeCreature(creature)
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		auto otherCreature = tfs::lua::getCreature(L, 2);
 		if (!otherCreature) {
@@ -7930,7 +7930,7 @@ int LuaScriptInterface::luaCreatureCanSeeCreature(lua_State* L)
 int LuaScriptInterface::luaCreatureCanSeeGhostMode(lua_State* L)
 {
 	// creature:canSeeGhostMode(creature)
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		auto otherCreature = tfs::lua::getCreature(L, 2);
 		if (!otherCreature) {
@@ -7949,7 +7949,7 @@ int LuaScriptInterface::luaCreatureCanSeeGhostMode(lua_State* L)
 int LuaScriptInterface::luaCreatureCanSeeInvisibility(lua_State* L)
 {
 	// creature:canSeeInvisibility()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushBoolean(L, creature->canSeeInvisibility());
 	} else {
@@ -7993,7 +7993,7 @@ int LuaScriptInterface::luaCreatureGetParent(lua_State* L)
 int LuaScriptInterface::luaCreatureGetId(lua_State* L)
 {
 	// creature:getId()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		lua_pushnumber(L, creature->getID());
 	} else {
@@ -8005,7 +8005,7 @@ int LuaScriptInterface::luaCreatureGetId(lua_State* L)
 int LuaScriptInterface::luaCreatureGetName(lua_State* L)
 {
 	// creature:getName()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushString(L, creature->getName());
 	} else {
@@ -8132,7 +8132,7 @@ int LuaScriptInterface::luaCreatureSetMaster(lua_State* L)
 int LuaScriptInterface::luaCreatureGetLight(lua_State* L)
 {
 	// creature:getLight()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (!creature) {
 		lua_pushnil(L);
 		return 1;
@@ -8165,7 +8165,7 @@ int LuaScriptInterface::luaCreatureSetLight(lua_State* L)
 int LuaScriptInterface::luaCreatureGetSpeed(lua_State* L)
 {
 	// creature:getSpeed()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		lua_pushnumber(L, creature->getSpeed());
 	} else {
@@ -8177,7 +8177,7 @@ int LuaScriptInterface::luaCreatureGetSpeed(lua_State* L)
 int LuaScriptInterface::luaCreatureGetBaseSpeed(lua_State* L)
 {
 	// creature:getBaseSpeed()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		lua_pushnumber(L, creature->getBaseSpeed());
 	} else {
@@ -8231,7 +8231,7 @@ int LuaScriptInterface::luaCreatureSetSkillLoss(lua_State* L)
 int LuaScriptInterface::luaCreatureGetPosition(lua_State* L)
 {
 	// creature:getPosition()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushPosition(L, creature->getPosition());
 	} else {
@@ -8262,7 +8262,7 @@ int LuaScriptInterface::luaCreatureGetTile(lua_State* L)
 int LuaScriptInterface::luaCreatureGetDirection(lua_State* L)
 {
 	// creature:getDirection()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		lua_pushnumber(L, creature->getDirection());
 	} else {
@@ -8286,7 +8286,7 @@ int LuaScriptInterface::luaCreatureSetDirection(lua_State* L)
 int LuaScriptInterface::luaCreatureGetHealth(lua_State* L)
 {
 	// creature:getHealth()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		lua_pushnumber(L, creature->getHealth());
 	} else {
@@ -8338,7 +8338,7 @@ int LuaScriptInterface::luaCreatureAddHealth(lua_State* L)
 int LuaScriptInterface::luaCreatureGetMaxHealth(lua_State* L)
 {
 	// creature:getMaxHealth()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		lua_pushnumber(L, creature->getMaxHealth());
 	} else {
@@ -8423,7 +8423,7 @@ int LuaScriptInterface::luaCreatureSetSkull(lua_State* L)
 int LuaScriptInterface::luaCreatureGetOutfit(lua_State* L)
 {
 	// creature:getOutfit()
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		tfs::lua::pushOutfit(L, creature->getCurrentOutfit());
 	} else {
@@ -8791,7 +8791,7 @@ int LuaScriptInterface::luaCreatureGetZone(lua_State* L)
 int LuaScriptInterface::luaCreatureHasIcon(lua_State* L)
 {
 	// creature:hasIcon(iconId)
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (creature) {
 		auto iconId = tfs::lua::getNumber<CreatureIcon_t>(L, 2);
 		tfs::lua::pushBoolean(L, creature->getIcons().contains(iconId));
@@ -8826,7 +8826,7 @@ int LuaScriptInterface::luaCreatureSetIcon(lua_State* L)
 int LuaScriptInterface::luaCreatureGetIcon(lua_State* L)
 {
 	// creature:getIcon(iconId)
-	auto creature = tfs::lua::getUserdata<const Creature>(L, 1);
+	auto creature = tfs::lua::getSharedPtr<const Creature>(L, 1);
 	if (!creature) {
 		lua_pushnil(L);
 		return 1;
@@ -11333,7 +11333,7 @@ int LuaScriptInterface::luaMonsterCreate(lua_State* L)
 int LuaScriptInterface::luaMonsterIsMonster(lua_State* L)
 {
 	// monster:isMonster()
-	tfs::lua::pushBoolean(L, tfs::lua::getUserdata<const Monster>(L, 1) != nullptr);
+	tfs::lua::pushBoolean(L, tfs::lua::getSharedPtr<const Monster>(L, 1) != nullptr);
 	return 1;
 }
 
@@ -11809,7 +11809,7 @@ int LuaScriptInterface::luaNpcCreate(lua_State* L)
 int LuaScriptInterface::luaNpcIsNpc(lua_State* L)
 {
 	// npc:isNpc()
-	tfs::lua::pushBoolean(L, tfs::lua::getUserdata<const Npc>(L, 1) != nullptr);
+	tfs::lua::pushBoolean(L, tfs::lua::getSharedPtr<const Npc>(L, 1) != nullptr);
 	return 1;
 }
 
