@@ -5958,7 +5958,7 @@ int LuaScriptInterface::luaTileGetHouse(lua_State* L)
 		return 1;
 	}
 
-	if (auto houseTile = std::dynamic_pointer_cast<HouseTile>(tile)) {
+	if (auto houseTile = tile->getHouseTile()) {
 		tfs::lua::pushUserdata(L, houseTile->getHouse());
 		tfs::lua::setMetatable(L, -1, "House");
 	} else {
