@@ -35,8 +35,6 @@
 #include "teleport.h"
 #include "weapons.h"
 
-#include <ranges>
-
 extern Chat* g_chat;
 extern Game g_game;
 extern GlobalEvents* g_globalEvents;
@@ -4535,7 +4533,7 @@ int LuaScriptInterface::luaGameGetPlayers(lua_State* L)
 	lua_createtable(L, g_game.getPlayersOnline(), 0);
 
 	int index = 0;
-	for (const auto& [_, player] : g_game.getPlayers()) {
+	for (const auto& player : g_game.getPlayers() | std::views::values) {
 		tfs::lua::pushSharedPtr(L, player);
 		tfs::lua::setMetatable(L, -1, "Player");
 		lua_rawseti(L, -2, ++index);
@@ -4549,7 +4547,7 @@ int LuaScriptInterface::luaGameGetNpcs(lua_State* L)
 	lua_createtable(L, g_game.getNpcsOnline(), 0);
 
 	int index = 0;
-	for (const auto& [_, npc] : g_game.getNpcs()) {
+	for (const auto& npc : g_game.getNpcs() | std::views::values) {
 		tfs::lua::pushSharedPtr(L, npc);
 		tfs::lua::setMetatable(L, -1, "Npc");
 		lua_rawseti(L, -2, ++index);
@@ -4563,7 +4561,7 @@ int LuaScriptInterface::luaGameGetMonsters(lua_State* L)
 	lua_createtable(L, g_game.getMonstersOnline(), 0);
 
 	int index = 0;
-	for (const auto& [_, monster] : g_game.getMonsters()) {
+	for (const auto& monster : g_game.getMonsters() | std::views::values) {
 		tfs::lua::pushSharedPtr(L, monster);
 		tfs::lua::setMetatable(L, -1, "Monster");
 		lua_rawseti(L, -2, ++index);
@@ -4719,7 +4717,7 @@ int LuaScriptInterface::luaGameGetTowns(lua_State* L)
 	lua_createtable(L, towns.size(), 0);
 
 	int index = 0;
-	for (const auto& [_, town] : towns) {
+	for (const auto& town : towns | std::views::values) {
 		pushTown(L, *town);
 		lua_rawseti(L, -2, ++index);
 	}
