@@ -763,8 +763,6 @@ void tfs::lua::pushThing(lua_State* L, const std::shared_ptr<Thing>& thing)
 	} else if (const auto& tile = thing->getTile()) {
 		pushSharedPtr(L, tile);
 		setMetatable(L, -1, "Tile");
-	} else if (thing == Thing::virtualThing) {
-		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
 	}
@@ -4922,7 +4920,6 @@ int LuaScriptInterface::luaGameCreateItem(lua_State* L)
 		g_game.internalAddItem(tile, item, INDEX_WHEREEVER, FLAG_NOLIMIT);
 	} else {
 		addTempItem(item);
-		item->setParent(Thing::virtualThing);
 	}
 
 	tfs::lua::pushSharedPtr(L, item);
@@ -4962,7 +4959,6 @@ int LuaScriptInterface::luaGameCreateContainer(lua_State* L)
 		g_game.internalAddItem(tile, container, INDEX_WHEREEVER, FLAG_NOLIMIT);
 	} else {
 		addTempItem(container);
-		container->setParent(Thing::virtualThing);
 	}
 
 	tfs::lua::pushSharedPtr(L, container);
@@ -5925,7 +5921,7 @@ int LuaScriptInterface::luaTileAddItemEx(lua_State* L)
 		return 1;
 	}
 
-	if (item->getParent() != Thing::virtualThing) {
+	if (item->hasParent()) {
 		reportErrorFunc(L, "Item already has a parent");
 		lua_pushnil(L);
 		return 1;
@@ -6613,7 +6609,6 @@ int LuaScriptInterface::luaItemClone(lua_State* L)
 	}
 
 	addTempItem(clone);
-	clone->setParent(Thing::virtualThing);
 
 	tfs::lua::pushSharedPtr(L, clone);
 	tfs::lua::setItemMetatable(L, -1, clone);
@@ -6660,7 +6655,6 @@ int LuaScriptInterface::luaItemSplit(lua_State* L)
 
 	*itemPtr = newItem;
 
-	splitItem->setParent(Thing::virtualThing);
 	addTempItem(splitItem);
 
 	tfs::lua::pushSharedPtr(L, splitItem);
@@ -7098,7 +7092,7 @@ int LuaScriptInterface::luaItemMoveTo(lua_State* L)
 	uint32_t flags = tfs::lua::getNumber<uint32_t>(
 	    L, 3, FLAG_NOLIMIT | FLAG_IGNOREBLOCKITEM | FLAG_IGNOREBLOCKCREATURE | FLAG_IGNORENOTMOVEABLE);
 
-	if (item->getParent() == Thing::virtualThing) {
+	if (!item->hasParent()) {
 		tfs::lua::pushBoolean(L, g_game.internalAddItem(toThing, item, INDEX_WHEREEVER, flags) == RETURNVALUE_NOERROR);
 	} else {
 		std::shared_ptr<Item> moveItem = nullptr;
@@ -7502,7 +7496,7 @@ int LuaScriptInterface::luaContainerAddItemEx(lua_State* L)
 		return 1;
 	}
 
-	if (item->getParent() != Thing::virtualThing) {
+	if (item->hasParent()) {
 		reportErrorFunc(L, "Item already has a parent");
 		lua_pushnil(L);
 		return 1;
@@ -9978,7 +9972,7 @@ int LuaScriptInterface::luaPlayerAddItemEx(lua_State* L)
 		return 1;
 	}
 
-	if (item->getParent() != Thing::virtualThing) {
+	if (item->hasParent()) {
 		reportErrorFunc(L, "Item already has a parent");
 		tfs::lua::pushBoolean(L, false);
 		return 1;
