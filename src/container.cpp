@@ -16,7 +16,7 @@
 Container::~Container()
 {
 	if (getID() == ITEM_BROWSEFIELD) {
-		const auto& parent = getParent();
+		const auto& parent = getRealParent();
 		for (const auto& item : itemList) {
 			item->setParent(parent);
 		}
