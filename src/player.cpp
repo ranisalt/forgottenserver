@@ -614,7 +614,7 @@ void Player::addContainer(uint8_t cid, Container* container)
 		return;
 	}
 
-	if (container->getID() == ITEM_BROWSEFIELD) {
+	if (container->getBrowseField()) {
 		container->incrementReferenceCounter();
 	}
 
@@ -622,7 +622,7 @@ void Player::addContainer(uint8_t cid, Container* container)
 	if (it != openContainers.end()) {
 		OpenContainer& openContainer = it->second;
 		Container* oldContainer = openContainer.container;
-		if (oldContainer->getID() == ITEM_BROWSEFIELD) {
+		if (oldContainer->getBrowseField()) {
 			oldContainer->decrementReferenceCounter();
 		}
 
@@ -647,7 +647,7 @@ void Player::closeContainer(uint8_t cid)
 	Container* container = openContainer.container;
 	openContainers.erase(it);
 
-	if (container && container->getID() == ITEM_BROWSEFIELD) {
+	if (container && container->getBrowseField()) {
 		container->decrementReferenceCounter();
 	}
 }
@@ -974,7 +974,7 @@ void Player::sendAddContainerItem(const Container* container, const Item* item)
 		}
 
 		uint16_t slot = openContainer.index;
-		if (container->getID() == ITEM_BROWSEFIELD) {
+		if (container->getBrowseField()) {
 			uint16_t containerSize = container->size() - 1;
 			uint16_t pageEnd = openContainer.index + container->capacity() - 1;
 			if (containerSize > pageEnd) {

@@ -8,6 +8,7 @@
 #include "item.h"
 #include "tile.h"
 
+class BrowseField;
 class Container;
 class DepotLocker;
 class StoreInbox;
@@ -32,8 +33,7 @@ class Container : public Item, public Cylinder
 public:
 	explicit Container(uint16_t type);
 	Container(uint16_t type, uint16_t size, bool unlocked = true, bool pagination = false);
-	explicit Container(Tile* tile);
-	~Container();
+	virtual ~Container();
 
 	// non-copyable
 	Container(const Container&) = delete;
@@ -44,13 +44,16 @@ public:
 	Container* getContainer() override final { return this; }
 	const Container* getContainer() const override final { return this; }
 
+	virtual BrowseField* getBrowseField() { return nullptr; }
+	virtual const BrowseField* getBrowseField() const { return nullptr; }
+
 	virtual DepotLocker* getDepotLocker() { return nullptr; }
 	virtual const DepotLocker* getDepotLocker() const { return nullptr; }
 
 	virtual StoreInbox* getStoreInbox() { return nullptr; }
 	virtual const StoreInbox* getStoreInbox() const { return nullptr; }
 
-	bool hasContainerParent() const;
+	virtual bool hasContainerParent() const;
 
 	Attr_ReadValue readAttr(AttrTypes_t attr, PropStream& propStream) override;
 	bool unserializeItemNode(OTB::Loader& loader, const OTB::Node& node, PropStream& propStream) override;

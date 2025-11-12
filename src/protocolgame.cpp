@@ -1904,7 +1904,7 @@ void ProtocolGame::sendContainer(uint8_t cid, const Container* container, uint16
 
 	msg.addByte(cid);
 
-	if (container->getID() == ITEM_BROWSEFIELD) {
+	if (container->getBrowseField()) {
 		msg.addItem(ITEM_BAG, 1);
 		msg.addString("Browse Field");
 	} else {

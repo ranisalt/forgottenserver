@@ -5,6 +5,7 @@
 
 #include "tile.h"
 
+#include "browsefield.h"
 #include "combat.h"
 #include "configmanager.h"
 #include "creature.h"

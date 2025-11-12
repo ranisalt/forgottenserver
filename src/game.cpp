@@ -7,6 +7,7 @@
 
 #include "actions.h"
 #include "bed.h"
+#include "browsefield.h"
 #include "configmanager.h"
 #include "creature.h"
 #include "creatureevent.h"
@@ -269,7 +270,7 @@ Thing* Game::internalGetThing(Player* player, const Position& pos, int32_t index
 			return nullptr;
 		}
 
-		if (parentContainer->getID() == ITEM_BROWSEFIELD) {
+		if (parentContainer->getBrowseField()) {
 			Tile* tile = parentContainer->getTile();
 			if (tile && tile->hasFlag(TILESTATE_SUPPORTS_HANGABLE)) {
 				if (tile->hasProperty(CONST_PROP_ISVERTICAL)) {
@@ -2376,11 +2377,12 @@ void Game::playerMoveUpContainer(uint32_t playerId, uint8_t cid)
 
 		auto it = browseFields.find(tile);
 		if (it == browseFields.end()) {
-			parentContainer = new Container(tile);
-			parentContainer->incrementReferenceCounter();
-			browseFields[tile] = parentContainer;
+			auto browseField = new BrowseField(tile);
+			browseField->incrementReferenceCounter();
+			browseFields[tile] = browseField;
 			g_scheduler.addEvent(createSchedulerTask(
 			    30000, [this, position = tile->getPosition()]() { decreaseBrowseFieldRef(position); }));
+			parentContainer = browseField;
 		} else {
 			parentContainer = it->second;
 		}
@@ -2548,11 +2550,12 @@ void Game::playerBrowseField(uint32_t playerId, const Position& pos)
 
 	auto it = browseFields.find(tile);
 	if (it == browseFields.end()) {
-		container = new Container(tile);
-		container->incrementReferenceCounter();
-		browseFields[tile] = container;
+		auto browseField = new BrowseField(tile);
+		browseField->incrementReferenceCounter();
+		browseFields[tile] = browseField;
 		g_scheduler.addEvent(
 		    createSchedulerTask(30000, [this, position = tile->getPosition()]() { decreaseBrowseFieldRef(position); }));
+		container = browseField;
 	} else {
 		container = it->second;
 	}

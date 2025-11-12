@@ -11,6 +11,7 @@
 #include "position.h"
 #include "wildcardtree.h"
 
+class BrowseField;
 class Monster;
 class Npc;
 class ServiceManager;
@@ -465,7 +466,7 @@ public:
 	void removeGuild(uint32_t guildId);
 	void decreaseBrowseFieldRef(const Position& pos);
 
-	std::unordered_map<Tile*, Container*> browseFields;
+	std::unordered_map<Tile*, BrowseField*> browseFields;
 
 	void internalRemoveItems(std::vector<Item*> itemList, uint32_t amount, bool stackable);
 
