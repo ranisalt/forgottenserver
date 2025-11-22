@@ -40,6 +40,13 @@ else()
     list(APPEND VCPKG_MANIFEST_FEATURES "lua")
 endif()
 
+option(ASAN "Enable Address Sanitizer" OFF)
+if (ASAN)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
+
+
 project(tfs CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

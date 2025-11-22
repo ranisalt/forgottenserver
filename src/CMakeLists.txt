@@ -13,7 +13,6 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/container.cpp
 	${CMAKE_CURRENT_LIST_DIR}/creature.cpp
 	${CMAKE_CURRENT_LIST_DIR}/creatureevent.cpp
-	${CMAKE_CURRENT_LIST_DIR}/cylinder.cpp
 	${CMAKE_CURRENT_LIST_DIR}/database.cpp
 	${CMAKE_CURRENT_LIST_DIR}/databasemanager.cpp
 	${CMAKE_CURRENT_LIST_DIR}/databasetasks.cpp
@@ -54,7 +53,6 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/protocol.cpp
 	${CMAKE_CURRENT_LIST_DIR}/protocolgame.cpp
 	${CMAKE_CURRENT_LIST_DIR}/protocollogin.cpp
-	${CMAKE_CURRENT_LIST_DIR}/protocolold.cpp
 	${CMAKE_CURRENT_LIST_DIR}/protocolstatus.cpp
 	${CMAKE_CURRENT_LIST_DIR}/rsa.cpp
 	${CMAKE_CURRENT_LIST_DIR}/scheduler.cpp
@@ -94,7 +92,6 @@ set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/container.h
 	${CMAKE_CURRENT_LIST_DIR}/creatureevent.h
 	${CMAKE_CURRENT_LIST_DIR}/creature.h
-	${CMAKE_CURRENT_LIST_DIR}/cylinder.h
 	${CMAKE_CURRENT_LIST_DIR}/database.h
 	${CMAKE_CURRENT_LIST_DIR}/databasemanager.h
 	${CMAKE_CURRENT_LIST_DIR}/databasetasks.h
@@ -140,7 +137,6 @@ set(tfs_HDR
 	${CMAKE_CURRENT_LIST_DIR}/protocolgame.h
 	${CMAKE_CURRENT_LIST_DIR}/protocol.h
 	${CMAKE_CURRENT_LIST_DIR}/protocollogin.h
-	${CMAKE_CURRENT_LIST_DIR}/protocolold.h
 	${CMAKE_CURRENT_LIST_DIR}/protocolstatus.h
 	${CMAKE_CURRENT_LIST_DIR}/pugicast.h
 	${CMAKE_CURRENT_LIST_DIR}/rsa.h
