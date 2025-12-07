@@ -14,8 +14,8 @@ class BedItem final : public Item
 public:
 	explicit BedItem(uint16_t id);
 
-	std::shared_ptr<BedItem> getBed() override { return std::static_pointer_cast<BedItem>(shared_from_this()); }
-	std::shared_ptr<const BedItem> getBed() const override
+	std::shared_ptr<BedItem> asBed() override { return std::static_pointer_cast<BedItem>(shared_from_this()); }
+	std::shared_ptr<const BedItem> asBed() const override
 	{
 		return std::static_pointer_cast<const BedItem>(shared_from_this());
 	}

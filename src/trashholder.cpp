@@ -18,7 +18,7 @@ ReturnValue TrashHolder::queryMaxCount(int32_t, const std::shared_ptr<const Thin
 
 void TrashHolder::addThing(int32_t, const std::shared_ptr<Thing>& thing)
 {
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item) {
 		return;
 	}
@@ -29,7 +29,7 @@ void TrashHolder::addThing(int32_t, const std::shared_ptr<Thing>& thing)
 
 	const ItemType& it = Item::items[id];
 	if (item->isHangable() && it.isGroundTile()) {
-		if (const auto& tile = getTile()) {
+		if (const auto& tile = asTile()) {
 			if (tile->hasFlag(TILESTATE_SUPPORTS_HANGABLE)) {
 				return;
 			}

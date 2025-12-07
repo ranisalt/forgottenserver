@@ -293,7 +293,7 @@ std::shared_ptr<Tile> Item::getTile()
 	if (const auto& parent = topParent->getParent()) {
 		topParent = parent;
 	}
-	return std::dynamic_pointer_cast<Tile>(topParent);
+	return topParent->asTile();
 }
 
 std::shared_ptr<const Tile> Item::getTile() const
@@ -306,7 +306,16 @@ std::shared_ptr<const Tile> Item::getTile() const
 	if (const auto& parent = topParent->getParent()) {
 		topParent = parent;
 	}
-	return std::dynamic_pointer_cast<const Tile>(topParent);
+	return topParent->asTile();
+}
+
+const Position& Item::getPosition() const
+{
+	auto tile = getTile();
+	if (tile) {
+		return tile->getPosition();
+	}
+	return Tile::nullptrTile->getPosition();
 }
 
 uint16_t Item::getSubType() const
@@ -329,8 +338,8 @@ std::shared_ptr<const Player> Item::getHoldingPlayer() const
 		return nullptr;
 	}
 
-	if (const auto& creature = topParent->getCreature()) {
-		return creature->getPlayer();
+	if (const auto& creature = topParent->asCreature()) {
+		return creature->asPlayer();
 	}
 	return nullptr;
 }
@@ -1001,7 +1010,7 @@ std::string Item::getNameDescription(const ItemType& it, const std::shared_ptr<c
 std::string Item::getNameDescription() const
 {
 	const ItemType& it = items[id];
-	return getNameDescription(it, getItem());
+	return getNameDescription(it, asItem());
 }
 
 std::string Item::getWeightDescription(const ItemType& it, uint32_t weight, uint32_t count /*= 1*/)
@@ -1048,7 +1057,7 @@ void Item::setUniqueId(uint16_t n)
 		return;
 	}
 
-	if (g_game.addUniqueItem(n, getItem())) {
+	if (g_game.addUniqueItem(n, asItem())) {
 		getAttributes()->setUniqueId(n);
 	}
 }
@@ -1233,7 +1242,7 @@ ItemAttributes::Attribute& ItemAttributes::getAttr(itemAttrTypes type)
 	return attributes.back();
 }
 
-void Item::startDecaying() { g_game.startDecay(getItem()); }
+void Item::startDecaying() { g_game.startDecay(asItem()); }
 
 bool Item::hasMarketAttributes() const
 {

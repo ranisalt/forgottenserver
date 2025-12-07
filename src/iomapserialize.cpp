@@ -122,7 +122,7 @@ bool IOMapSerialize::loadItem(PropStream& propStream, const std::shared_ptr<Thin
 
 	std::shared_ptr<Tile> tile = nullptr;
 	if (!parent->hasParent()) {
-		tile = parent->getTile();
+		tile = parent->asTile();
 	}
 
 	const ItemType& iType = Item::items[id];
@@ -130,7 +130,7 @@ bool IOMapSerialize::loadItem(PropStream& propStream, const std::shared_ptr<Thin
 		// create a new item
 		if (const auto item = Item::CreateItem(id)) {
 			if (item->unserializeAttr(propStream)) {
-				const auto& container = item->getContainer();
+				const auto& container = item->asContainer();
 				if (container && !loadContainer(propStream, container)) {
 					return false;
 				}
@@ -150,10 +150,10 @@ bool IOMapSerialize::loadItem(PropStream& propStream, const std::shared_ptr<Thin
 				if (findItem->getID() == id) {
 					item = findItem;
 					break;
-				} else if (iType.isDoor() && findItem->getDoor()) {
+				} else if (iType.isDoor() && findItem->asDoor()) {
 					item = findItem;
 					break;
-				} else if (iType.isBed() && findItem->getBed()) {
+				} else if (iType.isBed() && findItem->asBed()) {
 					item = findItem;
 					break;
 				}
@@ -162,7 +162,7 @@ bool IOMapSerialize::loadItem(PropStream& propStream, const std::shared_ptr<Thin
 
 		if (item) {
 			if (item->unserializeAttr(propStream)) {
-				const auto& container = item->getContainer();
+				const auto& container = item->asContainer();
 				if (container && !loadContainer(propStream, container)) {
 					return false;
 				}
@@ -176,11 +176,11 @@ bool IOMapSerialize::loadItem(PropStream& propStream, const std::shared_ptr<Thin
 			if (const auto dummy = Item::CreateItem(id)) {
 				dummy->unserializeAttr(propStream);
 
-				if (const auto& container = dummy->getContainer()) {
+				if (const auto& container = dummy->asContainer()) {
 					if (!loadContainer(propStream, container)) {
 						return false;
 					}
-				} else if (const auto& bedItem = dummy->getBed()) {
+				} else if (const auto& bedItem = dummy->asBed()) {
 					uint32_t sleeperGUID = bedItem->getSleeper();
 					if (sleeperGUID != 0) {
 						g_game.removeBedSleeper(sleeperGUID);
@@ -194,7 +194,7 @@ bool IOMapSerialize::loadItem(PropStream& propStream, const std::shared_ptr<Thin
 
 void IOMapSerialize::saveItem(PropWriteStream& stream, const std::shared_ptr<const Item>& item)
 {
-	const auto& container = item->getContainer();
+	const auto& container = item->asContainer();
 
 	// Write ID & props
 	stream.write<uint16_t>(item->getID());
@@ -225,8 +225,8 @@ void IOMapSerialize::saveTile(PropWriteStream& stream, const std::shared_ptr<con
 		const ItemType& it = Item::items[item->getID()];
 
 		// Note that these are NEGATED, ie. these are the items that will be saved.
-		if (!(it.moveable || it.forceSerialize || item->getDoor() ||
-		      (item->getContainer() && !item->getContainer()->empty()) || it.canWriteText || item->getBed())) {
+		if (!(it.moveable || it.forceSerialize || item->asDoor() ||
+		      (item->asContainer() && !item->asContainer()->empty()) || it.canWriteText || item->asBed())) {
 			continue;
 		}
 

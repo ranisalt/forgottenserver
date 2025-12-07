@@ -19,7 +19,7 @@ bool canSend(const std::shared_ptr<const Item>& item)
 
 std::string getReceiverName(const std::shared_ptr<Item>& item)
 {
-	if (const auto& container = item->getContainer()) {
+	if (const auto& container = item->asContainer()) {
 		for (const auto& containerItem : container->getItemList()) {
 			if (containerItem->getID() == ITEM_LABEL) {
 				return getReceiverName(containerItem);
@@ -77,7 +77,7 @@ bool sendItem(const std::shared_ptr<Item>& item)
 ReturnValue Mailbox::queryAdd(int32_t, const std::shared_ptr<const Thing>& thing, uint32_t, uint32_t,
                               const std::shared_ptr<Creature>&) const
 {
-	if (const auto& item = thing->getItem(); item && canSend(item)) {
+	if (const auto& item = thing->asItem(); item && canSend(item)) {
 		return RETURNVALUE_NOERROR;
 	}
 	return RETURNVALUE_NOTPOSSIBLE;
@@ -92,7 +92,7 @@ ReturnValue Mailbox::queryMaxCount(int32_t, const std::shared_ptr<const Thing>&,
 
 void Mailbox::addThing(int32_t, const std::shared_ptr<Thing>& thing)
 {
-	if (const auto& item = thing->getItem(); item && canSend(item)) {
+	if (const auto& item = thing->asItem(); item && canSend(item)) {
 		sendItem(item);
 	}
 }

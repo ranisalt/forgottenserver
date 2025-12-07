@@ -38,9 +38,9 @@ Npc::Npc(const std::string& name) : Creature(), filename("data/npc/" + name + ".
 	reset();
 }
 
-void Npc::addList() { g_game.addNpc(getNpc()); }
+void Npc::addList() { g_game.addNpc(asNpc()); }
 
-void Npc::removeList() { g_game.removeNpc(getNpc()); }
+void Npc::removeList() { g_game.removeNpc(asNpc()); }
 
 bool Npc::load()
 {
@@ -81,7 +81,7 @@ void Npc::reload()
 	SpectatorVec players;
 	g_game.map.getSpectators(players, getPosition(), true, true);
 	for (const auto& player : players) {
-		assert(player->getPlayer() != nullptr);
+		assert(player->asPlayer() != nullptr);
 		spectators.insert(std::static_pointer_cast<Player>(player));
 	}
 
@@ -94,7 +94,7 @@ void Npc::reload()
 
 	// Simulate that the creature is placed on the map again.
 	if (npcEventHandler) {
-		npcEventHandler->onCreatureAppear(getNpc());
+		npcEventHandler->onCreatureAppear(asNpc());
 	}
 }
 
@@ -193,7 +193,7 @@ bool Npc::loadFromXml()
 
 	pugi::xml_attribute scriptFile = npcNode.attribute("script");
 	if (scriptFile) {
-		auto handler = std::make_unique<NpcEventsHandler>(scriptFile.as_string(), getNpc());
+		auto handler = std::make_unique<NpcEventsHandler>(scriptFile.as_string(), asNpc());
 		if (!handler->isLoaded()) {
 			return false;
 		}
@@ -236,7 +236,7 @@ void Npc::onCreatureAppear(const std::shared_ptr<Creature>& creature, bool, Magi
 		SpectatorVec players;
 		g_game.map.getSpectators(players, getPosition(), true, true);
 		for (const auto& player : players) {
-			assert(player->getPlayer() != nullptr);
+			assert(player->asPlayer() != nullptr);
 			spectators.insert(std::static_pointer_cast<Player>(player));
 		}
 
@@ -250,7 +250,7 @@ void Npc::onCreatureAppear(const std::shared_ptr<Creature>& creature, bool, Magi
 		if (npcEventHandler) {
 			npcEventHandler->onCreatureAppear(creature);
 		}
-	} else if (const auto& player = creature->getPlayer()) {
+	} else if (const auto& player = creature->asPlayer()) {
 		if (npcEventHandler) {
 			npcEventHandler->onCreatureAppear(creature);
 		}
@@ -269,7 +269,7 @@ void Npc::onRemoveCreature(const std::shared_ptr<Creature>& creature, bool isLog
 		if (npcEventHandler) {
 			npcEventHandler->onCreatureDisappear(creature);
 		}
-	} else if (const auto& player = creature->getPlayer()) {
+	} else if (const auto& player = creature->asPlayer()) {
 		if (npcEventHandler) {
 			npcEventHandler->onCreatureDisappear(creature);
 		}
@@ -285,13 +285,13 @@ void Npc::onCreatureMove(const std::shared_ptr<Creature>& creature, const std::s
 {
 	Creature::onCreatureMove(creature, newTile, newPos, oldTile, oldPos, teleport);
 
-	if (creature.get() == this || creature->getPlayer()) {
+	if (creature.get() == this || creature->asPlayer()) {
 		if (npcEventHandler) {
 			npcEventHandler->onCreatureMove(creature, oldPos, newPos);
 		}
 
 		if (creature.get() != this) {
-			const auto& player = creature->getPlayer();
+			const auto& player = creature->asPlayer();
 
 			// if player is now in range, add to spectators list, otherwise erase
 			if (player->canSee(position)) {
@@ -312,7 +312,7 @@ void Npc::onCreatureSay(const std::shared_ptr<Creature>& creature, SpeakClasses 
 	}
 
 	// only players for script events
-	if (const auto& player = creature->getPlayer()) {
+	if (const auto& player = creature->asPlayer()) {
 		if (npcEventHandler) {
 			npcEventHandler->onCreatureSay(player, type, text);
 		}
@@ -339,13 +339,13 @@ void Npc::onThink(uint32_t interval)
 	}
 }
 
-void Npc::doSay(const std::string& text) { g_game.internalCreatureSay(getNpc(), TALKTYPE_SAY, text, false); }
+void Npc::doSay(const std::string& text) { g_game.internalCreatureSay(asNpc(), TALKTYPE_SAY, text, false); }
 
 void Npc::doSayToPlayer(const std::shared_ptr<Player>& player, const std::string& text)
 {
 	if (player) {
-		player->sendCreatureSay(getNpc(), TALKTYPE_PRIVATE_NP, text);
-		player->onCreatureSay(getNpc(), TALKTYPE_PRIVATE_NP, text);
+		player->sendCreatureSay(asNpc(), TALKTYPE_PRIVATE_NP, text);
+		player->onCreatureSay(asNpc(), TALKTYPE_PRIVATE_NP, text);
 	}
 }
 
@@ -427,7 +427,7 @@ bool Npc::canWalkTo(const Position& fromPos, Direction dir) const
 	}
 
 	const auto& tile = g_game.map.getTile(toPos);
-	if (!tile || tile->queryAdd(0, getNpc(), 1, 0) != RETURNVALUE_NOERROR) {
+	if (!tile || tile->queryAdd(0, asNpc(), 1, 0) != RETURNVALUE_NOERROR) {
 		return false;
 	}
 
@@ -493,7 +493,7 @@ void Npc::turnToCreature(const std::shared_ptr<Creature>& creature)
 			dir = DIRECTION_SOUTH;
 		}
 	}
-	g_game.internalCreatureTurn(getNpc(), dir);
+	g_game.internalCreatureTurn(asNpc(), dir);
 }
 
 void Npc::setCreatureFocus(const std::shared_ptr<Creature>& creature)

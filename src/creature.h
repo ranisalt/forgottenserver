@@ -90,21 +90,21 @@ public:
 	Creature(const Creature&) = delete;
 	Creature& operator=(const Creature&) = delete;
 
-	std::shared_ptr<Creature> getCreature() override final
+	std::shared_ptr<Creature> asCreature() override final
 	{
 		return std::static_pointer_cast<Creature>(shared_from_this());
 	}
-	std::shared_ptr<const Creature> getCreature() const override final
+	std::shared_ptr<const Creature> asCreature() const override final
 	{
 		return std::static_pointer_cast<const Creature>(shared_from_this());
 	}
 
-	virtual std::shared_ptr<Player> getPlayer() { return nullptr; }
-	virtual std::shared_ptr<const Player> getPlayer() const { return nullptr; }
-	virtual std::shared_ptr<Npc> getNpc() { return nullptr; }
-	virtual std::shared_ptr<const Npc> getNpc() const { return nullptr; }
-	virtual std::shared_ptr<Monster> getMonster() { return nullptr; }
-	virtual std::shared_ptr<const Monster> getMonster() const { return nullptr; }
+	virtual std::shared_ptr<Player> asPlayer() { return nullptr; }
+	virtual std::shared_ptr<const Player> asPlayer() const { return nullptr; }
+	virtual std::shared_ptr<Npc> asNpc() { return nullptr; }
+	virtual std::shared_ptr<const Npc> asNpc() const { return nullptr; }
+	virtual std::shared_ptr<Monster> asMonster() { return nullptr; }
+	virtual std::shared_ptr<const Monster> asMonster() const { return nullptr; }
 
 	virtual const std::string& getName() const = 0;
 	virtual const std::string& getNameDescription() const = 0;
@@ -183,7 +183,7 @@ public:
 	bool isInvisible() const;
 	ZoneType_t getZone() const
 	{
-		const auto& tile = getTile();
+		const auto& tile = asTile();
 		if (!tile) {
 			return ZONE_NORMAL;
 		}
@@ -365,14 +365,14 @@ public:
 	std::shared_ptr<Thing> getParent() const override final { return tile.lock(); }
 	void setParent(const std::shared_ptr<Thing>& thing) override final
 	{
-		tile = thing->getTile();
-		position = thing->getTile()->getPosition();
+		tile = thing->asTile();
+		position = thing->asTile()->getPosition();
 	}
 
 	const Position& getPosition() const override final { return position; }
 
-	std::shared_ptr<Tile> getTile() override final { return tile.lock(); }
-	std::shared_ptr<const Tile> getTile() const override final { return tile.lock(); }
+	std::shared_ptr<Tile> asTile() override final { return tile.lock(); }
+	std::shared_ptr<const Tile> asTile() const override final { return tile.lock(); }
 
 	const Position& getLastPosition() const { return lastPosition; }
 	void setLastPosition(Position newLastPos) { lastPosition = newLastPos; }

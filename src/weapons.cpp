@@ -289,7 +289,7 @@ void Weapon::internalUseWeapon(const std::shared_ptr<Player>& player, const std:
 		Combat::doTargetCombat(player, target, damage, params);
 	}
 
-	onUsedWeapon(player, item, target->getTile());
+	onUsedWeapon(player, item, target->asTile());
 }
 
 void Weapon::internalUseWeapon(const std::shared_ptr<Player>& player, const std::shared_ptr<Item>& item,
@@ -678,7 +678,7 @@ bool WeaponDistance::useWeapon(const std::shared_ptr<Player>& player, const std:
 		Weapon::internalUseWeapon(player, item, target, damageModifier);
 	} else {
 		// miss target
-		auto destTile = target->getTile();
+		auto destTile = target->asTile();
 
 		if (!player->getPosition().isInRange(target->getPosition(), 1, 1, 0)) {
 			static std::vector<std::pair<int32_t, int32_t>> destList{{-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0},
@@ -724,7 +724,7 @@ int32_t WeaponDistance::getElementDamage(const std::shared_ptr<const Player>& pl
 	int32_t minValue = 0;
 	int32_t maxValue = Weapons::getMaxWeaponDamage(player->getLevel(), attackSkill, attackValue, attackFactor);
 	if (target) {
-		if (target->getPlayer()) {
+		if (target->asPlayer()) {
 			minValue = static_cast<int32_t>(std::ceil(player->getLevel() * 0.1));
 		} else {
 			minValue = static_cast<int32_t>(std::ceil(player->getLevel() * 0.2));
@@ -758,7 +758,7 @@ int32_t WeaponDistance::getWeaponDamage(const std::shared_ptr<const Player>& pla
 
 	int32_t minValue;
 	if (target) {
-		if (target->getPlayer()) {
+		if (target->asPlayer()) {
 			minValue = static_cast<int32_t>(std::ceil(player->getLevel() * 0.1));
 		} else {
 			minValue = static_cast<int32_t>(std::ceil(player->getLevel() * 0.2));

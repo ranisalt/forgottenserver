@@ -486,28 +486,28 @@ public:
 	Item& operator=(const Item&) = delete;
 	bool operator==(const Item& otherItem) const;
 
-	std::shared_ptr<Item> getItem() override final { return std::static_pointer_cast<Item>(shared_from_this()); }
-	std::shared_ptr<const Item> getItem() const override final
+	std::shared_ptr<Item> asItem() override final { return std::static_pointer_cast<Item>(shared_from_this()); }
+	std::shared_ptr<const Item> asItem() const override final
 	{
 		return std::static_pointer_cast<const Item>(shared_from_this());
 	}
 
-	virtual std::shared_ptr<Container> getContainer() { return nullptr; }
-	virtual std::shared_ptr<const Container> getContainer() const { return nullptr; }
-	virtual std::shared_ptr<Teleport> getTeleport() { return nullptr; }
-	virtual std::shared_ptr<const Teleport> getTeleport() const { return nullptr; }
-	virtual std::shared_ptr<TrashHolder> getTrashHolder() { return nullptr; }
-	virtual std::shared_ptr<const TrashHolder> getTrashHolder() const { return nullptr; }
-	virtual std::shared_ptr<Mailbox> getMailbox() { return nullptr; }
-	virtual std::shared_ptr<const Mailbox> getMailbox() const { return nullptr; }
-	virtual std::shared_ptr<Door> getDoor() { return nullptr; }
-	virtual std::shared_ptr<const Door> getDoor() const { return nullptr; }
-	virtual std::shared_ptr<MagicField> getMagicField() { return nullptr; }
-	virtual std::shared_ptr<const MagicField> getMagicField() const { return nullptr; }
-	virtual std::shared_ptr<BedItem> getBed() { return nullptr; }
-	virtual std::shared_ptr<const BedItem> getBed() const { return nullptr; }
-	virtual std::shared_ptr<Podium> getPodium() { return nullptr; }
-	virtual std::shared_ptr<const Podium> getPodium() const { return nullptr; }
+	virtual std::shared_ptr<Container> asContainer() { return nullptr; }
+	virtual std::shared_ptr<const Container> asContainer() const { return nullptr; }
+	virtual std::shared_ptr<Teleport> asTeleport() { return nullptr; }
+	virtual std::shared_ptr<const Teleport> asTeleport() const { return nullptr; }
+	virtual std::shared_ptr<TrashHolder> asTrashHolder() { return nullptr; }
+	virtual std::shared_ptr<const TrashHolder> asTrashHolder() const { return nullptr; }
+	virtual std::shared_ptr<Mailbox> asMailbox() { return nullptr; }
+	virtual std::shared_ptr<const Mailbox> asMailbox() const { return nullptr; }
+	virtual std::shared_ptr<Door> asDoor() { return nullptr; }
+	virtual std::shared_ptr<const Door> asDoor() const { return nullptr; }
+	virtual std::shared_ptr<MagicField> asMagicField() { return nullptr; }
+	virtual std::shared_ptr<const MagicField> asMagicField() const { return nullptr; }
+	virtual std::shared_ptr<BedItem> asBed() { return nullptr; }
+	virtual std::shared_ptr<const BedItem> asBed() const { return nullptr; }
+	virtual std::shared_ptr<Podium> asPodium() { return nullptr; }
+	virtual std::shared_ptr<const Podium> asPodium() const { return nullptr; }
 
 	const std::string& getStrAttr(itemAttrTypes type) const
 	{
@@ -898,8 +898,9 @@ public:
 
 	std::shared_ptr<Thing> getTopParent();
 	std::shared_ptr<const Thing> getTopParent() const;
-	std::shared_ptr<Tile> getTile() override final;
-	std::shared_ptr<const Tile> getTile() const override final;
+	std::shared_ptr<Tile> getTile();
+	std::shared_ptr<const Tile> getTile() const;
+	const Position& getPosition() const override final;
 	bool isRemoved() const override { return !getParent() || getParent()->isRemoved(); }
 
 protected:

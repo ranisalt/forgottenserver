@@ -211,7 +211,7 @@ std::shared_ptr<Thing> Game::internalGetThing(const std::shared_ptr<Player>& pla
 
 				if (player && tile->hasFlag(TILESTATE_SUPPORTS_HANGABLE)) {
 					// do extra checks here if the thing is accessible
-					if (thing && thing->getItem()) {
+					if (thing && thing->asItem()) {
 						if (tile->hasProperty(CONST_PROP_ISVERTICAL)) {
 							if (player->getPosition().x + 1 == tile->getPosition().x) {
 								return nullptr;
@@ -264,7 +264,7 @@ std::shared_ptr<Thing> Game::internalGetThing(const std::shared_ptr<Player>& pla
 		}
 
 		if (parentContainer->getID() == ITEM_BROWSEFIELD) {
-			const auto& tile = parentContainer->getTile();
+			const auto& tile = parentContainer->asTile();
 			if (tile && tile->hasFlag(TILESTATE_SUPPORTS_HANGABLE)) {
 				if (tile->hasProperty(CONST_PROP_ISVERTICAL)) {
 					if (player->getPosition().x + 1 == tile->getPosition().x) {
@@ -308,8 +308,8 @@ std::shared_ptr<Thing> Game::internalGetThing(const std::shared_ptr<Player>& pla
 static std::pair<Position, uint8_t> internalGetPosition(const std::shared_ptr<Item>& item)
 {
 	if (const auto& topParent = item->getTopParent()) {
-		if (const auto& creature = topParent->getCreature()) {
-			if (const auto& player = creature->getPlayer()) {
+		if (const auto& creature = topParent->asCreature()) {
+			if (const auto& player = creature->asPlayer()) {
 				const uint16_t x = 0xFFFF;
 
 				if (const auto& container = std::dynamic_pointer_cast<Container>(item->getTopParent())) {
@@ -324,7 +324,7 @@ static std::pair<Position, uint8_t> internalGetPosition(const std::shared_ptr<It
 			}
 		}
 
-		if (const auto& tile = topParent->getTile()) {
+		if (const auto& tile = topParent->asTile()) {
 			return std::make_pair(tile->getPosition(), tile->getThingIndex(item));
 		}
 	}
@@ -513,7 +513,7 @@ bool Game::placeCreature(const std::shared_ptr<Creature>& creature, const Positi
 	addCreatureCheck(creature);
 
 	const auto& position = creature->getPosition();
-	const auto& tile = creature->getTile();
+	const auto& tile = creature->asTile();
 
 	SpectatorVec spectators;
 	map.getSpectators(spectators, position, true);
@@ -531,14 +531,14 @@ bool Game::removeCreature(const std::shared_ptr<Creature>& creature, bool isLogo
 		return false;
 	}
 
-	const auto& tile = creature->getTile();
+	const auto& tile = creature->asTile();
 
 	std::vector<int32_t> oldStackPosVector;
 
 	SpectatorVec spectators;
 	map.getSpectators(spectators, tile->getPosition(), true);
 	for (const auto& spectator : spectators) {
-		if (const auto& player = spectator->getPlayer()) {
+		if (const auto& player = spectator->asPlayer()) {
 			oldStackPosVector.push_back(
 			    player->canSeeCreature(creature) ? tile->getClientIndexOfCreature(player, creature) : -1);
 		}
@@ -551,7 +551,7 @@ bool Game::removeCreature(const std::shared_ptr<Creature>& creature, bool isLogo
 	// send to client
 	size_t i = 0;
 	for (const auto& spectator : spectators) {
-		if (const auto& player = spectator->getPlayer()) {
+		if (const auto& player = spectator->asPlayer()) {
 			player->sendRemoveTileCreature(creature, tilePosition, oldStackPosVector[i++]);
 		}
 	}
@@ -617,7 +617,7 @@ void Game::playerMoveThing(uint32_t playerId, const Position& fromPos, uint16_t 
 		return;
 	}
 
-	if (const auto& movingCreature = thing->getCreature()) {
+	if (const auto& movingCreature = thing->asCreature()) {
 		const auto& tile = map.getTile(toPos);
 		if (!tile) {
 			player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
@@ -633,7 +633,7 @@ void Game::playerMoveThing(uint32_t playerId, const Position& fromPos, uint16_t 
 		} else {
 			playerMoveCreature(player, movingCreature, movingCreature->getPosition(), tile);
 		}
-	} else if (const auto& item = thing->getItem()) {
+	} else if (const auto& item = thing->asItem()) {
 		const auto& toThing = internalGetThing(player, toPos);
 		if (!toThing) {
 			player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
@@ -746,7 +746,7 @@ void Game::playerMoveCreature(const std::shared_ptr<Player>& player, const std::
 				}
 			}
 
-			if (const auto& movingNpc = movingCreature->getNpc()) {
+			if (const auto& movingNpc = movingCreature->asNpc()) {
 				if (!Spawns::isInZone(movingNpc->getMasterPos(), movingNpc->getMasterRadius(), toPos)) {
 					player->sendCancelMessage(RETURNVALUE_NOTENOUGHROOM);
 					return;
@@ -771,12 +771,12 @@ ReturnValue Game::internalMoveCreature(const std::shared_ptr<Creature>& creature
 	creature->setLastPosition(creature->getPosition());
 	const Position& currentPos = creature->getPosition();
 	Position destPos = getNextPosition(direction, currentPos);
-	const auto& player = creature->getPlayer();
+	const auto& player = creature->asPlayer();
 
 	bool diagonalMovement = (direction & DIRECTION_DIAGONAL_MASK) != 0;
 	if (player && !diagonalMovement) {
 		// try to go up
-		if (currentPos.z != 8 && creature->getTile()->hasHeight(3)) {
+		if (currentPos.z != 8 && creature->asTile()->hasHeight(3)) {
 			const auto& aboveTile = map.getTile(currentPos.x, currentPos.y, currentPos.getZ() - 1);
 			if (!aboveTile || (!aboveTile->getGround() && !aboveTile->hasFlag(TILESTATE_BLOCKSOLID))) {
 				if (const auto& destAboveTile = map.getTile(destPos.x, destPos.y, destPos.getZ() - 1)) {
@@ -839,7 +839,7 @@ ReturnValue Game::internalMoveCreature(const std::shared_ptr<Creature>& creature
 	uint32_t n = 0;
 
 	while ((subThing = toThing->queryDestination(index, creature, toItem, flags)) != toThing) {
-		map.moveCreature(creature, subThing->getTile());
+		map.moveCreature(creature, subThing->asTile());
 
 		if (creature->getParent() != subThing) {
 			// could happen if a script move the creature
@@ -909,12 +909,12 @@ void Game::playerMoveItem(const std::shared_ptr<Player>& player, const Position&
 		}
 
 		const auto& thing = internalGetThing(player, fromPos, fromIndex, 0, STACKPOS_MOVE);
-		if (!thing || !thing->getItem()) {
+		if (!thing || !thing->asItem()) {
 			player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
 			return;
 		}
 
-		item = thing->getItem();
+		item = thing->asItem();
 	}
 
 	if (item->getClientID() != spriteId) {
@@ -942,7 +942,7 @@ void Game::playerMoveItem(const std::shared_ptr<Player>& player, const Position&
 	}
 
 	const Position& playerPos = player->getPosition();
-	const Position& mapFromPos = fromThing->getTile()->getPosition();
+	const Position& mapFromPos = fromThing->getPosition();
 	if (playerPos.z != mapFromPos.z) {
 		player->sendCancelMessage(playerPos.z > mapFromPos.z ? RETURNVALUE_FIRSTGOUPSTAIRS
 		                                                     : RETURNVALUE_FIRSTGODOWNSTAIRS);
@@ -967,7 +967,7 @@ void Game::playerMoveItem(const std::shared_ptr<Player>& player, const Position&
 		return;
 	}
 
-	const auto& toThingTile = toThing->getTile();
+	const auto& toThingTile = toThing->asTile();
 	const Position& mapToPos = toThingTile->getPosition();
 
 	// hangable item specific code
@@ -1070,7 +1070,7 @@ ReturnValue Game::internalMoveItem(std::shared_ptr<Thing> fromThing, std::shared
                                    const std::shared_ptr<Item>& tradeItem /* = nullptr*/,
                                    const Position* fromPos /*= nullptr*/, const Position* toPos /*= nullptr*/)
 {
-	const auto& actorPlayer = actor ? actor->getPlayer() : nullptr;
+	const auto& actorPlayer = actor ? actor->asPlayer() : nullptr;
 	if (actorPlayer && fromPos && toPos) {
 		const ReturnValue ret =
 		    tfs::events::player::onMoveItem(actorPlayer, item, count, *fromPos, *toPos, fromThing, toThing);
@@ -1079,7 +1079,7 @@ ReturnValue Game::internalMoveItem(std::shared_ptr<Thing> fromThing, std::shared
 		}
 	}
 
-	if (const auto& fromTile = fromThing->getTile()) {
+	if (const auto& fromTile = fromThing->asTile()) {
 		auto it = browseFields.find(fromTile.get());
 		if (it != browseFields.end() && it->second == fromThing) {
 			fromThing = fromTile;
@@ -1178,13 +1178,13 @@ ReturnValue Game::internalMoveItem(std::shared_ptr<Thing> fromThing, std::shared
 	}
 
 	if (tradeItem) {
-		if (toThing->getItem() == tradeItem) {
+		if (toThing->asItem() == tradeItem) {
 			return RETURNVALUE_NOTENOUGHROOM;
 		}
 
 		auto parent = toThing->getParent();
 		while (parent) {
-			if (parent->getItem() == tradeItem) {
+			if (parent->asItem() == tradeItem) {
 				return RETURNVALUE_NOTENOUGHROOM;
 			}
 
@@ -1380,7 +1380,7 @@ ReturnValue Game::internalRemoveItem(const std::shared_ptr<Item>& item, int32_t 
 		return RETURNVALUE_NOTPOSSIBLE;
 	}
 
-	if (const auto& fromTile = parent->getTile()) {
+	if (const auto& fromTile = parent->asTile()) {
 		auto it = browseFields.find(fromTile.get());
 		if (it != browseFields.end() && it->second == parent) {
 			parent = fromTile;
@@ -1427,11 +1427,11 @@ ReturnValue Game::internalPlayerAddItem(const std::shared_ptr<Player>& player, c
 	ReturnValue ret = internalAddItem(player, item, static_cast<int32_t>(slot), 0, false, remainderCount);
 	if (remainderCount != 0) {
 		const auto& remainderItem = Item::CreateItem(item->getID(), remainderCount);
-		internalAddItem(player->getTile(), remainderItem, INDEX_WHEREEVER, FLAG_NOLIMIT);
+		internalAddItem(player->asTile(), remainderItem, INDEX_WHEREEVER, FLAG_NOLIMIT);
 	}
 
 	if (ret != RETURNVALUE_NOERROR && dropOnMap) {
-		ret = internalAddItem(player->getTile(), item, INDEX_WHEREEVER, FLAG_NOLIMIT);
+		ret = internalAddItem(player->asTile(), item, INDEX_WHEREEVER, FLAG_NOLIMIT);
 	}
 
 	return ret;
@@ -1451,7 +1451,7 @@ std::shared_ptr<Item> Game::findItemOfType(const std::shared_ptr<Thing>& fromThi
 			continue;
 		}
 
-		const auto& item = thing->getItem();
+		const auto& item = thing->asItem();
 		if (!item) {
 			continue;
 		}
@@ -1461,7 +1461,7 @@ std::shared_ptr<Item> Game::findItemOfType(const std::shared_ptr<Thing>& fromThi
 		}
 
 		if (depthSearch) {
-			if (const auto& container = item->getContainer()) {
+			if (const auto& container = item->asContainer()) {
 				containers.push_back(container);
 			}
 		}
@@ -1475,7 +1475,7 @@ std::shared_ptr<Item> Game::findItemOfType(const std::shared_ptr<Thing>& fromThi
 				return item;
 			}
 
-			if (const auto& subContainer = item->getContainer()) {
+			if (const auto& subContainer = item->asContainer()) {
 				containers.push_back(subContainer);
 			}
 		}
@@ -1504,12 +1504,12 @@ bool Game::removeMoney(const std::shared_ptr<Thing>& fromThing, uint64_t money, 
 			continue;
 		}
 
-		const auto& item = thing->getItem();
+		const auto& item = thing->asItem();
 		if (!item) {
 			continue;
 		}
 
-		if (const auto& container = item->getContainer()) {
+		if (const auto& container = item->asContainer()) {
 			containers.push_back(container);
 		} else {
 			const uint32_t worth = item->getWorth();
@@ -1524,7 +1524,7 @@ bool Game::removeMoney(const std::shared_ptr<Thing>& fromThing, uint64_t money, 
 	while (i < containers.size()) {
 		const auto container = containers[i++];
 		for (const auto& item : container->getItemList()) {
-			if (const auto& tmpContainer = item->getContainer()) {
+			if (const auto& tmpContainer = item->asContainer()) {
 				containers.push_back(tmpContainer);
 			} else {
 				const uint32_t worth = item->getWorth();
@@ -1579,7 +1579,7 @@ void Game::addMoney(const std::shared_ptr<Thing>& thing, uint64_t money, uint32_
 
 			ReturnValue ret = internalAddItem(thing, remaindItem, INDEX_WHEREEVER, flags);
 			if (ret != RETURNVALUE_NOERROR) {
-				internalAddItem(thing->getTile(), remaindItem, INDEX_WHEREEVER, FLAG_NOLIMIT);
+				internalAddItem(thing->asTile(), remaindItem, INDEX_WHEREEVER, FLAG_NOLIMIT);
 			}
 
 			currencyCoins -= count;
@@ -1599,7 +1599,7 @@ std::shared_ptr<Item> Game::transformItem(const std::shared_ptr<Item>& item, uin
 		return nullptr;
 	}
 
-	if (const auto& fromTile = parent->getTile()) {
+	if (const auto& fromTile = parent->asTile()) {
 		auto it = browseFields.find(fromTile.get());
 		if (it != browseFields.end() && it->second == parent) {
 			parent = fromTile;
@@ -1737,7 +1737,7 @@ ReturnValue Game::internalTeleport(const std::shared_ptr<Thing>& thing, const Po
 		return RETURNVALUE_NOTPOSSIBLE;
 	}
 
-	if (const auto& creature = thing->getCreature()) {
+	if (const auto& creature = thing->asCreature()) {
 		ReturnValue ret = toTile->queryAdd(0, creature, 1, FLAG_NOLIMIT);
 		if (ret != RETURNVALUE_NOERROR) {
 			return ret;
@@ -1745,7 +1745,7 @@ ReturnValue Game::internalTeleport(const std::shared_ptr<Thing>& thing, const Po
 
 		map.moveCreature(creature, toTile, !pushMove);
 		return RETURNVALUE_NOERROR;
-	} else if (const auto& item = thing->getItem()) {
+	} else if (const auto& item = thing->asItem()) {
 		std::shared_ptr<Item> moveItem = nullptr;
 		return internalMoveItem(item->getParent(), toTile, INDEX_WHEREEVER, item, item->getItemCount(), moveItem,
 		                        flags);
@@ -1809,7 +1809,7 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t spriteId)
 		return;
 	}
 
-	const auto& backpack = item->getContainer();
+	const auto& backpack = item->asContainer();
 	if (!backpack) {
 		return;
 	}
@@ -1993,7 +1993,7 @@ void Game::playerCloseNpcChannel(uint32_t playerId)
 	SpectatorVec spectators;
 	map.getSpectators(spectators, player->getPosition());
 	for (const auto& spectator : spectators) {
-		if (const auto& npc = spectator->getNpc()) {
+		if (const auto& npc = spectator->asNpc()) {
 			npc->onPlayerCloseChannel(player);
 		}
 	}
@@ -2050,7 +2050,7 @@ void Game::playerUseItemEx(uint32_t playerId, const Position& fromPos, uint8_t f
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item || !item->isUseable() || item->getClientID() != fromSpriteId) {
 		player->sendCancelMessage(RETURNVALUE_CANNOTUSETHISOBJECT);
 		return;
@@ -2137,7 +2137,7 @@ void Game::playerUseItem(uint32_t playerId, const Position& pos, uint8_t stackPo
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item || item->isUseable() || item->getClientID() != spriteId) {
 		player->sendCancelMessage(RETURNVALUE_CANNOTUSETHISOBJECT);
 		return;
@@ -2198,7 +2198,7 @@ void Game::playerUseWithCreature(uint32_t playerId, const Position& fromPos, uin
 
 	bool isHotkey = (fromPos.x == 0xFFFF && fromPos.y == 0 && fromPos.z == 0);
 	if (!getBoolean(ConfigManager::AIMBOT_HOTKEY_ENABLED)) {
-		if (creature->getPlayer() || isHotkey) {
+		if (creature->asPlayer() || isHotkey) {
 			player->sendCancelMessage(RETURNVALUE_DIRECTPLAYERSHOOT);
 			return;
 		}
@@ -2210,7 +2210,7 @@ void Game::playerUseWithCreature(uint32_t playerId, const Position& fromPos, uin
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item || !item->isUseable() || item->getClientID() != spriteId) {
 		player->sendCancelMessage(RETURNVALUE_CANNOTUSETHISOBJECT);
 		return;
@@ -2296,7 +2296,7 @@ static auto createBrowseField(const std::shared_ptr<Tile>& tile)
 
 	if (TileItemVector* itemVector = tile->getItemList()) {
 		for (const auto& item : *itemVector) {
-			if ((item->getContainer() || item->hasProperty(CONST_PROP_MOVEABLE)) &&
+			if ((item->asContainer() || item->hasProperty(CONST_PROP_MOVEABLE)) &&
 			    !item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
 				browseField->addItem(item);
 			}
@@ -2321,7 +2321,7 @@ void Game::playerMoveUpContainer(uint32_t playerId, uint8_t cid)
 
 	auto parentContainer = std::dynamic_pointer_cast<Container>(container->getRealParent());
 	if (!parentContainer) {
-		const auto& tile = container->getTile();
+		const auto& tile = container->asTile();
 		if (!tile) {
 			return;
 		}
@@ -2365,7 +2365,7 @@ void Game::playerRotateItem(uint32_t playerId, const Position& pos, uint8_t stac
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item || item->getClientID() != spriteId || (!item->isRotatable() && !item->isPodium()) ||
 	    item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
 		player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
@@ -2387,7 +2387,7 @@ void Game::playerRotateItem(uint32_t playerId, const Position& pos, uint8_t stac
 		return;
 	}
 
-	if (const auto& podium = item->getPodium()) {
+	if (const auto& podium = item->asPodium()) {
 		podium->setDirection(static_cast<Direction>((podium->getDirection() + 1) % 4));
 		updatePodium(podium);
 	} else {
@@ -2562,7 +2562,7 @@ void Game::playerWrapItem(uint32_t playerId, const Position& position, uint8_t s
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item || item->getClientID() != spriteId || !item->hasAttribute(ITEM_ATTRIBUTE_WRAPID) ||
 	    item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
 		player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
@@ -2617,7 +2617,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 		return;
 	}
 
-	const auto& tradeItem = tradeThing->getItem();
+	const auto& tradeItem = tradeThing->asItem();
 	if (tradeItem->getClientID() != spriteId || !tradeItem->isPickupable() ||
 	    tradeItem->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
 		player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
@@ -2625,9 +2625,9 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 	}
 
 	if (getBoolean(ConfigManager::ONLY_INVITED_CAN_MOVE_HOUSE_ITEMS)) {
-		if (const auto& tile = tradeItem->getTile()) {
-			if (const auto& houseTile = tile->getHouseTile()) {
-				if (!tradeItem->getTopParent()->getCreature() && !houseTile->getHouse()->isInvited(player)) {
+		if (const auto& tile = tradeItem->asTile()) {
+			if (const auto& houseTile = tile->asHouseTile()) {
+				if (!tradeItem->getTopParent()->asCreature() && !houseTile->getHouse()->isInvited(player)) {
 					player->sendCancelMessage(RETURNVALUE_PLAYERISNOTINVITED);
 					return;
 				}
@@ -2659,7 +2659,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 		return;
 	}
 
-	if (const auto& tradeItemContainer = tradeItem->getContainer()) {
+	if (const auto& tradeItemContainer = tradeItem->asContainer()) {
 		for (auto&& item : tradeItems | std::views::keys | std::views::as_const) {
 			if (tradeItem == item) {
 				player->sendCancelMessage("This item is already being traded.");
@@ -2671,7 +2671,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 				return;
 			}
 
-			const auto& container = item->getContainer();
+			const auto& container = item->asContainer();
 			if (container && container->isHoldingItem(tradeItem)) {
 				player->sendCancelMessage("This item is already being traded.");
 				return;
@@ -2684,7 +2684,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 				return;
 			}
 
-			const auto& container = item->getContainer();
+			const auto& container = item->asContainer();
 			if (container && container->isHoldingItem(tradeItem)) {
 				player->sendCancelMessage("This item is already being traded.");
 				return;
@@ -2692,7 +2692,7 @@ void Game::playerRequestTrade(uint32_t playerId, const Position& pos, uint8_t st
 		}
 	}
 
-	if (const auto& tradeContainer = tradeItem->getContainer()) {
+	if (const auto& tradeContainer = tradeItem->asContainer()) {
 		if (tradeContainer->getItemHoldingCount() + 1 > ITEM_STACK_SIZE) {
 			player->sendCancelMessage(std::format("You can only trade up to {} objects at once.", ITEM_STACK_SIZE));
 			return;
@@ -2905,7 +2905,7 @@ void Game::playerLookInTrade(uint32_t playerId, bool lookAtCounterOffer, uint8_t
 		return;
 	}
 
-	const auto& tradeContainer = tradeItem->getContainer();
+	const auto& tradeContainer = tradeItem->asContainer();
 	if (!tradeContainer) {
 		return;
 	}
@@ -2915,7 +2915,7 @@ void Game::playerLookInTrade(uint32_t playerId, bool lookAtCounterOffer, uint8_t
 	while (i < containers.size()) {
 		const auto container = containers[i++];
 		for (const auto& item : container->getItemList()) {
-			if (const auto& childContainer = item->getContainer()) {
+			if (const auto& childContainer = item->asContainer()) {
 				containers.push_back(childContainer);
 			}
 
@@ -3315,7 +3315,7 @@ void Game::playerRequestEditPodium(uint32_t playerId, const Position& position, 
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item || item->getClientID() != spriteId || it.type != ITEM_TYPE_PODIUM) {
 		player->sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
 		return;
@@ -3356,7 +3356,7 @@ void Game::playerEditPodium(uint32_t playerId, Outfit_t outfit, const Position& 
 		return;
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item) {
 		return;
 	}
@@ -3539,7 +3539,7 @@ void Game::playerWhisper(const std::shared_ptr<Player>& player, const std::strin
 
 	// send to client
 	for (const auto& spectator : spectators) {
-		if (const auto& spectatorPlayer = spectator->getPlayer()) {
+		if (const auto& spectatorPlayer = spectator->asPlayer()) {
 			if (!player->getPosition().isInRange(spectatorPlayer->getPosition(), 1, 1)) {
 				spectatorPlayer->sendCreatureSay(player, TALKTYPE_WHISPER, "pspsps");
 			} else {
@@ -3641,7 +3641,7 @@ void Game::playerSpeakToNpc(const std::shared_ptr<Player>& player, const std::st
 	SpectatorVec spectators;
 	map.getSpectators(spectators, player->getPosition());
 	for (const auto& spectator : spectators) {
-		if (spectator->getNpc()) {
+		if (spectator->asNpc()) {
 			spectator->onCreatureSay(player, TALKTYPE_PRIVATE_PN, text);
 		}
 	}
@@ -3672,7 +3672,7 @@ bool Game::internalCreatureTurn(const std::shared_ptr<Creature>& creature, Direc
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendCreatureTurn(creature);
 	}
 	return true;
@@ -3711,7 +3711,7 @@ bool Game::internalCreatureSay(const std::shared_ptr<Creature>& creature, SpeakC
 
 	// send to client
 	for (const auto& spectator : spectators) {
-		if (const auto& tmpPlayer = spectator->getPlayer()) {
+		if (const auto& tmpPlayer = spectator->asPlayer()) {
 			if (!ghostMode || tmpPlayer->canSeeCreature(creature)) {
 				tmpPlayer->sendCreatureSay(creature, type, text, pos);
 			}
@@ -3830,7 +3830,7 @@ void Game::changeSpeed(const std::shared_ptr<Creature>& creature, int32_t varSpe
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), false, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendChangeSpeed(creature, creature->getStepSpeed());
 	}
 }
@@ -3851,7 +3851,7 @@ void Game::internalCreatureChangeOutfit(const std::shared_ptr<Creature>& creatur
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendCreatureChangeOutfit(creature, outfit);
 	}
 }
@@ -3862,7 +3862,7 @@ void Game::internalCreatureChangeVisible(const std::shared_ptr<Creature>& creatu
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendCreatureChangeVisible(creature, visible);
 	}
 }
@@ -3873,7 +3873,7 @@ void Game::changeLight(const std::shared_ptr<const Creature>& creature)
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendCreatureLight(creature);
 	}
 }
@@ -3886,7 +3886,7 @@ bool Game::combatBlockHit(CombatDamage& damage, const std::shared_ptr<Creature>&
 		return true;
 	}
 
-	if (target->getPlayer() && target->isInGhostMode()) {
+	if (target->asPlayer() && target->isInGhostMode()) {
 		return true;
 	}
 
@@ -3976,7 +3976,7 @@ void Game::combatGetTypeInfo(CombatType_t combatType, const std::shared_ptr<Crea
 				case RACE_BLOOD:
 					color = TEXTCOLOR_RED;
 					effect = CONST_ME_DRAWBLOOD;
-					if (const auto& tile = target->getTile()) {
+					if (const auto& tile = target->asTile()) {
 						if (!tile->hasFlag(TILESTATE_PROTECTIONZONE)) {
 							splash = Item::CreateItem(ITEM_SMALLSPLASH, FLUID_BLOOD);
 						}
@@ -3997,7 +3997,7 @@ void Game::combatGetTypeInfo(CombatType_t combatType, const std::shared_ptr<Crea
 				case RACE_INK:
 					color = TEXTCOLOR_DARKGREY;
 					effect = CONST_ME_DRAWINK;
-					if (const auto& tile = target->getTile()) {
+					if (const auto& tile = target->asTile()) {
 						if (tile && !tile->hasFlag(TILESTATE_PROTECTIONZONE)) {
 							splash = Item::CreateItem(ITEM_SMALLSPLASH, FLUID_INK);
 						}
@@ -4010,7 +4010,7 @@ void Game::combatGetTypeInfo(CombatType_t combatType, const std::shared_ptr<Crea
 			}
 
 			if (splash) {
-				internalAddItem(target->getTile(), splash, INDEX_WHEREEVER, FLAG_NOLIMIT);
+				internalAddItem(target->asTile(), splash, INDEX_WHEREEVER, FLAG_NOLIMIT);
 				startDecay(splash);
 			}
 
@@ -4076,8 +4076,8 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature>& attacker, const s
 			return false;
 		}
 
-		const auto& attackerPlayer = attacker ? attacker->getPlayer() : nullptr;
-		const auto& targetPlayer = target->getPlayer();
+		const auto& attackerPlayer = attacker ? attacker->asPlayer() : nullptr;
+		const auto& targetPlayer = target->asPlayer();
 		if (attackerPlayer && targetPlayer && attackerPlayer->getSkull() == SKULL_BLACK &&
 		    attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
 			return false;
@@ -4130,7 +4130,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature>& attacker, const s
 			SpectatorVec spectators;
 			map.getSpectators(spectators, targetPos, false, true);
 			for (const auto& spectator : spectators) {
-				assert(spectator->getPlayer() != nullptr);
+				assert(spectator->asPlayer() != nullptr);
 
 				const auto& spectatorPlayer = std::static_pointer_cast<Player>(spectator);
 				if (spectatorPlayer == attackerPlayer && attackerPlayer != targetPlayer) {
@@ -4176,8 +4176,8 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature>& attacker, const s
 			return true;
 		}
 
-		const auto& attackerPlayer = attacker ? attacker->getPlayer() : nullptr;
-		const auto& targetPlayer = target->getPlayer();
+		const auto& attackerPlayer = attacker ? attacker->asPlayer() : nullptr;
+		const auto& targetPlayer = target->asPlayer();
 		if (attackerPlayer && targetPlayer && attackerPlayer->getSkull() == SKULL_BLACK &&
 		    attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
 			return false;
@@ -4239,7 +4239,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature>& attacker, const s
 				message.primary.color = TEXTCOLOR_BLUE;
 
 				for (const auto& spectator : spectators) {
-					assert(spectator->getPlayer() != nullptr);
+					assert(spectator->asPlayer() != nullptr);
 
 					const auto& spectatorPlayer = std::static_pointer_cast<Player>(spectator);
 					if (spectatorPlayer->getPosition().z != targetPos.z) {
@@ -4388,7 +4388,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature>& attacker, const s
 			std::string spectatorMessage;
 
 			for (const auto& spectator : spectators) {
-				assert(spectator->getPlayer() != nullptr);
+				assert(spectator->asPlayer() != nullptr);
 
 				const auto& spectatorPlayer = std::static_pointer_cast<Player>(spectator);
 				if (spectatorPlayer->getPosition().z != targetPos.z) {
@@ -4451,7 +4451,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature>& attacker, const s
 bool Game::combatChangeMana(const std::shared_ptr<Creature>& attacker, const std::shared_ptr<Creature>& target,
                             CombatDamage& damage)
 {
-	const auto& targetPlayer = target->getPlayer();
+	const auto& targetPlayer = target->asPlayer();
 	if (!targetPlayer) {
 		return true;
 	}
@@ -4459,7 +4459,7 @@ bool Game::combatChangeMana(const std::shared_ptr<Creature>& attacker, const std
 	int32_t manaChange = damage.primary.value + damage.secondary.value;
 	if (manaChange > 0) {
 		if (attacker) {
-			const auto& attackerPlayer = attacker->getPlayer();
+			const auto& attackerPlayer = attacker->asPlayer();
 			if (attackerPlayer && attackerPlayer->getSkull() == SKULL_BLACK &&
 			    attackerPlayer->getSkullClient(target) == SKULL_NONE) {
 				return false;
@@ -4497,7 +4497,7 @@ bool Game::combatChangeMana(const std::shared_ptr<Creature>& attacker, const std
 			return false;
 		}
 
-		const auto& attackerPlayer = attacker ? attacker->getPlayer() : nullptr;
+		const auto& attackerPlayer = attacker ? attacker->asPlayer() : nullptr;
 		if (attackerPlayer && attackerPlayer->getSkull() == SKULL_BLACK &&
 		    attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
 			return false;
@@ -4537,7 +4537,7 @@ bool Game::combatChangeMana(const std::shared_ptr<Creature>& attacker, const std
 		SpectatorVec spectators;
 		map.getSpectators(spectators, targetPos, false, true);
 		for (const auto& spectator : spectators) {
-			assert(spectator->getPlayer() != nullptr);
+			assert(spectator->asPlayer() != nullptr);
 
 			const auto& spectatorPlayer = std::static_pointer_cast<Player>(spectator);
 			if (spectatorPlayer == attackerPlayer && attackerPlayer != targetPlayer) {
@@ -4590,7 +4590,7 @@ void Game::addCreatureHealth(const std::shared_ptr<const Creature>& target)
 void Game::addCreatureHealth(const SpectatorVec& spectators, const std::shared_ptr<const Creature>& target)
 {
 	for (const auto& spectator : spectators) {
-		if (const auto& tmpPlayer = spectator->getPlayer()) {
+		if (const auto& tmpPlayer = spectator->asPlayer()) {
 			tmpPlayer->sendCreatureHealth(target);
 		}
 	}
@@ -4606,7 +4606,7 @@ void Game::addMagicEffect(const Position& pos, uint8_t effect)
 void Game::addMagicEffect(const SpectatorVec& spectators, const Position& pos, uint8_t effect)
 {
 	for (const auto& spectator : spectators) {
-		if (const auto& tmpPlayer = spectator->getPlayer()) {
+		if (const auto& tmpPlayer = spectator->asPlayer()) {
 			tmpPlayer->sendMagicEffect(pos, effect);
 		}
 	}
@@ -4626,7 +4626,7 @@ void Game::addDistanceEffect(const SpectatorVec& spectators, const Position& fro
                              uint8_t effect)
 {
 	for (const auto& spectator : spectators) {
-		if (const auto& tmpPlayer = spectator->getPlayer()) {
+		if (const auto& tmpPlayer = spectator->asPlayer()) {
 			tmpPlayer->sendDistanceShoot(fromPos, toPos, effect);
 		}
 	}
@@ -4762,7 +4762,7 @@ void Game::updateCreatureWalkthrough(const std::shared_ptr<const Creature>& crea
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 
 		const auto& spectatorPlayer = std::static_pointer_cast<Player>(spectator);
 		spectatorPlayer->sendCreatureWalkthrough(creature, spectatorPlayer->canWalkthroughEx(creature));
@@ -4775,7 +4775,7 @@ void Game::updateKnownCreature(const std::shared_ptr<const Creature>& creature)
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendUpdateTileCreature(creature);
 	}
 }
@@ -4789,7 +4789,7 @@ void Game::updateCreatureSkull(const std::shared_ptr<const Creature>& creature)
 	SpectatorVec spectators;
 	map.getSpectators(spectators, creature->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendCreatureSkull(creature);
 	}
 }
@@ -4799,7 +4799,7 @@ void Game::updatePlayerShield(const std::shared_ptr<Player>& player)
 	SpectatorVec spectators;
 	map.getSpectators(spectators, player->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendCreatureShield(player);
 	}
 }
@@ -5438,7 +5438,7 @@ std::vector<std::shared_ptr<Item>> Game::getMarketItemList(uint16_t wareId, uint
 		containers.pop_front();
 
 		for (const auto& item : container->getItemList()) {
-			const auto& containerItem = item->getContainer();
+			const auto& containerItem = item->asContainer();
 			if (containerItem && !containerItem->empty()) {
 				containers.push_back(containerItem);
 				continue;
@@ -5592,7 +5592,7 @@ std::shared_ptr<BedItem> Game::getBedBySleeper(uint32_t guid) const
 
 void Game::updatePodium(const std::shared_ptr<Podium>& podium)
 {
-	const auto& tile = podium->getTile();
+	const auto& tile = podium->asTile();
 	if (!tile) {
 		return;
 	}
@@ -5601,7 +5601,7 @@ void Game::updatePodium(const std::shared_ptr<Podium>& podium)
 	SpectatorVec spectators;
 	map.getSpectators(spectators, podium->getPosition(), true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 		std::static_pointer_cast<Player>(spectator)->sendUpdateTileItem(tile, podium->getPosition(), podium);
 	}
 }

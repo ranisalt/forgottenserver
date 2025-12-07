@@ -50,7 +50,7 @@ void House::setOwner(uint32_t guid, bool updateDatabase /* = true*/,
 		for (const auto& tile : tiles | tfs::views::lock_weak_ptrs) {
 			if (const CreatureVector* creatures = tile->getCreatures()) {
 				for (int32_t i = creatures->size(); --i >= 0;) {
-					kickPlayer(nullptr, (*creatures)[i]->getPlayer());
+					kickPlayer(nullptr, (*creatures)[i]->asPlayer());
 				}
 			}
 		}
@@ -139,12 +139,12 @@ bool House::kickPlayer(const std::shared_ptr<Player>& player, const std::shared_
 		return false;
 	}
 
-	const auto& tile = target->getTile();
+	const auto& tile = target->asTile();
 	if (!tile) {
 		return false;
 	}
 
-	const auto& houseTile = tile->getHouseTile();
+	const auto& houseTile = tile->asHouseTile();
 	if (!houseTile || houseTile->getHouse() != this) {
 		return false;
 	}
@@ -180,7 +180,7 @@ void House::setAccessList(uint32_t listId, std::string_view textlist)
 	for (const auto& tile : tiles | tfs::views::lock_weak_ptrs) {
 		if (CreatureVector* creatures = tile->getCreatures()) {
 			for (int32_t i = creatures->size(); --i >= 0;) {
-				const auto& player = (*creatures)[i]->getPlayer();
+				const auto& player = (*creatures)[i]->asPlayer();
 				if (player && !isInvited(player)) {
 					kickPlayer(nullptr, player);
 				}
@@ -221,7 +221,7 @@ bool House::transferToDepot(const std::shared_ptr<Player>& player) const
 			for (const auto& item : *items) {
 				if (item->isPickupable()) {
 					moveItemList.push_back(item);
-				} else if (const auto& container = item->getContainer()) {
+				} else if (const auto& container = item->asContainer()) {
 					for (const auto& containerItem : container->getItemList()) {
 						moveItemList.push_back(containerItem);
 					}
@@ -345,10 +345,10 @@ void HouseTransferItem::onTradeEvent(TradeEvents_t event, const std::shared_ptr<
 {
 	if (event == ON_TRADE_TRANSFER) {
 		if (house) {
-			house->executeTransfer(std::static_pointer_cast<HouseTransferItem>(getItem()), owner);
+			house->executeTransfer(std::static_pointer_cast<HouseTransferItem>(asItem()), owner);
 		}
 
-		g_game.internalRemoveItem(getItem(), 1);
+		g_game.internalRemoveItem(asItem(), 1);
 	} else if (event == ON_TRADE_CANCEL) {
 		if (house) {
 			house->resetTransferItem();
@@ -537,7 +537,7 @@ void Door::onRemoved()
 	Item::onRemoved();
 
 	if (house) {
-		house->removeDoor(getDoor());
+		house->removeDoor(asDoor());
 	}
 }
 

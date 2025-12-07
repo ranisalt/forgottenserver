@@ -105,8 +105,8 @@ public:
 	std::shared_ptr<Thing> getReceiver() override final { return shared_from_this(); }
 	std::shared_ptr<const Thing> getReceiver() const override final { return shared_from_this(); }
 
-	std::shared_ptr<Player> getPlayer() override { return std::static_pointer_cast<Player>(shared_from_this()); }
-	std::shared_ptr<const Player> getPlayer() const override
+	std::shared_ptr<Player> asPlayer() override { return std::static_pointer_cast<Player>(shared_from_this()); }
+	std::shared_ptr<const Player> asPlayer() const override
 	{
 		return std::static_pointer_cast<const Player>(shared_from_this());
 	}
@@ -591,7 +591,7 @@ public:
 	                     const std::shared_ptr<const Item>& item)
 	{
 		if (client) {
-			int32_t stackpos = tile->getStackposOfItem(getPlayer(), item);
+			int32_t stackpos = tile->getStackposOfItem(asPlayer(), item);
 			if (stackpos != -1) {
 				client->sendAddTileItem(pos, stackpos, item);
 			}
@@ -601,7 +601,7 @@ public:
 	                        const std::shared_ptr<const Item>& item)
 	{
 		if (client) {
-			int32_t stackpos = tile->getStackposOfItem(getPlayer(), item);
+			int32_t stackpos = tile->getStackposOfItem(asPlayer(), item);
 			if (stackpos != -1) {
 				client->sendUpdateTileItem(pos, stackpos, item);
 			}
@@ -616,9 +616,8 @@ public:
 	void sendUpdateTileCreature(const std::shared_ptr<const Creature>& creature)
 	{
 		if (client) {
-			client->sendUpdateTileCreature(creature->getPosition(),
-			                               creature->getTile()->getClientIndexOfCreature(getPlayer(), creature),
-			                               creature);
+			client->sendUpdateTileCreature(
+			    creature->getPosition(), creature->asTile()->getClientIndexOfCreature(asPlayer(), creature), creature);
 		}
 	}
 	void sendRemoveTileCreature(const std::shared_ptr<const Creature>& creature, const Position& pos, int32_t stackpos)
@@ -656,7 +655,7 @@ public:
 	                     MagicEffectClasses magicEffect = CONST_ME_NONE)
 	{
 		if (client) {
-			client->sendAddCreature(creature, pos, creature->getTile()->getClientIndexOfCreature(getPlayer(), creature),
+			client->sendAddCreature(creature, pos, creature->asTile()->getClientIndexOfCreature(asPlayer(), creature),
 			                        magicEffect);
 		}
 	}
@@ -670,7 +669,7 @@ public:
 	void sendCreatureTurn(const std::shared_ptr<const Creature>& creature)
 	{
 		if (client && canSeeCreature(creature)) {
-			int32_t stackpos = creature->getTile()->getClientIndexOfCreature(getPlayer(), creature);
+			int32_t stackpos = creature->asTile()->getClientIndexOfCreature(asPlayer(), creature);
 			if (stackpos != -1) {
 				client->sendCreatureTurn(creature, stackpos);
 			}
@@ -707,7 +706,7 @@ public:
 			return;
 		}
 
-		if (creature->getPlayer()) {
+		if (creature->asPlayer()) {
 			if (visible) {
 				client->sendCreatureOutfit(creature, creature->getCurrentOutfit());
 			} else {
@@ -717,7 +716,7 @@ public:
 		} else if (canSeeInvisibility()) {
 			client->sendCreatureOutfit(creature, creature->getCurrentOutfit());
 		} else {
-			int32_t stackpos = creature->getTile()->getClientIndexOfCreature(getPlayer(), creature);
+			int32_t stackpos = creature->asTile()->getClientIndexOfCreature(asPlayer(), creature);
 			if (stackpos == -1) {
 				return;
 			}
@@ -732,7 +731,7 @@ public:
 	void sendLight()
 	{
 		if (client) {
-			client->sendCreatureLight(getCreature());
+			client->sendCreatureLight(asCreature());
 		}
 	}
 	void sendCreatureLight(const std::shared_ptr<const Creature>& creature)
@@ -811,7 +810,7 @@ public:
 		if (!sendAll) {
 			// update one slot
 			if (const auto& slotThing = getThing(CONST_SLOT_RIGHT)) {
-				if (const auto& slotItem = slotThing->getItem()) {
+				if (const auto& slotItem = slotThing->asItem()) {
 					if (slotItem->getWeaponType() == WEAPON_QUIVER) {
 						sendInventoryItem(CONST_SLOT_RIGHT, slotItem);
 					}
@@ -822,7 +821,7 @@ public:
 			constexpr auto slots = std::array{CONST_SLOT_RIGHT, CONST_SLOT_LEFT, CONST_SLOT_AMMO};
 			for (const auto& slot : slots) {
 				if (const auto& slotThing = getThing(slot)) {
-					if (const auto& slotItem = slotThing->getItem()) {
+					if (const auto& slotItem = slotThing->asItem()) {
 						if (slotItem->getWeaponType() == WEAPON_QUIVER) {
 							sendInventoryItem(slot, slotItem);
 						}

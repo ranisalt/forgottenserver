@@ -27,7 +27,7 @@ Attr_ReadValue BedItem::readAttr(AttrTypes_t attr, PropStream& propStream)
 				std::string name = IOLoginData::getNameByGuid(guid);
 				if (!name.empty()) {
 					setSpecialDescription(name + " is sleeping there.");
-					g_game.setBedSleeper(getBed(), guid);
+					g_game.setBedSleeper(asBed(), guid);
 					sleeperGUID = guid;
 				}
 			}
@@ -137,10 +137,10 @@ bool BedItem::sleep(const std::shared_ptr<Player>& player)
 	}
 
 	// update the bedSleepersMap
-	g_game.setBedSleeper(getBed(), player->getGUID());
+	g_game.setBedSleeper(asBed(), player->getGUID());
 
 	// make the player walk onto the bed
-	g_game.map.moveCreature(player, getTile());
+	g_game.map.moveCreature(player, asTile());
 
 	// display 'Zzzz'/sleep effect
 	g_game.addMagicEffect(player->getPosition(), CONST_ME_SLEEP);
@@ -232,12 +232,12 @@ void BedItem::updateAppearance(const std::shared_ptr<const Player>& player)
 		if (player && it.transformToOnUse[player->getSex()] != 0) {
 			const ItemType& newType = Item::items[it.transformToOnUse[player->getSex()]];
 			if (newType.type == ITEM_TYPE_BED) {
-				g_game.transformItem(getBed(), it.transformToOnUse[player->getSex()]);
+				g_game.transformItem(asBed(), it.transformToOnUse[player->getSex()]);
 			}
 		} else if (it.transformToFree != 0) {
 			const ItemType& newType = Item::items[it.transformToFree];
 			if (newType.type == ITEM_TYPE_BED) {
-				g_game.transformItem(getBed(), it.transformToFree);
+				g_game.transformItem(asBed(), it.transformToFree);
 			}
 		}
 	}

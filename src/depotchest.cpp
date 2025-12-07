@@ -10,7 +10,7 @@
 ReturnValue DepotChest::queryAdd(int32_t index, const std::shared_ptr<const Thing>& thing, uint32_t count,
                                  uint32_t flags, const std::shared_ptr<Creature>& actor /* = nullptr*/) const
 {
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (!item) {
 		return RETURNVALUE_NOTPOSSIBLE;
 	}
@@ -24,7 +24,7 @@ ReturnValue DepotChest::queryAdd(int32_t index, const std::shared_ptr<const Thin
 		}
 
 		if (item->getTopParent().get() != this) {
-			if (const auto& container = item->getContainer()) {
+			if (const auto& container = item->asContainer()) {
 				addCount = container->getItemHoldingCount() + 1;
 			} else {
 				addCount = 1;

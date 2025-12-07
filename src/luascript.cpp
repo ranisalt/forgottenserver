@@ -285,11 +285,11 @@ uint32_t ScriptEnvironment::addThing(const std::shared_ptr<Thing>& thing)
 		return 0;
 	}
 
-	if (const auto& creature = thing->getCreature()) {
+	if (const auto& creature = thing->asCreature()) {
 		return creature->getID();
 	}
 
-	const auto& item = thing->getItem();
+	const auto& item = thing->asItem();
 	if (item && item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)) {
 		return item->getUniqueId();
 	}
@@ -343,7 +343,7 @@ std::shared_ptr<Item> ScriptEnvironment::getItemByUID(uint32_t uid)
 	if (!thing) {
 		return nullptr;
 	}
-	return thing->getItem();
+	return thing->asItem();
 }
 
 std::shared_ptr<Container> ScriptEnvironment::getContainerByUID(uint32_t uid)
@@ -352,7 +352,7 @@ std::shared_ptr<Container> ScriptEnvironment::getContainerByUID(uint32_t uid)
 	if (!item) {
 		return nullptr;
 	}
-	return item->getContainer();
+	return item->asContainer();
 }
 
 void ScriptEnvironment::removeItemByUID(uint32_t uid)
@@ -735,13 +735,13 @@ void tfs::lua::pushThing(lua_State* L, const std::shared_ptr<Thing>& thing)
 		return;
 	}
 
-	if (const auto& item = thing->getItem()) {
+	if (const auto& item = thing->asItem()) {
 		pushSharedPtr(L, item);
 		setItemMetatable(L, -1, item);
-	} else if (const auto& creature = thing->getCreature()) {
+	} else if (const auto& creature = thing->asCreature()) {
 		pushSharedPtr(L, creature);
 		setCreatureMetatable(L, -1, creature);
-	} else if (const auto& tile = thing->getTile()) {
+	} else if (const auto& tile = thing->asTile()) {
 		pushSharedPtr(L, tile);
 		setMetatable(L, -1, "Tile");
 	} else {
@@ -809,11 +809,11 @@ static void setWeakMetatable(lua_State* L, int32_t index, const std::string& nam
 
 void tfs::lua::setItemMetatable(lua_State* L, int32_t index, const std::shared_ptr<const Item>& item)
 {
-	if (item->getContainer()) {
+	if (item->asContainer()) {
 		luaL_getmetatable(L, "Container");
-	} else if (item->getTeleport()) {
+	} else if (item->asTeleport()) {
 		luaL_getmetatable(L, "Teleport");
-	} else if (item->getPodium()) {
+	} else if (item->asPodium()) {
 		luaL_getmetatable(L, "Podium");
 	} else {
 		luaL_getmetatable(L, "Item");
@@ -823,9 +823,9 @@ void tfs::lua::setItemMetatable(lua_State* L, int32_t index, const std::shared_p
 
 void tfs::lua::setCreatureMetatable(lua_State* L, int32_t index, const std::shared_ptr<const Creature>& creature)
 {
-	if (creature->getPlayer()) {
+	if (creature->asPlayer()) {
 		luaL_getmetatable(L, "Player");
-	} else if (creature->getMonster()) {
+	} else if (creature->asMonster()) {
 		luaL_getmetatable(L, "Monster");
 	} else {
 		luaL_getmetatable(L, "Npc");
@@ -3775,7 +3775,7 @@ int LuaScriptInterface::luaIsDepot(lua_State* L)
 {
 	// isDepot(uid)
 	const auto& container = tfs::lua::getScriptEnv()->getContainerByUID(tfs::lua::getNumber<uint32_t>(L, -1));
-	tfs::lua::pushBoolean(L, container && container->getDepotLocker());
+	tfs::lua::pushBoolean(L, container && container->asDepotLocker());
 	return 1;
 }
 
@@ -3800,7 +3800,7 @@ int LuaScriptInterface::luaGetDepotId(lua_State* L)
 		return 1;
 	}
 
-	const auto& depotLocker = container->getDepotLocker();
+	const auto& depotLocker = container->asDepotLocker();
 	if (!depotLocker) {
 		reportErrorFunc(L, "Depot not found");
 		tfs::lua::pushBoolean(L, false);
@@ -5321,10 +5321,10 @@ int LuaScriptInterface::luaTileGetThing(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& creature = thing->getCreature()) {
+	if (const auto& creature = thing->asCreature()) {
 		tfs::lua::pushSharedPtr(L, creature);
 		tfs::lua::setCreatureMetatable(L, -1, creature);
-	} else if (const auto& item = thing->getItem()) {
+	} else if (const auto& item = thing->asItem()) {
 		tfs::lua::pushSharedPtr(L, item);
 		tfs::lua::setItemMetatable(L, -1, item);
 	} else {
@@ -5360,10 +5360,10 @@ int LuaScriptInterface::luaTileGetTopVisibleThing(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& visibleCreature = thing->getCreature()) {
+	if (const auto& visibleCreature = thing->asCreature()) {
 		tfs::lua::pushSharedPtr(L, visibleCreature);
 		tfs::lua::setCreatureMetatable(L, -1, visibleCreature);
-	} else if (const auto& visibleItem = thing->getItem()) {
+	} else if (const auto& visibleItem = thing->asItem()) {
 		tfs::lua::pushSharedPtr(L, visibleItem);
 		tfs::lua::setItemMetatable(L, -1, visibleItem);
 	} else {
@@ -5946,7 +5946,7 @@ int LuaScriptInterface::luaTileGetHouse(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& houseTile = tile->getHouseTile()) {
+	if (const auto& houseTile = tile->asHouseTile()) {
 		tfs::lua::pushUserdata(L, houseTile->getHouse());
 		tfs::lua::setMetatable(L, -1, "House");
 	} else {
@@ -6503,7 +6503,7 @@ int LuaScriptInterface::luaItemIsItem(lua_State* L)
 {
 	// item:isItem()
 	if (const auto& thing = tfs::lua::getThing(L, 1)) {
-		tfs::lua::pushBoolean(L, thing->getItem() != nullptr);
+		tfs::lua::pushBoolean(L, thing->asItem() != nullptr);
 	} else {
 		lua_pushnil(L);
 	}
@@ -6807,7 +6807,7 @@ int LuaScriptInterface::luaItemGetTile(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& tile = item->getTile()) {
+	if (const auto& tile = item->asTile()) {
 		tfs::lua::pushSharedPtr(L, tile);
 		tfs::lua::setMetatable(L, -1, "Tile");
 	} else {
@@ -7315,7 +7315,7 @@ int LuaScriptInterface::luaContainerGetEmptySlots(lua_State* L)
 	bool recursive = tfs::lua::getBoolean(L, 2, false);
 	if (recursive) {
 		for (ContainerIterator it = container->iterator(); it.hasNext(); it.advance()) {
-			if (const auto& tmpContainer = (*it)->getContainer()) {
+			if (const auto& tmpContainer = (*it)->asContainer()) {
 				slots += tmpContainer->capacity() - tmpContainer->size();
 			}
 		}
@@ -7542,7 +7542,7 @@ int LuaScriptInterface::luaTeleportCreate(lua_State* L)
 	uint32_t id = tfs::lua::getNumber<uint32_t>(L, 2);
 
 	const auto& item = tfs::lua::getScriptEnv()->getItemByUID(id);
-	if (item && item->getTeleport()) {
+	if (item && item->asTeleport()) {
 		tfs::lua::pushSharedPtr(L, item);
 		tfs::lua::setMetatable(L, -1, "Teleport");
 	} else {
@@ -7581,7 +7581,7 @@ int LuaScriptInterface::luaPodiumCreate(lua_State* L)
 	uint32_t id = tfs::lua::getNumber<uint32_t>(L, 2);
 
 	const auto& item = tfs::lua::getScriptEnv()->getItemByUID(id);
-	if (item && item->getPodium()) {
+	if (item && item->asPodium()) {
 		tfs::lua::pushSharedPtr(L, item);
 		tfs::lua::setMetatable(L, -1, "Podium");
 	} else {
@@ -8128,7 +8128,7 @@ int LuaScriptInterface::luaCreatureGetTile(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& tile = creature->getTile()) {
+	if (const auto& tile = creature->asTile()) {
 		tfs::lua::pushSharedPtr(L, tile);
 		tfs::lua::setMetatable(L, -1, "Tile");
 	} else {
@@ -8182,7 +8182,7 @@ int LuaScriptInterface::luaCreatureSetHealth(lua_State* L)
 	creature->setHealth(std::min<int32_t>(tfs::lua::getNumber<uint32_t>(L, 2), creature->getMaxHealth()));
 	g_game.addCreatureHealth(creature);
 
-	if (const auto& player = creature->getPlayer()) {
+	if (const auto& player = creature->asPlayer()) {
 		player->sendStats();
 	}
 	tfs::lua::pushBoolean(L, true);
@@ -8233,7 +8233,7 @@ int LuaScriptInterface::luaCreatureSetMaxHealth(lua_State* L)
 	creature->setHealth(std::min<int32_t>(creature->getHealth(), creature->getMaxHealth()));
 	g_game.addCreatureHealth(creature);
 
-	if (const auto& player = creature->getPlayer()) {
+	if (const auto& player = creature->asPlayer()) {
 		player->sendStats();
 	}
 	tfs::lua::pushBoolean(L, true);
@@ -8435,7 +8435,7 @@ int LuaScriptInterface::luaCreatureRemove(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& player = creature->getPlayer()) {
+	if (const auto& player = creature->asPlayer()) {
 		player->kickPlayer(true);
 	} else {
 		g_game.removeCreature(creature);
@@ -8815,7 +8815,7 @@ int LuaScriptInterface::luaPlayerIsPlayer(lua_State* L)
 {
 	// player:isPlayer()
 	if (const auto& creature = tfs::lua::getCreature(L, 1)) {
-		tfs::lua::pushBoolean(L, creature->getPlayer() != nullptr);
+		tfs::lua::pushBoolean(L, creature->asPlayer() != nullptr);
 	} else {
 		lua_pushnil(L);
 	}
@@ -10189,7 +10189,7 @@ int LuaScriptInterface::luaPlayerGetSlotItem(lua_State* L)
 		return 1;
 	}
 
-	if (const auto& item = thing->getItem()) {
+	if (const auto& item = thing->asItem()) {
 		tfs::lua::pushSharedPtr(L, item);
 		tfs::lua::setItemMetatable(L, -1, item);
 	} else {
@@ -10715,14 +10715,14 @@ int LuaScriptInterface::luaPlayerSetGhostMode(lua_State* L)
 
 	player->switchGhostMode();
 
-	const auto& tile = player->getTile();
+	const auto& tile = player->asTile();
 	const Position& position = player->getPosition();
 	const bool isInvisible = player->isInvisible();
 
 	SpectatorVec spectators;
 	g_game.map.getSpectators(spectators, position, true, true);
 	for (const auto& spectator : spectators) {
-		assert(spectator->getPlayer() != nullptr);
+		assert(spectator->asPlayer() != nullptr);
 
 		const auto& spectatorPlayer = std::static_pointer_cast<Player>(spectator);
 		if (spectatorPlayer != player && !spectatorPlayer->isAccessPlayer()) {
@@ -11125,7 +11125,7 @@ int LuaScriptInterface::luaMonsterIsMonster(lua_State* L)
 {
 	// monster:isMonster()
 	if (const auto& creature = tfs::lua::getCreature(L, 1)) {
-		tfs::lua::pushBoolean(L, creature->getMonster() != nullptr);
+		tfs::lua::pushBoolean(L, creature->asMonster() != nullptr);
 	} else {
 		lua_pushnil(L);
 	}
@@ -11586,7 +11586,7 @@ int LuaScriptInterface::luaNpcIsNpc(lua_State* L)
 {
 	// npc:isNpc()
 	if (const auto& creature = tfs::lua::getCreature(L, 1)) {
-		tfs::lua::pushBoolean(L, creature->getNpc() != nullptr);
+		tfs::lua::pushBoolean(L, creature->asNpc() != nullptr);
 	} else {
 		lua_pushnil(L);
 	}

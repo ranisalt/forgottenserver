@@ -19,11 +19,11 @@ public:
 
 	Attr_ReadValue readAttr(AttrTypes_t attr, PropStream& propStream) override;
 
-	std::shared_ptr<DepotLocker> getDepotLocker() override
+	std::shared_ptr<DepotLocker> asDepotLocker() override
 	{
 		return std::static_pointer_cast<DepotLocker>(shared_from_this());
 	}
-	std::shared_ptr<const DepotLocker> getDepotLocker() const override
+	std::shared_ptr<const DepotLocker> asDepotLocker() const override
 	{
 		return std::static_pointer_cast<const DepotLocker>(shared_from_this());
 	}
