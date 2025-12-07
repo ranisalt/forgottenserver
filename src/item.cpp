@@ -254,7 +254,7 @@ std::shared_ptr<Thing> Item::getTopParent()
 	}
 
 	while (parent->hasParent()) {
-		receiver = std::move(parent);
+		receiver = parent;
 		parent = parent->getParent();
 	}
 
@@ -273,7 +273,7 @@ std::shared_ptr<const Thing> Item::getTopParent() const
 	}
 
 	while (parent->hasParent()) {
-		receiver = std::move(parent);
+		receiver = parent;
 		parent = parent->getParent();
 	}
 
