@@ -293,7 +293,7 @@ std::shared_ptr<Tile> Item::getTile()
 	if (const auto& parent = topParent->getParent()) {
 		topParent = parent;
 	}
-	return topParent->getTile();
+	return std::dynamic_pointer_cast<Tile>(topParent);
 }
 
 std::shared_ptr<const Tile> Item::getTile() const
@@ -306,7 +306,7 @@ std::shared_ptr<const Tile> Item::getTile() const
 	if (const auto& parent = topParent->getParent()) {
 		topParent = parent;
 	}
-	return topParent->getTile();
+	return std::dynamic_pointer_cast<const Tile>(topParent);
 }
 
 uint16_t Item::getSubType() const
