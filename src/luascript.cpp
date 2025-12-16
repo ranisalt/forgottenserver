@@ -2679,7 +2679,6 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod(L, "Player", "getAccountId", LuaScriptInterface::luaPlayerGetAccountId);
 	registerMethod(L, "Player", "getLastLoginSaved", LuaScriptInterface::luaPlayerGetLastLoginSaved);
 	registerMethod(L, "Player", "getLastLogout", LuaScriptInterface::luaPlayerGetLastLogout);
-	registerMethod(L, "Player", "kick", LuaScriptInterface::luaPlayerKick);
 
 	registerMethod(L, "Player", "getAccountType", LuaScriptInterface::luaPlayerGetAccountType);
 	registerMethod(L, "Player", "setAccountType", LuaScriptInterface::luaPlayerSetAccountType);
