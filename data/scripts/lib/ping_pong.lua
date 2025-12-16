@@ -1,5 +1,5 @@
 function Player.getLastPing(self)
-  return self:getStorageValue(PlayerStorageKeys.lastPing) or 0
+  return self:getStorageValue(PlayerStorageKeys.lastPing)
 end
 
 function Player.setLastPing(self, time)
@@ -7,7 +7,7 @@ function Player.setLastPing(self, time)
 end
 
 function Player.getLastPong(self)
-  return self:getStorageValue(PlayerStorageKeys.lastPong) or 0
+  return self:getStorageValue(PlayerStorageKeys.lastPong)
 end
 
 function Player.setLastPong(self, time)
