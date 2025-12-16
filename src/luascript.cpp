@@ -8891,21 +8891,6 @@ int LuaScriptInterface::luaPlayerGetLastLogout(lua_State* L)
 	return 1;
 }
 
-int LuaScriptInterface::luaPlayerKick(lua_State* L)
-{
-	// player:kick([displayEffect = false])
-	const auto& player = tfs::lua::getSharedPtr<Player>(L, 1);
-	if (!player) {
-		lua_pushnil(L);
-		return 1;
-	}
-
-	const auto displayEffect = tfs::lua::getBoolean(L, 2, false);
-	player->kickPlayer(displayEffect);
-	tfs::lua::pushBoolean(L, true);
-	return 1;
-}
-
 int LuaScriptInterface::luaPlayerGetAccountType(lua_State* L)
 {
 	// player:getAccountType()

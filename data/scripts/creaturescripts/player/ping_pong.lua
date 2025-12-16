@@ -38,7 +38,7 @@ function event.onThink(player, interval)
             return true
         end
 
-        player:kick()
+        player:remove()
     end
     return true
 end
