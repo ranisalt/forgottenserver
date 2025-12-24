@@ -124,7 +124,7 @@ std::shared_ptr<T>& getSharedPtr(lua_State* L, int32_t arg)
 template <class T>
 int luaSharedPtrDelete(lua_State* L)
 {
-	auto& ptr = tfs::lua::getSharedPtr<T>(L, 1);
+	auto& ptr = getSharedPtr<T>(L, 1);
 	std::destroy_at(std::addressof(ptr));
 	return 0;
 }
