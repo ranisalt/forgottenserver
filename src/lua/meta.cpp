@@ -64,9 +64,9 @@ void setItemMetatable(lua_State* L, int32_t index, const std::shared_ptr<const I
 
 void setCreatureMetatable(lua_State* L, int32_t index, const std::shared_ptr<const Creature>& creature)
 {
-	if (creature->getPlayer()) {
+	if (creature->asPlayer()) {
 		luaL_getmetatable(L, "Player");
-	} else if (creature->getMonster()) {
+	} else if (creature->asMonster()) {
 		luaL_getmetatable(L, "Monster");
 	} else {
 		luaL_getmetatable(L, "Npc");
