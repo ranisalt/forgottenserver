@@ -116,17 +116,17 @@ T* getUserdata(lua_State* L, int32_t arg)
 
 // SharedPtr helpers
 template <class T>
+std::shared_ptr<T>& getSharedPtr(lua_State* L, int32_t arg)
+{
+	return *static_cast<std::shared_ptr<T>*>(lua_touserdata(L, arg));
+}
+
+template <class T>
 int luaSharedPtrDelete(lua_State* L)
 {
 	auto& ptr = tfs::lua::getSharedPtr<T>(L, 1);
 	std::destroy_at(std::addressof(ptr));
 	return 0;
-}
-
-template <class T>
-std::shared_ptr<T>& getSharedPtr(lua_State* L, int32_t arg)
-{
-	return *static_cast<std::shared_ptr<T>*>(lua_touserdata(L, arg));
 }
 
 template <class T>
