@@ -47,4 +47,3 @@ set(luamodules_SRC
 	)
 
 add_library(luascript OBJECT ${lua_SRC} ${luamodules_SRC})
-target_link_libraries(luascript PRIVATE "$<$<CXX_COMPILER_ID:GNU>:stdc++exp>")
