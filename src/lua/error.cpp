@@ -86,6 +86,8 @@ void reportError(lua_State* L, std::string_view error_desc, bool stacktrace /*= 
 
 		if (L) {
 			std::cout << "\nLua stack trace:\n" << getStackTrace(L, error_desc) << '\n';
+		} else {
+			std::cout << "\n" << error_desc << '\n';
 		}
 	}
 }
