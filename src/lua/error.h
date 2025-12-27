@@ -23,6 +23,6 @@ std::string getErrorDesc(ErrorCode_t code);
 
 int luaErrorHandler(lua_State* L);
 
-void reportError(lua_State* L, std::string_view error_desc);
+void reportError(lua_State* L, std::string_view error_desc, bool stacktrace = false);
 
 } // namespace tfs::lua

@@ -61,7 +61,7 @@ int luaErrorHandler(lua_State* L)
 	return 1;
 }
 
-void reportError(lua_State* L, std::string_view error_desc)
+void reportError(lua_State* L, std::string_view error_desc, bool stacktrace /*= false*/)
 {
 	auto [scriptId, luaScriptInterface, callbackId, timerEvent] = getScriptEnv()->getEventInfo();
 
@@ -81,8 +81,13 @@ void reportError(lua_State* L, std::string_view error_desc)
 		std::cout << luaScriptInterface->getFileById(scriptId) << '\n';
 	}
 
-	std::cout << "\nStack trace:\n" << boost::stacktrace::stacktrace() << '\n';
-	std::cout << "\nLua stack trace:\n" << getStackTrace(L, error_desc) << '\n';
+	if (stacktrace) {
+		std::cout << "\nStack trace:\n" << boost::stacktrace::stacktrace() << '\n';
+
+		if (L) {
+			std::cout << "\nLua stack trace:\n" << getStackTrace(L, error_desc) << '\n';
+		}
+	}
 }
 
 } // namespace tfs::lua
