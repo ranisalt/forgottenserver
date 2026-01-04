@@ -43,7 +43,7 @@ local function canWalkthroughEx(player, creature)
                configManager.getNumber(configKeys.PROTECTION_LEVEL)
 end
 
-local function sendCreatureTurn(player, creature, stackpos)
+local function sendCreatureTurn(player, creature, stackpos, direction)
     if not player:canSeeCreature(creature) then
         return
     end
@@ -60,7 +60,7 @@ local function sendCreatureTurn(player, creature, stackpos)
 
     msg:addU16(0x63)
     msg:addU32(creature:getId())
-    msg:addByte(creature:getDirection())
+    msg:addByte(direction)
     msg:addBool(not canWalkthroughEx(player, creature))
     return msg:sendToPlayer(player)
 end
@@ -76,7 +76,7 @@ function event.onPlayerTurn(player, direction)
     for _, spectator in ipairs(spectators) do
         local stackpos = getClientIndexOfCreature(spectator, player)
         if stackpos ~= -1 then
-            sendCreatureTurn(spectator, player, stackpos)
+            sendCreatureTurn(spectator, player, stackpos, direction)
         end
     end
 
