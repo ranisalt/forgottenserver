@@ -11,10 +11,6 @@ local function playerTurn(playerId, direction)
         return
     end
 
-    if player:getDirection() == direction then
-        return
-    end
-
     if not player:onTurn(direction) then
         return
     end
