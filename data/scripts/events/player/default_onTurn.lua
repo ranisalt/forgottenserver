@@ -50,7 +50,7 @@ local function sendCreatureTurn(player, creature, stackpos, direction)
 
     local msg = NetworkMessage()
     msg:addByte(0x6B)
-    if stackpos >= 10 then
+    if stackpos >= MAX_STACKPOS then
         msg:addU16(0xFFFF)
         msg:addU32(creature:getId())
     else
